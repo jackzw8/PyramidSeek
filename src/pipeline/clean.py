@@ -25,14 +25,8 @@ from typing import Any
 
 from .. import config
 
-# 通用工具复用 datasource 层的实现（不另写一份，家法 R13 的同一条理由）。
-# 待第三个调用方出现时再提取到 src/common.py（见《计划完成情况》D-12）。
-from ..datasource.akshare_src import (
-    is_missing,
-    market_of,
-    normalize_code,
-    report_type_of,
-)
+# 通用工具取自 leaf 模块 src/common.py（2026-10-14 由 akshare_src 提取，见《计划完成情况》D-12）
+from ..common import is_missing, market_of, normalize_code, report_type_of
 
 logger = logging.getLogger(__name__)
 

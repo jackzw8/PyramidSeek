@@ -1,0 +1,175 @@
+"""跨层通用工具（**leaf 模块**：除 ``config`` 与异常类型外不依赖包内任何模块）。
+
+为什么单独成模块（《计划完成情况》D-12）：这些函数与"用哪个数据源"**无关** ——
+单位换算、空值判定、证券代码语义、报告期语义、候选列取值 —— 但原先寄居在
+``datasource/akshare_src.py`` 里，导致 ``official_src``、``report_parser``、
+``pipeline/clean.py`` 都要从"某个数据源的实现模块"导入通用工具，**依赖方向被读歪**。
+
+约定：
+- 本模块只做**纯函数**，不做 IO、不联网、不依赖 pandas（保持轻量、可离线 import）；
+- ``akshare_src`` 仍 re-export 这些名字（既有 import 不破）；**新代码请直接
+  ``from ..common import ...``**。
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from . import config
+from .datasource.base import DataSourceError
+
+# 交易所映射（《数据字典》§3.1）
+_EXCHANGE_BY_PREFIX = {"SH": "SSE", "SZ": "SZSE", "BJ": "BSE", "HK": "HKEX"}
+
+# 报告期列候选名（数据源列名跨版本会变，故按语义逐个试）
+_PERIOD_KEYS = ("报告日", "报告期", "报表日期", "截止日期", "date")
+_DAYS_IN_MONTH = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+
+
+# ── 单位与空值（家法 R10 / R11）───────────────────────────────────────────
+def is_missing(value: Any) -> bool:
+    """判定空值：``None`` / ``NaN`` / ``NaT``。
+
+    用「自身不等于自身」判 NaN/NaT，避免在模块层引入 pandas（保持轻量、可离线 import）。
+    """
+    if value is None:
+        return True
+    try:
+        return bool(value != value)  # NaN / NaT 是唯一「自身不等于自身」的值
+    except (TypeError, ValueError):
+        return False
+
+
+def to_internal_billion(value: Any) -> float | None:
+    """元 → 亿元，保留 2 位小数；缺失返回 ``None``（**不用 0 顶替**）。"""
+    if is_missing(value):
+        return None
+    return round(float(value) / 1e8, config.AMOUNT_DECIMALS)
+
+
+# ── 证券代码语义 ──────────────────────────────────────────────────────────
+def _guess_prefix(digits: str) -> str:
+    """A股交易所前缀推断（仅用于数据源未给前缀时）。"""
+    if digits.startswith(("6", "9")):
+        return "SH"
+    if digits.startswith(("0", "2", "3")):
+        return "SZ"
+    if digits.startswith(("4", "8")):
+        return "BJ"
+    raise DataSourceError(f"无法推断 A股交易所前缀：{digits!r}")
+
+
+def normalize_code(raw: Any, market: str) -> str:
+    """代码归一为「市场前缀 + 数字」，如 ``600900`` → ``SH600900``、``700`` → ``HK00700``。
+
+    已有前缀（``SH`` / ``SZ`` / ``BJ`` / ``HK``）则只做补零。
+    """
+    text = str(raw).strip().upper()
+    digits = "".join(ch for ch in text if ch.isdigit())
+    if not digits:
+        raise DataSourceError(f"无法解析证券代码：{raw!r}")
+    if market == "HK":
+        return "HK" + digits.zfill(5)
+    prefix = text[:2] if text[:2] in ("SH", "SZ", "BJ") else _guess_prefix(digits)
+    return prefix + digits.zfill(6)
+
+
+def exchange_of(code: str) -> str:
+    return _EXCHANGE_BY_PREFIX[code[:2]]
+
+
+def market_of(code: str) -> str:
+    return "HK" if code.startswith("HK") else "A"
+
+
+def status_of(name: str) -> str:
+    """由证券简称判定状态（《数据字典》§3.1：normal / ST / suspended / delisted / new）。
+
+    这里只能判定名称可见的部分：``*ST`` / ``ST`` → ``ST``，含「退」→ ``delisted``；
+    ``suspended`` 与 ``new``（次新）需行情与上市日期，由清洗阶段补齐。
+    """
+    text = (name or "").replace(" ", "")
+    if "退" in text:
+        return "delisted"
+    if "ST" in text.upper():
+        return "ST"
+    return "normal"
+
+
+# ── 表格归一 ──────────────────────────────────────────────────────────────
+def _normalize_row(row: dict[str, Any]) -> dict[str, Any]:
+    return {str(key): (None if is_missing(val) else val) for key, val in row.items()}
+
+
+def to_records(table: Any) -> list[dict[str, Any]]:
+    """pandas DataFrame（或已归一 ``list[dict]``）→ ``list[dict]``，空值统一为 ``None``。"""
+    if table is None:
+        return []
+    if hasattr(table, "to_dict"):
+        rows = table.to_dict("records")
+    elif isinstance(table, list):
+        rows = table
+    else:
+        raise DataSourceError(f"无法识别的返回类型：{type(table)!r}")
+    return [_normalize_row(row) for row in rows]
+
+
+def pick(row: dict[str, Any], *names: str) -> Any:
+    """按候选列名取值（数据源列名跨版本会变，故按语义逐个试）。"""
+    for name in names:
+        if name in row:
+            return row[name]
+    return None
+
+
+# ── 报告期语义 ────────────────────────────────────────────────────────────
+def report_period_of(row: dict[str, Any]) -> str | None:
+    """取一行里的报告期并归一为 ``YYYY-MM-DD``；取不到返回 ``None``。"""
+    raw = pick(row, *_PERIOD_KEYS)
+    if raw is None:
+        return None
+    digits = "".join(ch for ch in str(raw) if ch.isdigit())
+    if len(digits) == 8:
+        return f"{digits[:4]}-{digits[4:6]}-{digits[6:]}"
+    if len(digits) == 4:
+        return f"{digits}-12-31"
+    return None
+
+
+def report_type_of(report_period: str) -> str:
+    """按报告月份归一到 ``annual`` / ``h1`` / ``q1`` / ``q3``。"""
+    month = int(report_period[5:7])
+    return {12: "annual", 6: "h1", 3: "q1", 9: "q3"}.get(month, "q1")
+
+
+def _last_day(year: int, month: int) -> int:
+    if month == 2 and (year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)):
+        return 29
+    return _DAYS_IN_MONTH[month - 1]
+
+
+def effective_date_of(report_period: str, lag_months: int = config.EFFECTIVE_LAG_MONTHS) -> str:
+    """报告期 + 4 个月生效，并截断到该月最后一天（家法 R9）。
+
+    例：``2024-12-31`` + 4 → ``2025-04-30``（4 月没有 31 日）。
+    """
+    year, month, day = (int(part) for part in report_period.split("-"))
+    month += lag_months
+    year += (month - 1) // 12
+    month = (month - 1) % 12 + 1
+    return f"{year:04d}-{month:02d}-{min(day, _last_day(year, month)):02d}"
+
+
+__all__ = [
+    "effective_date_of",
+    "exchange_of",
+    "is_missing",
+    "market_of",
+    "normalize_code",
+    "pick",
+    "report_period_of",
+    "report_type_of",
+    "status_of",
+    "to_internal_billion",
+    "to_records",
+]

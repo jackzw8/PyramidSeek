@@ -27,10 +27,9 @@ from typing import Any, NamedTuple
 
 from .. import config
 
-# 通用工具（元→亿元、空值判定、代码市场判定、候选列取值）放在 akshare_src，
-# 此处复用而不另写一份 —— 家法 R13 的同一条理由：两份实现必然分叉。
+# 通用工具取自 leaf 模块 src/common.py（2026-10-14 由 akshare_src 提取，见《计划完成情况》D-12）
+from ..common import is_missing, market_of, pick
 from . import report_parser
-from .akshare_src import is_missing, market_of, pick
 from .base import DataSourceError
 
 # ── 端点（**以实际线上接口为准**，未逐一联网验证，见《计划完成情况》D-8）──────
