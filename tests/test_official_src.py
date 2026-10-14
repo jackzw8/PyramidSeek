@@ -125,11 +125,23 @@ def make_source(handler, tmp_path, **kwargs) -> OfficialSource:
         ("2023年年度报告（修订版）", "2023-12-31"),
         ("某某公司年度报告", None),
         ("", None),
-        ("2024年半年度报告", "2024-12-31"),  # 骨架只认年份，题型过滤由检索参数负责
+        # 真实数据验证发现：`年度报告` 是 `半年度报告` 的子串，不能把半年报当成 12-31
+        ("长江电力2025年半年度报告", None),
+        ("某某公司2025年第一季度报告", None),
+        ("某某公司2024年年度报告摘要", None),
+        ("某某公司2024年年報", "2024-12-31"),  # 港股用词（年報）仍能识别
     ],
 )
 def test_report_period_of_title(title: str, expected: str | None) -> None:
     assert report_period_of_title(title) == expected
+
+
+def test_non_annual_markers_are_excluded() -> None:
+    """半年报 / 季报 / 摘要一律不作为年报期次，避免凭空多出一个财年。"""
+    from src.datasource.official_src import NOT_ANNUAL_MARKERS
+
+    for marker in NOT_ANNUAL_MARKERS:
+        assert report_period_of_title(f"某公司2024年{marker}报告") is None
 
 
 def test_pdf_name_is_ascii() -> None:

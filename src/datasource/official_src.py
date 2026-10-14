@@ -86,13 +86,33 @@ def pdf_name_of(code: str, report_period: str) -> str:
     return f"{code}_{report_period}.pdf"
 
 
-def report_period_of_title(title: str) -> str | None:
-    """从公告标题取年报年份 → 报告期 ``YYYY-12-31``。
+# 非年报的标题标记（半年报 / 季报 / 摘要 / 英文版）——不能当成年报处理
+NOT_ANNUAL_MARKERS = (
+    "半年度",
+    "半年报",
+    "季度报告",
+    "季报",
+    "一季",
+    "三季",
+    "摘要",
+    "英文",
+)
 
-    ``"长江电力2024年年度报告"`` → ``"2024-12-31"``；取不到返回 ``None``。
+
+def report_period_of_title(title: str) -> str | None:
+    """从公告标题取**年报**年份 → 报告期 ``YYYY-12-31``；不是年报则返回 ``None``。
+
+    ``"长江电力2024年年度报告"`` → ``"2024-12-31"``；``"…2025年半年度报告"`` → ``None``。
+
+    **2026-10-14 真实数据验证发现**：``年度报告`` 是 ``半年度报告`` 的子串，
+    只按"含年度报告 + 取前 4 位数字"会把半年报误判成 ``2025-12-31``
+    （凭空造出一个不存在的财年）。故先按题型标记排除半年报 / 季报 / 摘要 / 英文版。
     """
+    text = title or ""
+    if any(marker in text for marker in NOT_ANNUAL_MARKERS):
+        return None
     digits = ""
-    for ch in title or "":
+    for ch in text:
         if ch.isdigit():
             digits += ch
         elif digits:
@@ -274,7 +294,7 @@ class OfficialSource:
             rows = self._cninfo_announcements(code)
             url_of, title_of = _cninfo_file_url, _cninfo_title
 
-        documents: list[dict[str, Any]] = []
+        candidates: list[dict[str, Any]] = []
         for row in rows:
             url = url_of(row)
             title = title_of(row)
@@ -283,17 +303,18 @@ class OfficialSource:
             period = report_period_of_title(title)
             if period is None:
                 continue
-            documents.append(
-                {
-                    "code": code,
-                    "report_period": period,
-                    "title": title,
-                    "pdf_url": url,
-                    "local_path": str(self._download_pdf(url, code=code, report_period=period)),
-                }
+            candidates.append(
+                {"code": code, "report_period": period, "title": title, "pdf_url": url}
             )
-        documents.sort(key=lambda item: item["report_period"], reverse=True)
-        return documents[: max(years, 0)]
+        candidates.sort(key=lambda item: item["report_period"], reverse=True)
+
+        # 先截断再下载：检索页动辄 30 条公告，全下会白拉几十份 PDF（真跑时才暴露的浪费）
+        wanted = candidates[: max(years, 0)]
+        for item in wanted:
+            item["local_path"] = str(
+                self._download_pdf(item["pdf_url"], code=code, report_period=item["report_period"])
+            )
+        return wanted
 
     # ── 三表解析（D-11：年报 PDF → 标准层）────────────────────────────────
     def parse_annual_report(self, document: dict[str, Any]) -> list[dict[str, Any]]:
