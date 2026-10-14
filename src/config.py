@@ -91,6 +91,10 @@ BALANCE_TOLERANCE = 0.05  # 勾稽：|资产 − (负债 + 权益)| / 资产 ≤
 MOM_CHANGE_THRESHOLD = 2.00  # 环比突变阈值 ±200% → 标记待确认
 MARKET_MISSING_RATE_MAX = 0.05  # 单市场缺失率 ≤ 5%，超阈值 → degraded
 
+# ── 数据源与回退链（数据源规格 §1 / §7）──────────────────────────────────
+PRIMARY_SOURCE_NAME = "akshare"  # 主源名（回退链判定 degraded 的基准）
+FALLBACK_SOURCE_NAMES = ("official", "fixture")  # 官方源兜底 / fixtures 离线回退
+
 # ── 数据源容错（数据源规格 §7 / §8）──────────────────────────────────────
 FETCH_RETRY_TIMES = 3  # 重试 3 次
 FETCH_RETRY_BACKOFF = (1, 3, 9)  # 退避上限序列（秒）：3 次重试实际等待 2 次（1s、3s）

@@ -1,0 +1,340 @@
+"""采集编排的离线测试（任务 M1-6）。
+
+**全离线**：三级回退用可注入的 StubSource 验证；离线链用真实 fixtures。
+覆盖：回退顺序、降级留痕、空集视为失败、全链路失败的报错、小样本过滤、落库与幂等。
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from src import config
+from src.datasource import base
+from src.datasource.fixtures_src import FixturesSource
+from src.pipeline import fetch, store
+
+
+# ── 测试替身 ──────────────────────────────────────────────────────────────
+class StubSource:
+    """可配置的假数据源：能指定"哪些方法挂"与"哪些方法返回空"。"""
+
+    def __init__(
+        self,
+        name: str,
+        *,
+        stocks: dict | None = None,
+        financials: dict | None = None,
+        industries: dict | None = None,
+        fail: tuple[str, ...] = (),
+        empty: tuple[str, ...] = (),
+    ) -> None:
+        self.name = name
+        self._stocks = stocks or {}
+        self._financials = financials or {}
+        self._industries = industries or {}
+        self._fail = set(fail)
+        self._empty = set(empty)
+        self.calls: list[tuple[str, str]] = []
+
+    def _respond(self, method: str, key: str, value: list) -> list:
+        self.calls.append((method, key))
+        if method in self._fail:
+            raise base.DataSourceError(f"{self.name} 的 {method} 不可用", source=self.name)
+        return [] if method in self._empty else list(value)
+
+    def list_stocks(self, market: str) -> list:
+        return self._respond("list_stocks", market, self._stocks.get(market, []))
+
+    def financials(self, code: str) -> list:
+        return self._respond("financials", code, self._financials.get(code, []))
+
+    def industry_tree(self, market: str) -> list:
+        return self._respond("industry_tree", market, self._industries.get(market, []))
+
+    def price_daily(self, code: str, adjust: str = config.DEFAULT_ADJUST) -> list:
+        return []
+
+
+def stock_row(code: str = "SH600900", market: str = "A", **over) -> dict:
+    row = {
+        "code": code,
+        "name": "长江电力",
+        "market": market,
+        "exchange": "SSE" if market == "A" else "HKEX",
+        "l1_code": "801160",
+        "l1_name": "公用事业",
+        "l2_code": "801161",
+        "l2_name": "电力",
+        "industry_std": config.INDUSTRY_STANDARD[market],
+        "listed_at": "2003-11-18",
+        "shares": 244.7,
+        "status": "normal",
+        "is_financial": False,
+        "updated_at": "2026-10-14T00:00:00Z",
+    }
+    row.update(over)
+    return row
+
+
+def fin_row(code: str = "SH600900", period: str = "2024-12-31", **over) -> dict:
+    row = {
+        "code": code,
+        "report_period": period,
+        "report_type": "annual",
+        "revenue": 845.0,
+        "gross_profit": 524.0,
+        "net_profit": 325.0,
+        "total_assets": 6200.0,
+        "total_liabilities": 3520.0,
+        "equity": 2680.0,
+        "cash": 90.0,
+        "op_cashflow": 596.0,
+        "icf": -450.0,
+        "fcf": -100.0,
+        "effective_date": "2025-04-30",
+        "source": "stub",
+        "fetched_at": "2026-10-14T00:00:00Z",
+    }
+    row.update(over)
+    return row
+
+
+def stub_chain(**kwargs) -> dict[str, StubSource]:
+    """三级链，默认每级都能提供 A/HK 的股票与财报。"""
+    defaults = {
+        "primary": dict(
+            stocks={"A": [stock_row()], "HK": [stock_row("HK00700", "HK")]},
+            financials={"SH600900": [fin_row()], "HK00700": [fin_row("HK00700")]},
+            industries={"A": [{"standard": "申万2021", "version": "v1", "level": 1}]},
+        ),
+        "official": dict(
+            stocks={"A": [stock_row("SZ000858")]},
+            financials={"SH600900": [fin_row()]},
+        ),
+        "fixture": dict(
+            stocks={"A": [stock_row("SH600011")]},
+            financials={"SH600900": [fin_row()]},
+        ),
+    }
+    defaults.update(kwargs)
+    return {
+        name: StubSource("akshare" if name == "primary" else name, **cfg)
+        for name, cfg in defaults.items()
+    }
+
+
+# ── 回退链构造 ────────────────────────────────────────────────────────────
+def test_build_chain_skips_missing_levels() -> None:
+    primary, fixture = StubSource("primary"), StubSource("fixture")
+    assert fetch.build_chain(primary=primary, fixtures=fixture) == [primary, fixture]
+    assert fetch.build_chain(fixtures=fixture) == [fixture]
+    assert fetch.build_chain() == []
+
+
+def test_offline_chain_never_touches_network(monkeypatch) -> None:
+    def boom(*args, **kwargs):
+        raise AssertionError("offline 模式不应构造网络数据源")
+
+    monkeypatch.setattr(fetch, "AkShareSource", boom)
+    monkeypatch.setattr(fetch, "OfficialSource", boom)
+
+    chain = fetch.default_chain(offline=True)
+    assert len(chain) == 1
+    assert isinstance(chain[0], FixturesSource)
+
+
+# ── 回退顺序与降级留痕 ────────────────────────────────────────────────────
+def test_primary_success_is_not_degraded() -> None:
+    chain = stub_chain()
+    outcome = fetch.fetch_universe(
+        markets=("A",), chain=[chain["primary"], chain["official"], chain["fixture"]], persist=False
+    )
+
+    assert outcome.universe.stocks and outcome.universe.stocks[0]["code"] == "SH600900"
+    assert set(outcome.sources.values()) == {"akshare"}
+    assert outcome.degraded is False
+    assert outcome.fallbacks == {}
+    assert not any("降级" in note for note in outcome.notes)
+
+
+def test_official_takes_over_when_primary_fails() -> None:
+    chain = stub_chain(primary=dict(fail=("list_stocks", "financials", "industry_tree")))
+    outcome = fetch.fetch_universe(
+        markets=("A",), chain=[chain["primary"], chain["official"], chain["fixture"]], persist=False
+    )
+
+    assert [row["code"] for row in outcome.universe.stocks] == ["SZ000858"]
+    assert outcome.sources["list_stocks:A"] == "official"
+    assert outcome.sources["financials:SZ000858"] == "none"  # official 没有该标的的财报
+    assert outcome.degraded is True
+    assert any("akshare" in reason for reason in outcome.fallbacks["list_stocks:A"])
+    assert any("降级到 official" in note for note in outcome.notes)
+    assert any("degraded=true" in note for note in outcome.notes)
+
+
+def test_fixture_is_the_last_resort() -> None:
+    chain = stub_chain(
+        primary=dict(fail=("list_stocks", "financials")),
+        official=dict(fail=("list_stocks", "financials")),
+    )
+    outcome = fetch.fetch_universe(
+        markets=("A",), chain=[chain["primary"], chain["official"], chain["fixture"]], persist=False
+    )
+
+    assert [row["code"] for row in outcome.universe.stocks] == ["SH600011"]
+    assert outcome.sources["list_stocks:A"] == "fixture"
+    assert outcome.degraded is True
+
+
+def test_empty_result_counts_as_failure_and_falls_through() -> None:
+    """返回空集无法与"真的没有数据"区分 → 按失败处理，继续降级。"""
+    chain = stub_chain(primary=dict(empty=("list_stocks", "financials")))
+    outcome = fetch.fetch_universe(
+        markets=("A",), chain=[chain["primary"], chain["official"], chain["fixture"]], persist=False
+    )
+
+    assert outcome.sources["list_stocks:A"] == "official"
+    assert any("返回空集" in reason for reason in outcome.fallbacks["list_stocks:A"])
+
+
+def test_all_levels_failing_raises_with_reasons() -> None:
+    chain = stub_chain(
+        primary=dict(fail=("list_stocks",)),
+        official=dict(fail=("list_stocks",)),
+        fixture=dict(fail=("list_stocks",)),
+    )
+    with pytest.raises(base.DataSourceError) as excinfo:
+        fetch.fetch_universe(
+            markets=("A",),
+            chain=[chain["primary"], chain["official"], chain["fixture"]],
+            persist=False,
+        )
+
+    message = str(excinfo.value)
+    assert "三级回退" in message or "回退链" in message
+    assert "akshare" in message and "fixture" in message
+
+
+def test_failed_interface_lands_in_notes() -> None:
+    chain = stub_chain(
+        primary=dict(
+            stocks={"A": [stock_row()]},
+            financials={"SH600900": [fin_row()]},
+            fail=("industry_tree",),
+        ),
+        official=dict(fail=("industry_tree",)),
+        fixture=dict(stocks={"A": [stock_row()]}, fail=("industry_tree",)),
+    )
+    outcome = fetch.fetch_universe(
+        markets=("A",), chain=[chain["primary"], chain["official"], chain["fixture"]], persist=False
+    )
+
+    assert "industry_tree:A" in outcome.failed_interfaces
+    assert any("全链路失败" in note for note in outcome.notes)
+
+
+# ── 小样本过滤 ────────────────────────────────────────────────────────────
+def test_codes_filter_keeps_only_requested() -> None:
+    chain = stub_chain(
+        primary=dict(
+            stocks={"A": [stock_row("SH600900"), stock_row("SZ000858", name="五粮液")]},
+            financials={"SH600900": [fin_row()], "SZ000858": [fin_row("SZ000858")]},
+        )
+    )
+    outcome = fetch.fetch_universe(
+        markets=("A",), codes=["SZ000858"], chain=[chain["primary"]], persist=False
+    )
+
+    assert [row["code"] for row in outcome.universe.stocks] == ["SZ000858"]
+
+
+def test_limit_caps_rows_per_market() -> None:
+    rows = [stock_row(f"SH60000{i}") for i in range(5)]
+    chain = stub_chain(
+        primary=dict(
+            stocks={"A": rows},
+            financials={f"SH60000{i}": [fin_row(f"SH60000{i}")] for i in range(5)},
+        )
+    )
+    outcome = fetch.fetch_universe(markets=("A",), limit=2, chain=[chain["primary"]], persist=False)
+
+    assert len(outcome.universe.stocks) == 2
+
+
+def test_requested_code_missing_from_result_is_reported() -> None:
+    """指定了一个任何源都没有的标的：必须说清它没进清洗结果，不能静默通过。"""
+    chain = stub_chain(primary=dict(stocks={"A": []}, financials={}))
+    outcome = fetch.fetch_universe(
+        markets=("A",),
+        codes=["SH999999"],
+        chain=[chain["primary"], chain["fixture"]],
+        persist=False,
+    )
+
+    assert outcome.universe.pending == ["SH999999"]
+    assert any("未进入清洗结果" in note for note in outcome.notes)
+
+
+# ── 落库与幂等 ────────────────────────────────────────────────────────────
+def test_persist_false_skips_store() -> None:
+    chain = stub_chain()
+    outcome = fetch.fetch_universe(markets=("A",), chain=[chain["primary"]], persist=False)
+    assert outcome.stats is None
+
+
+def test_persist_writes_standard_layer(tmp_path) -> None:
+    chain = stub_chain()
+    outcome = fetch.fetch_universe(
+        markets=("A",),
+        chain=[chain["primary"]],
+        db_path=tmp_path / "standard.duckdb",
+        parquet_dir=tmp_path / "parquet",
+        persist=True,
+    )
+
+    assert outcome.stats is not None
+    assert outcome.stats.rows["stock"] == 1
+    assert outcome.stats.rows["financial_report"] == 1
+    assert len(outcome.stats.parquet) == 3
+
+
+def test_rerun_is_idempotent(tmp_path) -> None:
+    db_path = tmp_path / "standard.duckdb"
+    chain = stub_chain()
+    fetch.fetch_universe(markets=("A",), chain=[chain["primary"]], db_path=db_path)
+    fetch.fetch_universe(markets=("A",), chain=[chain["primary"]], db_path=db_path)
+
+    assert len(store.read_table("stock", db_path=db_path)) == 1
+    assert len(store.read_table("financial_report", db_path=db_path)) == 1
+
+
+# ── 真实 fixtures 端到端（离线）──────────────────────────────────────────
+def test_end_to_end_with_real_fixtures() -> None:
+    outcome = fetch.fetch_universe(chain=[FixturesSource()], persist=False)
+
+    assert len(outcome.universe.stocks) >= 10
+    assert len(outcome.universe.financials) >= 10
+    assert outcome.universe.pending == []
+    # 全部由 fixtures 提供 → 相对主源即为降级（诚实标记，不假装是主源数据）
+    assert outcome.degraded is True
+    assert set(outcome.sources.values()) == {"fixture"}
+
+
+def test_cli_offline_smoke(capsys) -> None:
+    assert fetch.main(["--offline", "--no-store", "--limit", "2"]) == 0
+    printed = capsys.readouterr().out
+    assert "[fetch] 股票" in printed
+    assert "degraded=True" in printed
+
+
+def test_cli_rejects_unknown_market(capsys) -> None:
+    assert fetch.main(["--offline", "--no-store", "--markets", "US"]) == 2
+    assert "不支持的市场" in capsys.readouterr().err
+
+
+def test_module_import_does_not_require_duckdb(monkeypatch) -> None:
+    """落库依赖 duckdb，但采集编排本身不该在 import 时就需要它。"""
+    assert Path(fetch.__file__).name == "fetch.py"
+    assert config.PRIMARY_SOURCE_NAME == "akshare"
