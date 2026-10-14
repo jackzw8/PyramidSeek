@@ -79,6 +79,10 @@ AMOUNT_UNIT = "亿元"
 AMOUNT_DECIMALS = 2
 RATIO_DECIMALS = 4  # 汇率/比率展示精度（内部统一存小数）
 
+# ── 行情复权口径（家法 R8 / 数据源规格 §5）───────────────────────────────
+ADJUST_MODES = ("qfq", "hfq")  # 前复权（默认）/ 后复权
+DEFAULT_ADJUST = "qfq"
+
 # ── 数据质量规则（数据源规格 §9）─────────────────────────────────────────
 BALANCE_TOLERANCE = 0.05  # 勾稽：|资产 − (负债 + 权益)| / 资产 ≤ 5%
 MOM_CHANGE_THRESHOLD = 2.00  # 环比突变阈值 ±200% → 标记待确认
