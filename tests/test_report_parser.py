@@ -229,3 +229,85 @@ def test_extract_text_returns_empty_for_scanned_pdf(tmp_path) -> None:
             self.pages = [FakePage("")]
 
     assert report_parser.extract_text(tmp_path / "scan.pdf", reader_factory=BlankReader) == ""
+
+
+# ── 真实年报版式（2026-10-14 长江电力 2025 年报验证时暴露的三个问题）──────
+REAL_INCOME_TEXT = """合并利润表
+项目 附注 2025 年度 2024 年度
+一、营业总收入 86,241,940,222.20 84,491,870,566.52
+其中：营业收入 七、61 86,241,940,222.20 84,491,870,566.52
+二、营业总成本 48,766,372,374.15 50,268,818,794.54
+其中：营业成本 七、61 33,057,840,034.77 34,528,346,186.67
+五、净利润（净亏损以“－”号填列） 34,949,270,887.55 32,930,199,395.19
+（一）按经营持续性分类
+1.持续经营净利润（净亏损以
+“－”号填列） 34,949,270,887.55 32,930,199,395.19
+（二）按所有权归属分类
+1.归属于母公司股东的净利润（净
+亏损以“-”号填列） 34,502,809,176.39 32,496,172,808.65
+2.少数股东损益（净亏损以“-”号
+填列） 446,461,711.16 434,026,586.54
+"""
+
+REAL_BALANCE_TEXT = """合并资产负债表
+项目 附注 期末余额 期初余额
+资产总计 七、24 559,208,340,046.84 566,585,128,973.81
+负债合计 七、35 325,847,678,729.19 344,500,336,848.80
+所有者权益（或股东权益）：
+归属于母公司股东权益合
+计 221,338,010,639.92 210,348,910,895.97
+少数股东权益 12,022,650,677.73 11,735,182,817.79
+股东权益合计 233,360,661,317.65 222,084,093,713.76
+负债和股东权益总计 559,208,340,046.84 566,585,128,973.81
+"""
+
+
+def test_fullwidth_minus_inside_chinese_quotes_is_part_of_subject() -> None:
+    """`（净亏损以“－”号填列）` 里的全角减号不能当成空值 token（否则整行金额列错位）。"""
+    parsed = report_parser.parse_line("五、净利润（净亏损以“－”号填列） 34,949,270,887.55")
+    assert parsed is not None
+    subject, amounts = parsed
+    assert subject == "净利润（净亏损以“－”号填列）"
+    assert amounts == [34_949_270_887.55]
+
+
+def test_standalone_dash_is_still_blank() -> None:
+    """独立成列的「—」仍是空值符号（如现金流量表里本期无金额）。"""
+    parsed = report_parser.parse_line("经营活动产生的现金流量净额 1 — 647,000,000.00")
+    assert parsed is not None
+    assert parsed[1] == [None, 647_000_000.0]
+
+
+def test_label_split_across_lines_is_recovered() -> None:
+    """标签被换行切断（`归属于母公司股东权益合` / `计 221,…`）也要能识别。"""
+    values = report_parser.parse_statement(REAL_BALANCE_TEXT, kind="balance")
+    assert values["equity"][0] == 221_338_010_639.92
+    assert values["total_assets"][0] == 559_208_340_046.84
+    assert values["total_liabilities"][0] == 325_847_678_729.19
+
+
+def test_real_income_layout_picks_attributable_net_profit() -> None:
+    """真实版式下 net_profit 必须取**归母**（345.03 亿），不能取总净利润（349.49 亿）。"""
+    values = report_parser.parse_statement(REAL_INCOME_TEXT, kind="income")
+    assert values["revenue"][0] == 86_241_940_222.20
+    assert values["cost"][0] == 33_057_840_034.77
+    assert values["net_profit"][0] == 34_502_809_176.39
+    assert values["net_profit"][1] == 32_496_172_808.65  # 上期列
+
+
+def test_bare_net_profit_is_not_an_accepted_subject() -> None:
+    """裸「净利润」是总口径：宁可返回 None 让上层报错，也不写错值。"""
+    assert "净利润" not in report_parser.SUBJECTS["income"]["net_profit"]
+
+
+def test_build_report_rows_works_on_real_layout() -> None:
+    """把真实版式片段拼成一份"迷你年报"，验证三段式端到端仍能产出标准层行。"""
+    cashflow = "合并现金流量表\n" "经营活动产生的现金流量净额 60,562,925,570.41 59,000,000,000.00\n"
+    text = f"{REAL_INCOME_TEXT}\n{REAL_BALANCE_TEXT}\n{cashflow}"
+    rows = report_parser.build_report_rows("SH600900", text, report_period="2025-12-31")
+
+    assert [row["report_period"] for row in rows] == ["2025-12-31", "2024-12-31"]
+    current = rows[0]
+    assert current["revenue"] == round(86_241_940_222.20 / 1e8, 2)
+    assert current["net_profit"] == round(34_502_809_176.39 / 1e8, 2)
+    assert current["equity"] == round(221_338_010_639.92 / 1e8, 2)

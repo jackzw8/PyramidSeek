@@ -35,8 +35,11 @@ from .base import DataSourceError
 
 # ── 端点（**以实际线上接口为准**，未逐一联网验证，见《计划完成情况》D-8）──────
 CNINFO_ANNOUNCEMENT_URL = "http://www.cninfo.com.cn/new/hisAnnouncement/query"
+CNINFO_ORG_SEARCH_URL = "http://www.cninfo.com.cn/new/information/topSearch/query"
 CNINFO_STATIC_BASE = "http://static.cninfo.com.cn/"
 CNINFO_ANNUAL_CATEGORY = "category_ndbg_szsh"  # 巨潮「年度报告」板块代码
+# 检索接口的 column 参数按交易所取值（2026-10-14 联网验证）
+CNINFO_COLUMNS = {"SH": "sse", "SZ": "szse", "BJ": "bj"}
 HKEX_SEARCH_URL = "https://www1.hkexnews.hk/search/titleSearchServlet.do"
 HKEX_ANNUAL_DOC_TYPE = "ANNUAL_REPORT"
 HKEX_BASE = "https://www1.hkexnews.hk"
@@ -245,21 +248,56 @@ class OfficialSource:
         return path
 
     # ── 公告检索 ──────────────────────────────────────────────────────────
+    def _cninfo_org_id(self, code: str) -> str:
+        """查巨潮内部 ``orgId``。
+
+        **2026-10-14 真实数据验证**：检索接口的 ``stock`` 参数必须是 ``代码,orgId``；
+        只给 ``600900`` 时接口返回 **HTTP 200 但 ``announcements`` 恒为 0 条**
+        —— 这就是 D-8 / D-16 里「检索端点返回 0 条」的真正原因。
+        """
+        symbol = code[2:]
+        response = self._request(
+            "POST",
+            CNINFO_ORG_SEARCH_URL,
+            what=f"巨潮 orgId 查询（{code}）",
+            code=code,
+            data={"keyWord": symbol, "maxNum": 10},
+        )
+        payload = response.json()
+        for item in payload if isinstance(payload, list) else []:
+            if str(item.get("code")) == symbol and item.get("orgId"):
+                return str(item["orgId"])
+        raise DataSourceError(
+            f"未查到巨潮 orgId（{code}）：标的可能不存在，或检索规则需更新",
+            source=self.name,
+            code=code,
+        )
+
     def _cninfo_announcements(self, code: str) -> list[dict[str, Any]]:
         cached = self._read_json_cache(f"announcements_{code}")
         if cached is not None:
             return cached
+        org_id = self._cninfo_org_id(code)
         response = self._request(
             "POST",
             CNINFO_ANNOUNCEMENT_URL,
             what=f"巨潮公告检索（{code}）",
             code=code,
             data={
-                "stock": code,
-                "category": CNINFO_ANNUAL_CATEGORY,
-                "pageSize": 30,
                 "pageNum": 1,
+                "pageSize": 30,
+                "column": CNINFO_COLUMNS.get(code[:2], "sse"),
+                "tabName": "fulltext",
+                "plate": "",
+                "stock": f"{code[2:]},{org_id}",  # ← 关键：代码 + orgId
+                "searchkey": "",
+                "secid": "",
+                "category": CNINFO_ANNUAL_CATEGORY,
+                "trade": "",
                 "seDate": "",
+                "sortName": "",
+                "sortType": "",
+                "isHLtitle": "true",
             },
         )
         rows = _as_records(response.json(), key="announcements")

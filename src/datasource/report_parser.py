@@ -50,7 +50,9 @@ SUBJECTS: dict[str, dict[str, tuple[str, ...]]] = {
     "income": {
         "revenue": ("营业收入", "营业总收入"),
         "cost": ("营业成本", "营业总成本"),
-        "net_profit": ("归属于母公司所有者的净利润", "归属于母公司股东的净利润", "净利润"),
+        # 只用**归母**口径：裸「净利润」是含少数股东的总口径，两者不是一个数
+        # （真实年报验证发现：长江电力 2025 总净利润 349.49 亿 vs 归母 345.03 亿）
+        "net_profit": ("归属于母公司所有者的净利润", "归属于母公司股东的净利润"),
     },
     "balance": {
         "total_assets": ("资产总计", "资产合计"),
@@ -74,7 +76,10 @@ REQUIRED_SUBJECTS: dict[str, tuple[str, ...]] = {
 
 # 空值符号（报表里"没有金额"的几种写法）
 BLANK_TOKENS = ("", "-", "--", "—", "－", "–", "/", "不适用")
-_NUMBER_PATTERN = re.compile(r"\(?\s*-?\d[\d,，]*(?:\.\d+)?\s*\)?|[-—－–]{1,2}")
+# 数字 / 空值符号。空值符号要求**前后是空白或行首尾**——否则会把中文括号里的全角减号
+# （如「（净亏损以“－”号填列）」里的 －）当成空值 token，导致整行金额列错位。
+# 这是 2026-10-14 用真实年报（长江电力 2025）验证时暴露的问题。
+_NUMBER_PATTERN = re.compile(r"\(?\s*-?\d[\d,，]*(?:\.\d+)?\s*\)?|(?<!\S)[-—－–]{1,2}(?!\S)")
 _SUBJECT_MARKER = re.compile(r"^(其中|加|减|其他)[：:]")
 _SUBJECT_ORDER = re.compile(r"^[（(]?[一二三四五六七八九十\d]+[）)、.]\s*")
 
@@ -127,9 +132,23 @@ def parse_amount(token: str | None) -> float | None:
 
 
 def normalize_subject(name: str) -> str:
-    """归一科目名：去掉「其中：」「加：」「一、」「（1）」等前后缀。"""
+    """归一科目名：去掉「其中：」「加：」「一、」「（1）」等前后缀与**内部空白**。
+
+    去掉内部空白是必需的：真实年报里标签会被换行切断，:func:`_candidate_lines`
+    拼接时会插入空格（``归属于母公司股东权益合 计``），不去掉就永远匹配不上。
+    """
     text = _SUBJECT_MARKER.sub("", str(name).strip())
-    return _SUBJECT_ORDER.sub("", text).strip()
+    text = _SUBJECT_ORDER.sub("", text)
+    return text.replace(" ", "").replace("\u3000", "").strip()
+
+
+def strip_ordinal(line: str) -> str:
+    """去掉行首编号（``1.`` / ``（一）`` / ``七、``）。
+
+    必须先去掉编号再找数字：否则 ``1.归属于母公司股东的净利润…`` 的首个"数字"是行号
+    ``1``，subject 变成空串、整行被丢弃 —— 2026-10-14 真实年报验证暴露。
+    """
+    return _SUBJECT_ORDER.sub("", line.lstrip())
 
 
 def _is_note_column(token: str) -> bool:
@@ -144,13 +163,14 @@ def parse_line(line: str) -> tuple[str, list[float | None]] | None:
     年报三表首列常是**附注号**（附注列），识别到就丢掉，只保留金额列，
     因此返回的金额按「本期、上期」顺序排列（供 :func:`parse_statement` 使用）。
     """
-    match = _NUMBER_PATTERN.search(line)
+    body = strip_ordinal(line)
+    match = _NUMBER_PATTERN.search(body)
     if match is None:
         return None
-    subject = normalize_subject(line[: match.start()])
+    subject = normalize_subject(body[: match.start()])
     if not subject or any(char.isdigit() for char in subject):
         return None
-    tokens = _NUMBER_PATTERN.findall(line[match.start() :])
+    tokens = _NUMBER_PATTERN.findall(body[match.start() :])
     if len(tokens) >= 2 and _is_note_column(tokens[0]):
         tokens = tokens[1:]
     return subject, [parse_amount(token) for token in tokens]
@@ -189,9 +209,20 @@ def split_statements(text: str) -> dict[str, str]:
     return {kind: text[span["end"] : span["stop"]] for kind, span in chosen.items()}
 
 
+def _candidate_lines(text: str) -> list[str]:
+    """匹配用的候选行：**原行 + 相邻两行拼接**。
+
+    真实年报里标签常被换行切断（如 ``归属于母公司股东权益合`` / ``计 221,338,…``），
+    只看单行必然漏科目 —— 2026-10-14 真实年报验证暴露的问题。
+    """
+    raw = [line for line in (item.strip() for item in text.splitlines()) if line]
+    joined = [f"{raw[index]} {raw[index + 1]}" for index in range(len(raw) - 1)]
+    return raw + joined
+
+
 def parse_statement(text: str, *, kind: str) -> dict[str, list[float | None]]:
     """在一张表里按科目名取**各列**金额（第 1 列=本期，第 2 列=上期）。"""
-    lines = [line for line in (raw.strip() for raw in text.splitlines()) if line]
+    lines = _candidate_lines(text)
     values: dict[str, list[float | None]] = {}
     for field_name, candidates in SUBJECTS[kind].items():
         found: list[float | None] | None = None

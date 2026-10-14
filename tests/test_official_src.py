@@ -76,10 +76,13 @@ MINI_REPORT_TEXT = """合并利润表
 """
 
 
-def cninfo_handler(periods, *, session_box=None):
-    """巨潮：公告检索返回 JSON；PDF 下载返回字节。"""
+def cninfo_handler(periods, *, org_id: str = "gssh0600900", session_box=None):
+    """巨潮：orgId 查询 + 公告检索返回 JSON；PDF 下载返回字节。"""
 
     def handler(method, url, kwargs):
+        if "topSearch" in url:
+            items = [{"code": "600900", "orgId": org_id, "zwjc": "长江电力"}] if org_id else []
+            return FakeResponse(payload=items)
         if "hisAnnouncement" in url:
             return FakeResponse(
                 payload={
@@ -199,6 +202,32 @@ def test_pdf_and_announcement_are_cached(tmp_path) -> None:
     assert len(session.calls) == calls_after_first  # 公告与 PDF 均命中缓存，零新请求
 
 
+def test_cninfo_query_sends_code_and_orgid(tmp_path) -> None:
+    """2026-10-14 真实验证：`stock` 必须是 `代码,orgId`，否则恒返回 0 条（D-16 根因）。"""
+    from src.datasource.official_src import CNINFO_ANNUAL_CATEGORY
+
+    session = FakeSession(cninfo_handler([2024]))
+    source = make_source(cninfo_handler([2024]), tmp_path, session=session)
+    source.annual_report_documents("SH600900")
+
+    org_call = next(call for call in session.calls if "topSearch" in call["url"])
+    assert org_call["kwargs"]["data"]["keyWord"] == "600900"
+
+    query = next(call for call in session.calls if "hisAnnouncement" in call["url"])
+    payload = query["kwargs"]["data"]
+    assert payload["stock"] == "600900,gssh0600900"
+    assert payload["column"] == "sse"
+    assert payload["category"] == CNINFO_ANNUAL_CATEGORY
+    assert payload["tabName"] == "fulltext"
+
+
+def test_cninfo_without_orgid_raises_identifiable_error(tmp_path) -> None:
+    """查不到 orgId 必须明确报错，而不是静默返回空集被当成"没有年报"。"""
+    source = make_source(cninfo_handler([2024], org_id=""), tmp_path)
+    with pytest.raises(base.DataSourceError, match="未查到巨潮 orgId"):
+        source.annual_report_documents("SH600900")
+
+
 def test_hk_code_routes_to_hkex_and_parses_json_string(tmp_path) -> None:
     documents = [{"TITLE": "2024年年報", "FILE_LINK": "/listedco/listconews/sehk/2025/0428/a.pdf"}]
     session = FakeSession(hkex_handler(documents))
@@ -225,16 +254,18 @@ def test_retry_then_success_uses_backoff(tmp_path) -> None:
     attempts = {"n": 0}
 
     def handler(method, url, kwargs):
-        attempts["n"] += 1
-        if attempts["n"] < 3:
-            raise ConnectionError("flaky")
+        if "topSearch" in url:  # 只让这一跳不稳定，便于精确计数
+            attempts["n"] += 1
+            if attempts["n"] < 3:
+                raise ConnectionError("flaky")
+            return FakeResponse(payload=[{"code": "600900", "orgId": "gssh0600900"}])
         return FakeResponse(payload={"announcements": []})
 
     source = make_source(handler, tmp_path, sleep=delays.append)
     source.annual_report_documents("SH600900")
 
     assert attempts["n"] == 3
-    assert delays == [1, 3]  # 退避：第 3 次成功，无需再等
+    assert delays == [1, 3]  # 退避：第 3 次成功，无需再等（min_interval=0 故无节流等待）
 
 
 def test_retry_exhausted_raises_identifiable_error(tmp_path) -> None:
@@ -259,9 +290,10 @@ def test_requests_are_throttled_by_min_interval(tmp_path) -> None:
         min_interval=config.FETCH_MIN_INTERVAL_SECONDS,
     )
 
-    source.annual_report_documents("SH600900")  # 公告 + PDF = 2 次请求
-    assert len(session.calls) == 2
-    assert delays == [config.FETCH_MIN_INTERVAL_SECONDS]  # 首次不睡，第二次前补足间隔
+    source.annual_report_documents("SH600900")  # orgId + 公告 + PDF = 3 次请求
+    assert len(session.calls) == 3
+    # 首次不睡；其后每次请求前补足间隔（家法：遵守目标站点抓取规范）
+    assert delays == [config.FETCH_MIN_INTERVAL_SECONDS] * 2
 
 
 # ── 主源 → 官方源自动回退（M1-3 验收）────────────────────────────────────
