@@ -10,3 +10,8 @@ requests==2.34.2
 jsonschema==4.23.0
 akshare==1.19.1
 pypdf==6.20.1  # 年报 PDF 文本抽取（D-11「年报 PDF → 三表结构化」）
+# 可选（未列在此处，按需安装）：pymupdf —— **港股**年报必需。
+# 港股年报的中文字体普遍没有 /ToUnicode 映射，pypdf 只能抽出错码位（0 个 CJK 字符），
+# pymupdf 能正确解码（D-24 实测：193,419 字符 / CJK 130,066）。代码里按
+# `config.PDF_EXTRACTORS = ("pymupdf", "pypdf")` 回落，**未安装也能跑 A 股**。
+# 注意：pymupdf 是 **AGPL** 许可 —— 只用于本地跑批工具链，不进入发布产物。
