@@ -18,7 +18,9 @@ M1-3 交付「解析骨架」，边界写清楚：
 
 from __future__ import annotations
 
+import html
 import json
+import re
 import time
 from collections.abc import Callable
 from datetime import UTC, date, datetime
@@ -32,16 +34,23 @@ from ..common import is_missing, market_of, pick
 from . import report_parser
 from .base import DataSourceError
 
-# ── 端点（**以实际线上接口为准**，未逐一联网验证，见《计划完成情况》D-8）──────
+# ── 端点（巨潮 2026-10-14 联网验证通过；披露易 2026-10-14 按实测写法修正，见 D-21）──
 CNINFO_ANNOUNCEMENT_URL = "http://www.cninfo.com.cn/new/hisAnnouncement/query"
 CNINFO_ORG_SEARCH_URL = "http://www.cninfo.com.cn/new/information/topSearch/query"
 CNINFO_STATIC_BASE = "http://static.cninfo.com.cn/"
 CNINFO_ANNUAL_CATEGORY = "category_ndbg_szsh"  # 巨潮「年度报告」板块代码
 # 检索接口的 column 参数按交易所取值（2026-10-14 联网验证）
 CNINFO_COLUMNS = {"SH": "sse", "SZ": "szse", "BJ": "bj"}
-HKEX_SEARCH_URL = "https://www1.hkexnews.hk/search/titleSearchServlet.do"
-HKEX_ANNUAL_DOC_TYPE = "ANNUAL_REPORT"
+
 HKEX_BASE = "https://www1.hkexnews.hk"
+# ① 反查内部 ``stockId``：检索接口要的是它，**不是**股票代号本身（M1-3 时直接拿 `00700`
+#    当 stockId 传，是错的 —— 见《计划完成情况》D-21）
+HKEX_PREFIX_URL = "https://www1.hkexnews.hk/search/prefix.do"
+# ② 年报检索：**返回 HTML 表格**而非 JSON（M1-3 的实现按 JSON 解析，必然失败）
+#    t1code=40000「财务报表/ESG资料」、t2code=40100「年报」
+HKEX_SEARCH_URL = "https://www1.hkexnews.hk/search/titlesearch.xhtml"
+HKEX_T1_CODE = "40000"
+HKEX_T2_CODE = "40100"
 
 
 class FallbackResult(NamedTuple):
@@ -303,18 +312,69 @@ class OfficialSource:
         self._write_json_cache(f"announcements_{code}", rows)
         return rows
 
-    def _hkex_announcements(self, code: str) -> list[dict[str, Any]]:
+    def _hkex_stock_id(self, code: str) -> int:
+        """查披露易内部 ``stockId``（整数）。
+
+        **2026-10-14 修正**（依据《技术研究/年报获取方法》里实测跑通的写法）：检索接口要的
+        ``stockId`` 是内部编号，**不是**股票代号 —— M1-3 直接拿 ``code[2:]`` 当 stockId 传，
+        是 D-21 的两个根因之一。
+        """
+        symbol = code[2:]
+        response = self._request(
+            "GET",
+            HKEX_PREFIX_URL,
+            what=f"披露易 stockId 查询（{code}）",
+            code=code,
+            params={
+                "callback": "callback",
+                "lang": "ZH",
+                "type": "A",
+                "name": symbol,
+                "market": "SEHK",
+            },
+        )
+        match = re.search(r'"stockId"\s*:\s*(\d+)', response.text or "")
+        if match is None:
+            raise DataSourceError(
+                f"未查到披露易 stockId（{code}）：标的可能不存在，或检索规则需更新",
+                source=self.name,
+                code=code,
+            )
+        return int(match.group(1))
+
+    def _hkex_announcements(self, code: str, *, years: int) -> list[dict[str, Any]]:
+        """检索年报公告（**返回 HTML 表格**，交给 :func:`_parse_hkex_rows` 解析）。"""
         cached = self._read_json_cache(f"announcements_{code}")
         if cached is not None:
             return cached
+        stock_id = self._hkex_stock_id(code)
+        # 财年 Y 的年报多在 Y+1 年披露（港股要求财年结束后 4 个月内），故窗口右端取到明年
+        last_year = self._today().year
+        first_year = last_year - max(years, 1) - 1
         response = self._request(
-            "GET",
+            "POST",
             HKEX_SEARCH_URL,
             what=f"披露易公告检索（{code}）",
             code=code,
-            params={"lang": "ZH", "stockId": code[2:], "documentType": HKEX_ANNUAL_DOC_TYPE},
+            params={"lang": "zh"},
+            data={
+                "lang": "ZH",
+                "category": "0",
+                "market": "SEHK",
+                "searchType": "1",
+                "documentType": "-1",
+                "t1code": HKEX_T1_CODE,
+                "t2Gcode": "-2",
+                "t2code": HKEX_T2_CODE,
+                "stockId": str(stock_id),
+                "from": f"{first_year}0101",
+                "to": f"{last_year + 1}1231",
+                "MB-Daterange": "0",
+                "title": "",
+            },
+            headers={"Referer": f"{HKEX_SEARCH_URL}?lang=zh"},
         )
-        rows = _as_records(response.json(), key="result")
+        rows = _parse_hkex_rows(response.text or "", code=code)
         self._write_json_cache(f"announcements_{code}", rows)
         return rows
 
@@ -325,11 +385,11 @@ class OfficialSource:
             ``pdf_url`` / ``local_path``（字符串，便于序列化与断言）。
         """
         if market_of(code) == "HK":
-            rows = self._hkex_announcements(code)
-            url_of, title_of = _hkex_file_link, _hkex_title
+            rows = self._hkex_announcements(code, years=years)
+            url_of, title_of, period_of = _hkex_file_link, _hkex_title, hkex_report_period_of_title
         else:
             rows = self._cninfo_announcements(code)
-            url_of, title_of = _cninfo_file_url, _cninfo_title
+            url_of, title_of, period_of = _cninfo_file_url, _cninfo_title, report_period_of_title
 
         candidates: list[dict[str, Any]] = []
         for row in rows:
@@ -337,16 +397,32 @@ class OfficialSource:
             title = title_of(row)
             if not url or not title:
                 continue
-            period = report_period_of_title(title)
+            period = period_of(title)
             if period is None:
                 continue
             candidates.append(
-                {"code": code, "report_period": period, "title": title, "pdf_url": url}
+                {
+                    "code": code,
+                    "report_period": period,
+                    "title": title,
+                    "pdf_url": url,
+                    # 港股中英文是两套文件：同一年度优先中文版（解析器认中文科目名）
+                    "is_english": str(row.get("lang") or "").lower() == "en",
+                }
             )
-        candidates.sort(key=lambda item: item["report_period"], reverse=True)
+        # 期次倒序；同一期次内中文版排前（``is_english=False`` 先）
+        candidates.sort(key=lambda item: (-int(item["report_period"][:4]), item["is_english"]))
 
         # 先截断再下载：检索页动辄 30 条公告，全下会白拉几十份 PDF（真跑时才暴露的浪费）
-        wanted = candidates[: max(years, 0)]
+        wanted: list[dict[str, Any]] = []
+        seen: set[str] = set()
+        for item in candidates:
+            if item["report_period"] in seen:  # 同一期次只留一份（中文优先）
+                continue
+            seen.add(item["report_period"])
+            wanted.append(item)
+            if len(wanted) >= max(years, 0):
+                break
         for item in wanted:
             item["local_path"] = str(
                 self._download_pdf(item["pdf_url"], code=code, report_period=item["report_period"])
@@ -461,6 +537,62 @@ def _cninfo_file_url(row: dict[str, Any]) -> str | None:
     return text if text.startswith("http") else CNINFO_STATIC_BASE + text
 
 
+def hkex_report_period_of_title(title: str) -> str | None:
+    """披露易标题 → 报告期（**只认年报**）；不是年报返回 ``None``。
+
+    中文用「年報」而不是 A 股的「年度报告」；同一批返回里还混着中期报告、ESG 报告等，
+    故与 :func:`report_period_of_title` 分开实现（《计划完成情况》D-21）。
+
+    >>> hkex_report_period_of_title("年報 2023")
+    '2023-12-31'
+    >>> hkex_report_period_of_title("中期報告 2023") is None
+    True
+    """
+    text = title or ""
+    match = (
+        re.search(r"(\d{4})\s*年報", text)
+        or re.search(r"年報[^\d]{0,12}(\d{4})", text)
+        or re.search(r"(\d{4})\s*ANNUAL\s*REPORT", text, re.I)
+        or re.search(r"ANNUAL\s*REPORT[^\d]{0,12}(\d{4})", text, re.I)
+    )
+    if match is None:
+        return None
+    year = int(match.group(1))
+    return f"{year}-12-31" if 1990 <= year <= 2100 else None
+
+
+def _hkex_row_text(block: str) -> str:
+    """从结果行 HTML 取「文件 / Document:」之后的描述文字（披露易把标题放那儿）。"""
+    text = html.unescape(re.sub(r"<[^>]+>", " ", block))
+    text = re.sub(r"\s+", " ", text).strip()
+    for marker in ("文件:", "文件：", "Document:"):
+        if marker in text:
+            return text.split(marker, 1)[1].strip()
+    return text
+
+
+def _parse_hkex_rows(page: str, *, code: str = "") -> list[dict[str, Any]]:
+    """把披露易检索结果页（**HTML 表格**）解析成 ``{code,title,url,lang}`` 行。
+
+    该端点返回 HTML，M1-3 的实现按 JSON 解析（``response.json()``）必然失败 —— D-21 根因之二。
+    ``lang`` 按文件名判定：中文版以 ``_c.pdf`` 结尾，英文版无后缀（早期为 ``_e.pdf``）。
+    """
+    rows: list[dict[str, Any]] = []
+    for block in re.findall(r"<tr[^>]*>.*?</tr>", page or "", re.S | re.I):
+        title = _hkex_row_text(block)
+        for link in re.findall(r'href="([^"]+\.pdf)"', block, re.I):
+            url = link if link.startswith("http") else f"{HKEX_BASE}/{link.lstrip('/')}"
+            rows.append(
+                {
+                    "code": code,
+                    "title": title,
+                    "url": url,
+                    "lang": "zh" if link.lower().endswith("_c.pdf") else "en",
+                }
+            )
+    return rows
+
+
 def _hkex_title(row: dict[str, Any]) -> str:
     return str(pick(row, "TITLE", "title", "标题") or "")
 
@@ -479,11 +611,13 @@ __all__ = [
     "CNINFO_ANNOUNCEMENT_URL",
     "CNINFO_ANNUAL_CATEGORY",
     "CNINFO_STATIC_BASE",
-    "HKEX_ANNUAL_DOC_TYPE",
+    "HKEX_BASE",
+    "HKEX_PREFIX_URL",
     "HKEX_SEARCH_URL",
     "FallbackResult",
     "OfficialSource",
     "call_with_fallback",
+    "hkex_report_period_of_title",
     "pdf_name_of",
     "report_period_of_title",
 ]
