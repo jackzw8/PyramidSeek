@@ -154,6 +154,7 @@ def test_schema_has_six_tables(tmp_path) -> None:
                 "icf",
                 "fcf",
                 "effective_date",
+                "currency",
                 "source",
                 "fetched_at",
             ),

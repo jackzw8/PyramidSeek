@@ -99,6 +99,14 @@ MARKET_MISSING_RATE_MAX = 0.05  # 单市场缺失率 ≤ 5%，超阈值 → degr
 PRIMARY_SOURCE_NAME = "akshare"  # 主源名（回退链判定 degraded 的基准）
 FALLBACK_SOURCE_NAMES = ("official", "fixture")  # 官方源兜底 / fixtures 离线回退
 
+# ── PDF 文本抽取（M1-7 / D-24）────────────────────────────────────────────
+# 按序尝试：前者抽不出内容（空串）或未安装时自动回落后者。
+# `pymupdf` 对「无 ToUnicode 映射的 CID 中文字体」能正确解码（pypdf 只能输出错码位）——
+# 这是港股年报的普遍情况（D-24 实测：pypdf 抽出 0 个 CJK 字符，pymupdf 抽出 13 万个）。
+# **注意 `pymupdf` 是 AGPL 许可**：只用于本地跑批工具链，不进入发布产物；
+# 未安装时自动回落 `pypdf`（A 股年报用 pypdf 一直正常）。
+PDF_EXTRACTORS = ("pymupdf", "pypdf")
+
 # ── 数据源容错（数据源规格 §7 / §8）──────────────────────────────────────
 FETCH_RETRY_TIMES = 3  # 重试 3 次
 FETCH_RETRY_BACKOFF = (1, 3, 9)  # 退避上限序列（秒）：3 次重试实际等待 2 次（1s、3s）
