@@ -1,0 +1,206 @@
+{
+  "meta": {
+    "fixtureVersion": "v1.0",
+    "builtFor": "M0-3（骨架与规范 · 示例数据）",
+    "years": ["2020", "2021", "2022", "2023", "2024"],
+    "units": {"amount": "亿元", "ratio": "小数", "shares": "亿股"},
+    "disclaimer": "本数据为系统测试用示意数据，不代表真实财务口径，不构成任何投资建议。",
+    "notes": [
+      "金额单位=亿元、保留 2 位小数；比率存小数；空值用 null，绝不用 0 代替（家法 R10/R11）。",
+      "industry_std / l1_code / l2_code 为示意占位，M1 接入数据源后以真实分类树覆盖（A股申万2021、港股 GICS）。",
+      "港股行业口径有 ADR-011 降级路径：M1 先用东财口径跑通全链路，industry_std 标注「东财口径（待校准 GICS）」。",
+      "status 取值为 fixture 设定，用于覆盖 normal/ST/suspended/new 四种取值，不代表真实当前状态。",
+      "勾稽关系精确成立：total_liabilities = total_assets − equity。",
+      "effective_date = report_period + 4 个月（家法 R9）。"
+    ],
+    "boundarySamples": {
+      "negative_net_profit": ["SH600011", "HK03690"],
+      "zero_values": ["SZ000620"],
+      "percentile_tie": ["SZ000651", "SZ000333"],
+      "single_stock_pool": ["SH601398"],
+      "null_fields": ["SH601398"],
+      "short_history": ["HK09618"],
+      "status_coverage": {"normal": 9, "ST": 1, "suspended": 1, "new": 1}
+    }
+  },
+  "stocks": [
+    {
+      "code": "SH600519", "name": "贵州茅台", "market": "A", "exchange": "SSE",
+      "industry_std": "申万2021",
+      "l1_code": "801120", "l1_name": "食品饮料",
+      "l2_code": "801123", "l2_name": "白酒",
+      "listed_at": "2001-08-27", "shares": 12.56,
+      "status": "normal", "is_financial": false,
+      "financials": {
+        "2020": {"report_period": "2020-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 979.93, "gross_profit": 896.00, "net_profit": 466.97, "total_assets": 2134.00, "total_liabilities": 465.00, "equity": 1669.00, "cash": 366.00, "op_cashflow": 516.69, "icf": -32.00, "fcf": -22.00, "effective_date": "2021-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2021": {"report_period": "2021-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 1094.64, "gross_profit": 999.00, "net_profit": 524.60, "total_assets": 2551.00, "total_liabilities": 588.00, "equity": 1963.00, "cash": 518.00, "op_cashflow": 640.29, "icf": -40.00, "fcf": -25.00, "effective_date": "2022-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2022": {"report_period": "2022-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 1275.54, "gross_profit": 1167.00, "net_profit": 627.16, "total_assets": 2544.00, "total_liabilities": 611.00, "equity": 1933.00, "cash": 582.00, "op_cashflow": 367.01, "icf": -45.00, "fcf": -58.00, "effective_date": "2023-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2023": {"report_period": "2023-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 1476.94, "gross_profit": 1353.00, "net_profit": 747.34, "total_assets": 2727.00, "total_liabilities": 646.00, "equity": 2081.00, "cash": 690.00, "op_cashflow": 665.93, "icf": -50.00, "fcf": -60.00, "effective_date": "2024-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2024": {"report_period": "2024-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 1741.44, "gross_profit": 1601.00, "net_profit": 861.63, "total_assets": 3075.00, "total_liabilities": 696.00, "equity": 2379.00, "cash": 881.00, "op_cashflow": 924.00, "icf": -55.00, "fcf": -70.00, "effective_date": "2025-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"}
+      }
+    },
+    {
+      "code": "SZ000858", "name": "五粮液", "market": "A", "exchange": "SZSE",
+      "industry_std": "申万2021",
+      "l1_code": "801120", "l1_name": "食品饮料",
+      "l2_code": "801123", "l2_name": "白酒",
+      "listed_at": "1998-04-27", "shares": 38.82,
+      "status": "normal", "is_financial": false,
+      "financials": {
+        "2020": {"report_period": "2020-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 573.00, "gross_profit": 430.00, "net_profit": 199.00, "total_assets": 1139.00, "total_liabilities": 289.00, "equity": 850.00, "cash": 682.00, "op_cashflow": 145.00, "icf": -20.00, "fcf": 15.00, "effective_date": "2021-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2021": {"report_period": "2021-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 662.00, "gross_profit": 497.00, "net_profit": 233.00, "total_assets": 1356.00, "total_liabilities": 356.00, "equity": 1000.00, "cash": 823.00, "op_cashflow": 180.00, "icf": -25.00, "fcf": 18.00, "effective_date": "2022-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2022": {"report_period": "2022-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 739.00, "gross_profit": 558.00, "net_profit": 267.00, "total_assets": 1572.00, "total_liabilities": 457.00, "equity": 1115.00, "cash": 924.00, "op_cashflow": 244.00, "icf": -30.00, "fcf": 20.00, "effective_date": "2023-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2023": {"report_period": "2023-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 832.00, "gross_profit": 629.00, "net_profit": 302.00, "total_assets": 1817.00, "total_liabilities": 554.00, "equity": 1263.00, "cash": 1096.00, "op_cashflow": 373.00, "icf": -35.00, "fcf": 22.00, "effective_date": "2024-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2024": {"report_period": "2024-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 891.00, "gross_profit": 684.00, "net_profit": 318.00, "total_assets": 1937.00, "total_liabilities": 488.00, "equity": 1449.00, "cash": 1200.00, "op_cashflow": 314.00, "icf": -40.00, "fcf": 25.00, "effective_date": "2025-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"}
+      }
+    },
+    {
+      "code": "SZ000651", "name": "格力电器", "market": "A", "exchange": "SZSE",
+      "industry_std": "申万2021",
+      "l1_code": "801110", "l1_name": "家用电器",
+      "l2_code": "801111", "l2_name": "白色家电",
+      "listed_at": "1996-11-18", "shares": 60.16,
+      "status": "normal", "is_financial": false,
+      "financials": {
+        "2020": {"report_period": "2020-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 1682.00, "gross_profit": 421.00, "net_profit": 220.00, "total_assets": 2792.00, "total_liabilities": 1672.00, "equity": 1120.00, "cash": 1370.00, "op_cashflow": 192.00, "icf": -90.00, "fcf": -60.00, "effective_date": "2021-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2021": {"report_period": "2021-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 1879.00, "gross_profit": 470.00, "net_profit": 230.00, "total_assets": 3200.00, "total_liabilities": 2100.00, "equity": 1100.00, "cash": 1470.00, "op_cashflow": 189.00, "icf": -100.00, "fcf": -80.00, "effective_date": "2022-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2022": {"report_period": "2022-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 1890.00, "gross_profit": 472.00, "net_profit": 250.00, "total_assets": 3550.00, "total_liabilities": 2500.00, "equity": 1050.00, "cash": 1600.00, "op_cashflow": 286.00, "icf": -60.00, "fcf": -90.00, "effective_date": "2023-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2023": {"report_period": "2023-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 2050.00, "gross_profit": 513.00, "net_profit": 280.00, "total_assets": 3700.00, "total_liabilities": 2570.00, "equity": 1130.00, "cash": 1580.00, "op_cashflow": 564.00, "icf": -70.00, "fcf": -100.00, "effective_date": "2024-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2024": {"report_period": "2024-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 1892.00, "gross_profit": 473.00, "net_profit": 320.00, "total_assets": 3820.00, "total_liabilities": 2570.00, "equity": 1250.00, "cash": 1600.00, "op_cashflow": 290.00, "icf": -80.00, "fcf": -110.00, "effective_date": "2025-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"}
+      }
+    },
+    {
+      "code": "SZ000333", "name": "美的集团", "market": "A", "exchange": "SZSE",
+      "industry_std": "申万2021",
+      "l1_code": "801110", "l1_name": "家用电器",
+      "l2_code": "801111", "l2_name": "白色家电",
+      "listed_at": "2013-09-18", "shares": 70.40,
+      "status": "normal", "is_financial": false,
+      "financials": {
+        "2020": {"report_period": "2020-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 2842.00, "gross_profit": 682.00, "net_profit": 240.00, "total_assets": 3604.00, "total_liabilities": 2454.00, "equity": 1150.00, "cash": 880.00, "op_cashflow": 300.00, "icf": -120.00, "fcf": -60.00, "effective_date": "2021-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2021": {"report_period": "2021-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 3412.00, "gross_profit": 819.00, "net_profit": 250.00, "total_assets": 3879.00, "total_liabilities": 2669.00, "equity": 1210.00, "cash": 970.00, "op_cashflow": 350.00, "icf": -150.00, "fcf": -70.00, "effective_date": "2022-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2022": {"report_period": "2022-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 3439.00, "gross_profit": 825.00, "net_profit": 255.00, "total_assets": 4226.00, "total_liabilities": 2926.00, "equity": 1300.00, "cash": 1000.00, "op_cashflow": 346.00, "icf": -160.00, "fcf": -80.00, "effective_date": "2023-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2023": {"report_period": "2023-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 3737.00, "gross_profit": 897.00, "net_profit": 265.00, "total_assets": 4860.00, "total_liabilities": 3440.00, "equity": 1420.00, "cash": 1130.00, "op_cashflow": 580.00, "icf": -170.00, "fcf": -90.00, "effective_date": "2024-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2024": {"report_period": "2024-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 4091.00, "gross_profit": 982.00, "net_profit": 290.00, "total_assets": 5490.00, "total_liabilities": 3940.00, "equity": 1550.00, "cash": 1250.00, "op_cashflow": 600.00, "icf": -180.00, "fcf": -100.00, "effective_date": "2025-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"}
+      }
+    },
+    {
+      "code": "SH600900", "name": "长江电力", "market": "A", "exchange": "SSE",
+      "industry_std": "申万2021",
+      "l1_code": "801160", "l1_name": "公用事业",
+      "l2_code": "801161", "l2_name": "电力",
+      "listed_at": "2003-11-18", "shares": 244.70,
+      "status": "normal", "is_financial": false,
+      "financials": {
+        "2020": {"report_period": "2020-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 577.00, "gross_profit": 366.00, "net_profit": 263.00, "total_assets": 3370.00, "total_liabilities": 1720.00, "equity": 1650.00, "cash": 60.00, "op_cashflow": 410.00, "icf": -300.00, "fcf": -50.00, "effective_date": "2021-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2021": {"report_period": "2021-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 556.00, "gross_profit": 345.00, "net_profit": 263.00, "total_assets": 3400.00, "total_liabilities": 1710.00, "equity": 1690.00, "cash": 70.00, "op_cashflow": 357.00, "icf": -200.00, "fcf": -60.00, "effective_date": "2022-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2022": {"report_period": "2022-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 520.00, "gross_profit": 323.00, "net_profit": 213.00, "total_assets": 3300.00, "total_liabilities": 1590.00, "equity": 1710.00, "cash": 60.00, "op_cashflow": 420.00, "icf": -260.00, "fcf": -70.00, "effective_date": "2023-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2023": {"report_period": "2023-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 782.00, "gross_profit": 485.00, "net_profit": 272.00, "total_assets": 6100.00, "total_liabilities": 3480.00, "equity": 2620.00, "cash": 80.00, "op_cashflow": 647.00, "icf": -400.00, "fcf": -90.00, "effective_date": "2024-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2024": {"report_period": "2024-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 845.00, "gross_profit": 524.00, "net_profit": 325.00, "total_assets": 6200.00, "total_liabilities": 3520.00, "equity": 2680.00, "cash": 90.00, "op_cashflow": 596.00, "icf": -450.00, "fcf": -100.00, "effective_date": "2025-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"}
+      }
+    },
+    {
+      "code": "SH600011", "name": "华能国际", "market": "A", "exchange": "SSE",
+      "industry_std": "申万2021",
+      "l1_code": "801160", "l1_name": "公用事业",
+      "l2_code": "801161", "l2_name": "电力",
+      "listed_at": "2001-12-06", "shares": 157.00,
+      "status": "normal", "is_financial": false,
+      "financials": {
+        "2020": {"report_period": "2020-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 1694.00, "gross_profit": 288.00, "net_profit": 17.00, "total_assets": 4600.00, "total_liabilities": 3600.00, "equity": 1000.00, "cash": 160.00, "op_cashflow": 300.00, "icf": -200.00, "fcf": -80.00, "effective_date": "2021-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2021": {"report_period": "2021-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 2046.00, "gross_profit": 205.00, "net_profit": -97.00, "total_assets": 4800.00, "total_liabilities": 3900.00, "equity": 900.00, "cash": 170.00, "op_cashflow": 200.00, "icf": -250.00, "fcf": -60.00, "effective_date": "2022-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2022": {"report_period": "2022-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 2467.00, "gross_profit": 247.00, "net_profit": -74.00, "total_assets": 5000.00, "total_liabilities": 4120.00, "equity": 880.00, "cash": 180.00, "op_cashflow": 250.00, "icf": -280.00, "fcf": -40.00, "effective_date": "2023-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2023": {"report_period": "2023-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 2544.00, "gross_profit": 407.00, "net_profit": 84.00, "total_assets": 5200.00, "total_liabilities": 4240.00, "equity": 960.00, "cash": 200.00, "op_cashflow": 500.00, "icf": -300.00, "fcf": -50.00, "effective_date": "2024-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2024": {"report_period": "2024-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 2450.00, "gross_profit": 392.00, "net_profit": 101.00, "total_assets": 5400.00, "total_liabilities": 4380.00, "equity": 1020.00, "cash": 210.00, "op_cashflow": 520.00, "icf": -320.00, "fcf": -55.00, "effective_date": "2025-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"}
+      }
+    },
+    {
+      "code": "SH601398", "name": "工商银行", "market": "A", "exchange": "SSE",
+      "industry_std": "申万2021",
+      "l1_code": "801780", "l1_name": "银行",
+      "l2_code": "801789", "l2_name": "国有大型银行",
+      "listed_at": "2006-10-27", "shares": 3564.06,
+      "status": "normal", "is_financial": true,
+      "financials": {
+        "2020": {"report_period": "2020-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 8826.00, "gross_profit": null, "net_profit": 3159.00, "total_assets": 333450.00, "total_liabilities": 304360.00, "equity": 29090.00, "cash": null, "op_cashflow": 3000.00, "icf": -1200.00, "fcf": 800.00, "effective_date": "2021-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2021": {"report_period": "2021-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 9427.00, "gross_profit": null, "net_profit": 3483.00, "total_assets": 351700.00, "total_liabilities": 320560.00, "equity": 31140.00, "cash": null, "op_cashflow": 3200.00, "icf": -1500.00, "fcf": 900.00, "effective_date": "2022-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2022": {"report_period": "2022-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 9180.00, "gross_profit": null, "net_profit": 3604.00, "total_assets": 396100.00, "total_liabilities": 361300.00, "equity": 34800.00, "cash": null, "op_cashflow": 3500.00, "icf": -1800.00, "fcf": 1000.00, "effective_date": "2023-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2023": {"report_period": "2023-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 8430.00, "gross_profit": null, "net_profit": 3640.00, "total_assets": 446900.00, "total_liabilities": 409600.00, "equity": 37300.00, "cash": null, "op_cashflow": 3800.00, "icf": -2000.00, "fcf": 1100.00, "effective_date": "2024-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2024": {"report_period": "2024-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 8218.00, "gross_profit": null, "net_profit": 3651.00, "total_assets": 488200.00, "total_liabilities": 447300.00, "equity": 40900.00, "cash": null, "op_cashflow": 4000.00, "icf": -2200.00, "fcf": 1200.00, "effective_date": "2025-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"}
+      }
+    },
+    {
+      "code": "SZ000620", "name": "新华联", "market": "A", "exchange": "SZSE",
+      "industry_std": "申万2021",
+      "l1_code": "801180", "l1_name": "房地产",
+      "l2_code": "801181", "l2_name": "房地产开发",
+      "listed_at": "1996-10-29", "shares": 18.97,
+      "status": "ST", "is_financial": false,
+      "financials": {
+        "2020": {"report_period": "2020-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 68.00, "gross_profit": 20.00, "net_profit": 0.00, "total_assets": 640.00, "total_liabilities": 420.00, "equity": 220.00, "cash": 0.00, "op_cashflow": 0.00, "icf": 0.00, "fcf": 0.00, "effective_date": "2021-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2021": {"report_period": "2021-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 55.00, "gross_profit": 15.00, "net_profit": 0.00, "total_assets": 600.00, "total_liabilities": 400.00, "equity": 200.00, "cash": 0.00, "op_cashflow": 5.00, "icf": 0.00, "fcf": 0.00, "effective_date": "2022-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2022": {"report_period": "2022-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 42.00, "gross_profit": 10.00, "net_profit": 0.00, "total_assets": 560.00, "total_liabilities": 380.00, "equity": 180.00, "cash": 0.00, "op_cashflow": 3.00, "icf": 0.00, "fcf": 0.00, "effective_date": "2023-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2023": {"report_period": "2023-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 38.00, "gross_profit": 8.00, "net_profit": 0.00, "total_assets": 520.00, "total_liabilities": 360.00, "equity": 160.00, "cash": 0.00, "op_cashflow": 2.00, "icf": 0.00, "fcf": 0.00, "effective_date": "2024-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2024": {"report_period": "2024-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 30.00, "gross_profit": 5.00, "net_profit": 0.00, "total_assets": 480.00, "total_liabilities": 340.00, "equity": 140.00, "cash": 0.00, "op_cashflow": 1.00, "icf": 0.00, "fcf": 0.00, "effective_date": "2025-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"}
+      }
+    },
+    {
+      "code": "HK00700", "name": "腾讯控股", "market": "HK", "exchange": "HKEX",
+      "industry_std": "GICS",
+      "l1_code": "50", "l1_name": "通信服务",
+      "l2_code": "50203010", "l2_name": "互动媒体与服务",
+      "listed_at": "2004-06-16", "shares": 92.00,
+      "status": "normal", "is_financial": false,
+      "financials": {
+        "2020": {"report_period": "2020-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 4821.00, "gross_profit": 2216.00, "net_profit": 1598.00, "total_assets": 13294.00, "total_liabilities": 5614.00, "equity": 7680.00, "cash": 2500.00, "op_cashflow": 1941.00, "icf": -1200.00, "fcf": -300.00, "effective_date": "2021-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2021": {"report_period": "2021-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 5601.00, "gross_profit": 2455.00, "net_profit": 2248.00, "total_assets": 15980.00, "total_liabilities": 6930.00, "equity": 9050.00, "cash": 2800.00, "op_cashflow": 2150.00, "icf": -1500.00, "fcf": -400.00, "effective_date": "2022-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2022": {"report_period": "2022-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 5546.00, "gross_profit": 2382.00, "net_profit": 1882.00, "total_assets": 15380.00, "total_liabilities": 7090.00, "equity": 8290.00, "cash": 3000.00, "op_cashflow": 1560.00, "icf": -1300.00, "fcf": -500.00, "effective_date": "2023-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2023": {"report_period": "2023-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 6090.00, "gross_profit": 2931.00, "net_profit": 1152.00, "total_assets": 15220.00, "total_liabilities": 6900.00, "equity": 8320.00, "cash": 3400.00, "op_cashflow": 2220.00, "icf": -1400.00, "fcf": -600.00, "effective_date": "2024-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2024": {"report_period": "2024-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 6603.00, "gross_profit": 3355.00, "net_profit": 1941.00, "total_assets": 16000.00, "total_liabilities": 6900.00, "equity": 9100.00, "cash": 3800.00, "op_cashflow": 2580.00, "icf": -1500.00, "fcf": -700.00, "effective_date": "2025-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"}
+      }
+    },
+    {
+      "code": "HK03690", "name": "美团", "market": "HK", "exchange": "HKEX",
+      "industry_std": "GICS",
+      "l1_code": "25", "l1_name": "可选消费",
+      "l2_code": "25504010", "l2_name": "互联网与直销零售",
+      "listed_at": "2018-09-20", "shares": 61.00,
+      "status": "normal", "is_financial": false,
+      "financials": {
+        "2020": {"report_period": "2020-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 1148.00, "gross_profit": 331.00, "net_profit": 47.00, "total_assets": 2075.00, "total_liabilities": 775.00, "equity": 1300.00, "cash": 480.00, "op_cashflow": 130.00, "icf": -180.00, "fcf": 60.00, "effective_date": "2021-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2021": {"report_period": "2021-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 1791.00, "gross_profit": 440.00, "net_profit": -235.00, "total_assets": 2710.00, "total_liabilities": 1510.00, "equity": 1200.00, "cash": 520.00, "op_cashflow": -40.00, "icf": -220.00, "fcf": 80.00, "effective_date": "2022-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2022": {"report_period": "2022-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 2199.00, "gross_profit": 639.00, "net_profit": -67.00, "total_assets": 2880.00, "total_liabilities": 1730.00, "equity": 1150.00, "cash": 550.00, "op_cashflow": 110.00, "icf": -260.00, "fcf": 90.00, "effective_date": "2023-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2023": {"report_period": "2023-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 2767.00, "gross_profit": 971.00, "net_profit": 139.00, "total_assets": 3150.00, "total_liabilities": 1750.00, "equity": 1400.00, "cash": 620.00, "op_cashflow": 380.00, "icf": -300.00, "fcf": 100.00, "effective_date": "2024-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2024": {"report_period": "2024-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 3376.00, "gross_profit": 1290.00, "net_profit": 358.00, "total_assets": 3600.00, "total_liabilities": 1850.00, "equity": 1750.00, "cash": 700.00, "op_cashflow": 570.00, "icf": -350.00, "fcf": 120.00, "effective_date": "2025-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"}
+      }
+    },
+    {
+      "code": "HK09618", "name": "京东集团", "market": "HK", "exchange": "HKEX",
+      "industry_std": "GICS",
+      "l1_code": "25", "l1_name": "可选消费",
+      "l2_code": "25504010", "l2_name": "互联网与直销零售",
+      "listed_at": "2020-06-18", "shares": 30.00,
+      "status": "new", "is_financial": false,
+      "financials": {
+        "2020": {"report_period": "2020-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 7458.00, "gross_profit": 1050.00, "net_profit": 494.00, "total_assets": 4245.00, "total_liabilities": 2265.00, "equity": 1980.00, "cash": 900.00, "op_cashflow": 400.00, "icf": -300.00, "fcf": 220.00, "effective_date": "2021-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2021": {"report_period": "2021-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 9516.00, "gross_profit": 1150.00, "net_profit": 172.00, "total_assets": 4850.00, "total_liabilities": 2900.00, "equity": 1950.00, "cash": 950.00, "op_cashflow": 420.00, "icf": -320.00, "fcf": 240.00, "effective_date": "2022-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2022": {"report_period": "2022-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 10462.00, "gross_profit": 1420.00, "net_profit": 104.00, "total_assets": 5150.00, "total_liabilities": 3040.00, "equity": 2110.00, "cash": 1000.00, "op_cashflow": 450.00, "icf": -340.00, "fcf": 260.00, "effective_date": "2023-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"}
+      }
+    },
+    {
+      "code": "HK01810", "name": "小米集团", "market": "HK", "exchange": "HKEX",
+      "industry_std": "GICS",
+      "l1_code": "45", "l1_name": "信息技术",
+      "l2_code": "45202030", "l2_name": "技术硬件、存储及外设",
+      "listed_at": "2018-07-09", "shares": 250.00,
+      "status": "suspended", "is_financial": false,
+      "financials": {
+        "2020": {"report_period": "2020-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 2459.00, "gross_profit": 367.00, "net_profit": 203.00, "total_assets": 2600.00, "total_liabilities": 1300.00, "equity": 1300.00, "cash": 500.00, "op_cashflow": 200.00, "icf": -150.00, "fcf": 80.00, "effective_date": "2021-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2021": {"report_period": "2021-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 3283.00, "gross_profit": 582.00, "net_profit": 193.00, "total_assets": 3100.00, "total_liabilities": 1550.00, "equity": 1550.00, "cash": 560.00, "op_cashflow": 220.00, "icf": -170.00, "fcf": 90.00, "effective_date": "2022-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2022": {"report_period": "2022-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 2800.00, "gross_profit": 476.00, "net_profit": 25.00, "total_assets": 2900.00, "total_liabilities": 1450.00, "equity": 1450.00, "cash": 600.00, "op_cashflow": 240.00, "icf": -190.00, "fcf": 100.00, "effective_date": "2023-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2023": {"report_period": "2023-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 2709.00, "gross_profit": 574.00, "net_profit": 175.00, "total_assets": 3200.00, "total_liabilities": 1600.00, "equity": 1600.00, "cash": 650.00, "op_cashflow": 260.00, "icf": -210.00, "fcf": 110.00, "effective_date": "2024-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"},
+        "2024": {"report_period": "2024-12-31", "report_type": "annual", "is_cumulative": false, "revenue": 3659.00, "gross_profit": 790.00, "net_profit": 236.00, "total_assets": 3500.00, "total_liabilities": 1750.00, "equity": 1750.00, "cash": 700.00, "op_cashflow": 280.00, "icf": -230.00, "fcf": 120.00, "effective_date": "2025-04-30", "source": "fixture", "fetched_at": "2026-10-14T00:00:00Z"}
+      }
+    }
+  ]
+}

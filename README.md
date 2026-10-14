@@ -1,0 +1,106 @@
+# 金字塔选股 PyramidSeek
+
+把《HOLDLE 投资交易课》的选股方法论产品化：
+
+```
+AkShare/官方源  →  离线批处理算分  →  静态 JSON 产物  →  GitHub Pages 静态站点
+```
+
+- **定位**：自用 / 小范围；全功能免费；无账号体系（收藏用匿名 `visitorId`）。
+- **市场**：A股 + 港股（本期不做美股）。
+- **核心口径**：`金字塔分 = clamp(质量分 Q + 成长分 G, 0, 1000)`。
+- **架构**：零服务器（GitHub Actions 定时跑批 + Pages 托管），产物是前后端唯一契约。
+
+> **免责声明**：本项目为学习 / 研究用途，所有评分与数据**不构成任何投资建议**。
+
+---
+
+## 一、权威文档（动手前必读）
+
+| 类型 | 位置 |
+|---|---|
+| 需求 / 技术 / 计划 / 数据字典 / 数据源 / 评分 / 契约 / ADR / Runbook | `../项目文档/技术文档_Markdown/`（编号 01–09） |
+| 家法（22 条规范） | `../项目文档/项目总结/01_项目规范.md` |
+| 经验沉淀 / 评审发现 | `../项目文档/项目总结/02_项目经验.md` |
+| 使用方法 | `../项目文档/项目总结/03_使用方法.md` |
+
+关键约定（与文档一致，改动先改文档）：
+
+- 金字塔分 `clamp(Q + G, 0, 1000)`；Q 由 6 项指标加权（权重合计 1000）。
+- 行业对比池：A股申万 / 港股 GICS；二级样本 `< 30` 回退一级；概念板块不纳入；分市场不混排。
+- 财报窗口：近 **5 个完整财年（年报）**；财报 **报告期 + 4 个月**生效；季报口径不可比，不进主评分。
+- 单位：金额「亿元、2 位小数」，比率存小数；空值是 `NULL` 不是 `0`。
+- 版本三件套：`snapshotVersion` / `contractVersion` / `formulaVersion`。
+- 港股行业分类按 ADR-011 走降级路径：先用东财口径跑通全链路，`industry_std` 标注「东财口径（待校准 GICS）」。
+
+---
+
+## 二、目录结构
+
+```
+PyramidSeekApp/
+├── README.md
+├── requirements.txt                # 运行依赖（固定版本）
+├── requirements-dev.txt            # 开发依赖（pytest / ruff）
+├── pyproject.toml                  # ruff + pytest 配置
+├── .github/workflows/ci.yml        # CI：lint + pytest
+├── src/
+│   ├── config.py                   # 权重/锚点/阈值/分类标准（常量唯一来源）
+│   ├── datasource/                 # 数据源抽象 + AkShare + 官方源兜底
+│   ├── pipeline/                   # 采集 / 清洗 / 落库
+│   ├── engine/                     # 指标 / 评分 / 行业分位
+│   ├── build/                      # 产物生成 + 校验
+│   └── batch.py                    # 总入口：一条命令跑完
+├── fixtures/                       # 示例数据（离线回归 + 黄金样本输入）
+├── public/                         # 前端静态站点（+ 产物 data/）
+├── tests/                          # 单元 / 回归 / 契约测试
+└── data/                           # 本地运行产物（gitignore）
+```
+
+---
+
+## 三、环境与运行
+
+**依赖**：Python 3.11+（本地已验证 3.14）。
+
+```powershell
+# 1) 安装依赖
+python -m pip install -r requirements.txt -r requirements-dev.txt
+
+# 2) 离线跑通整链（仅用 fixtures/，不联网）
+python -m src.batch
+
+# 3) 运行测试
+pytest
+```
+
+跑批环境由环境变量 `PS_ENV` 区分（`local` | `ci`），脚本不写死绝对路径、不使用交互输入。
+
+产物输出目录（默认）：`public/data/`，含 `meta.json`、`industries.json`、`ranking/{A,HK}.json`。
+
+---
+
+## 四、当前进度（里程碑）
+
+| 里程碑 | 状态 |
+|---|---|
+| **M0 骨架与规范** | ✅ 仓库结构 / `config.py` / `fixtures` / CI 空跑；`python -m src.batch` 可读 fixtures 输出**占位产物** |
+| M1 数据层 | ⬜ 待开工（数据源抽象 → AkShare → 官方源兜底 → 清洗 → DuckDB/Parquet） |
+| M2 计算层 | ⬜ 待开工（指标 / 子分 / 成长分 / 行业分位 / 双引擎黄金样本对账） |
+| M3 产物层 | ⬜ 待开工（ranking / stock / meta 产物 + schema 校验） |
+| M4 前端 | ⬜ 待开工（排行 / 详情 / 观察池 / 搜索） |
+| M5 发布 | ⬜ 待开工（Actions 跑批 + Pages 部署） |
+| M6 打磨 | ⬜ 待开工（告警 / 缓存 / 降级提示 / 文档） |
+
+> M0 阶段的产物是**占位产物**（`score = 0`，评分引擎未实现），仅用于验证「读 fixtures → 出产物」链路与目录/契约形状；正式数值在 M2/M3 落位。
+
+---
+
+## 五、开发纪律（摘自家法 R1–R22，详见 `01_项目规范.md`）
+
+1. 改行为先改文档，再改代码；改契约升 `contractVersion`，改公式升 `formulaVersion`。
+2. 常量只有一个家：Python 在 `src/config.py`，JS 在 `engine.js` 顶部常量区。
+3. 双引擎（Python / JS）逐字对齐，用同一份 `fixtures` 做黄金样本对账，CI 强制。
+4. 离线永远可跑：任何改动不得破坏「仅用 `fixtures/` 跑通整链」。
+5. 跑批幂等、产物不手改；产物只由 `batch` 生成。
+6. 一任务一分支；评分产物提交到独立 `data` 分支（强制单提交）。

@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# 本地运行产物（中间库/缓存）；只锚定仓库根目录的 data/，保留目录占位
+/data/*
+!/data/.gitkeep
+
+# 评分产物由 batch 生成（家法 R22），按 R21 提交到独立 data 分支，不进 main
+/public/data/*.json
+/public/data/ranking/
+!/public/data/.gitkeep
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
