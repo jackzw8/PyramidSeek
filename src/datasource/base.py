@@ -40,7 +40,7 @@ from .. import config
 
 # ── 参数取值（口径常量见 config，禁止调用处硬编码）────────────────────────
 MARKETS = config.MARKETS  # ("A", "HK")
-ADJUST_MODES = config.ADJUST_MODES  # ("qfq", "hfq")
+ADJUST_MODES = config.ADJUST_MODES  # ("qfq", "hfq", "raw")
 DEFAULT_ADJUST = config.DEFAULT_ADJUST  # "qfq"
 
 # ── 返回字段契约（来源：《数据字典》§3，必填 / 可选分开声明）──────────────
@@ -156,8 +156,10 @@ class DataSource(Protocol):
         """拉取日行情。
 
         :param code: 带市场前缀的代码。
-        :param adjust: ``"qfq"``（前复权，默认，家法 R8）或 ``"hfq"``（后复权）；
-            原始价 ``close`` 始终保留。
+        :param adjust: ``"qfq"``（前复权，默认，家法 R8）/ ``"hfq"``（后复权）/
+            ``"raw"``（不复权）。单次调用只返回**一种**口径：``close`` 仅 ``raw`` 时有值、
+            ``close_qfq`` 仅 ``qfq`` 时有值。标准层要求两者同时存在，因此**清洗阶段（M1-4）
+            需按 ``raw`` 与 ``qfq`` 各取一次、按交易日合并**并反算 ``adj_factor``。
         :returns: 每条记录含 ``PRICE_REQUIRED_FIELDS`` + ``PRICE_OPTIONAL_FIELDS``。
         :raises ValueError: ``adjust`` 不在 ``ADJUST_MODES`` 内。
         :raises DataSourceError: 拉取或解析失败。

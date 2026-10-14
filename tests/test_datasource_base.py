@@ -111,7 +111,7 @@ def test_field_contracts_never_overlap() -> None:
 def test_market_and_adjust_vocabulary_comes_from_config() -> None:
     """市场与复权取值只有一个来源（config），接口层不得另行硬编码。"""
     assert base.MARKETS == config.MARKETS == ("A", "HK")
-    assert base.ADJUST_MODES == config.ADJUST_MODES == ("qfq", "hfq")
+    assert base.ADJUST_MODES == config.ADJUST_MODES == ("qfq", "hfq", "raw")
     assert base.DEFAULT_ADJUST == config.DEFAULT_ADJUST == "qfq"  # 家法 R8：默认前复权
 
 
