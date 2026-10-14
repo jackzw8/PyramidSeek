@@ -14,13 +14,14 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
 from .. import config
 from ..common import is_missing
-from .indicators import RawIndicators
+from .indicators import RawIndicators, annual_rows
 
 # 走绝对值锚点的指标（= config.ABS_ANCHORS 的键，顺序一致；家法 R12 唯一来源）
 ABS_INDICATOR_KEYS: tuple[str, ...] = tuple(config.ABS_ANCHORS)
@@ -123,10 +124,147 @@ def absolute_sub_scores(
     return SubScores(values=subs, missing=tuple(missing))
 
 
+# ── 成长分（M2-3，《评分算法规格》§6）─────────────────────────────────────
+GROWTH_ITEM_KEYS: tuple[str, ...] = ("growth_np", "growth_ocf")
+# 键名与《数据字典》§3.5 的列名对齐（growth_np / growth_ocf），便于 M2-5 组装与落库
+_SERIES_FIELDS: dict[str, str] = {"growth_np": "net_profit", "growth_ocf": "op_cashflow"}
+MIN_GROWTH_POINTS = 2  # 至少两点才形成一个间隔，才谈得上"复合增速"
+
+
+@dataclass(frozen=True)
+class GrowthScore:
+    """成长分（§6）：两项单项分与合计 ``G``。"""
+
+    items: dict[str, float] = field(default_factory=dict)
+    total: float = 0.0
+    unavailable: tuple[str, ...] = ()  # 序列不足两点（或全缺失）→ 该项 0 分，并在此留痕
+
+
+def _clean_series(series: Sequence[Any]) -> list[float]:
+    """剔除缺失值（``None`` / ``NaN``）。
+
+    有洞的序列不能直接当"近 5 年"用 —— 复合增速里的 ``n`` 是**间隔数**，
+    混进空洞年份会把 n 算大、把增速算小。
+    """
+    return [float(value) for value in series if not is_missing(value)]
+
+
+def _mean(values: Sequence[float]) -> float:
+    return sum(values) / len(values)
+
+
+def _pstdev(values: Sequence[float]) -> float:
+    """**总体**标准差（``ddof=0``）。§6 只写 ``std(s)``，口径已澄清为总体（与原型 / JS 一致）。"""
+    mean = _mean(values)
+    return math.sqrt(sum((value - mean) ** 2 for value in values) / len(values))
+
+
+def cagr(series: Sequence[float]) -> float:
+    """近 N 年复合增速（§6 伪代码）。
+
+    首值为正且末值为正 → ``(y1/y0)**(1/n) - 1``；
+    否则退化为 ``(y1-y0)/|y0|/n``（首值非正时开方无意义、方向也会失真）；
+    首值为 0（除零）或序列不足两点 → ``0.0``。
+    """
+    values = [float(value) for value in series]
+    n = len(values) - 1
+    if n <= 0:
+        return 0.0
+    first, last = values[0], values[-1]
+    if first > 0 and last > 0:
+        return (last / first) ** (1.0 / n) - 1.0
+    if first == 0:
+        return 0.0
+    return (last - first) / abs(first) / n
+
+
+def stability_k(series: Sequence[float]) -> float:
+    """稳定性系数 ``k ∈ [config.K_MIN, config.K_MAX]``（§6 伪代码）。
+
+    ``cv = 总体标准差 ÷ |均值|``；均值恰为 0 → 直接取 ``K_MIN``（无法定义相对波动）。
+    k 保留 :data:`config.STABILITY_DECIMALS` 位（§6 已补明，见 D-20）。
+    """
+    values = [float(value) for value in series]
+    mean = _mean(values)
+    if mean == 0:
+        return float(config.K_MIN)
+    cv = _pstdev(values) / abs(mean)
+    if cv <= config.CV_LOW:
+        return float(config.K_MAX)
+    if cv >= config.CV_HIGH:
+        return float(config.K_MIN)
+    ratio = (cv - config.CV_LOW) / (config.CV_HIGH - config.CV_LOW)
+    span = config.K_MAX - config.K_MIN
+    return round(config.K_MAX - span * ratio, config.STABILITY_DECIMALS)
+
+
+def growth_item(series: Sequence[float]) -> float:
+    """单项成长分 = 方向分 × 稳定性系数，截断到 ``±config.GROWTH_MAX``（§6 伪代码）。
+
+    序列（剔除缺失后）不足两点 → ``0.0``：不是一个可比的区间。
+    """
+    values = _clean_series(series)
+    if len(values) < MIN_GROWTH_POINTS:
+        return 0.0
+    direction = max(-1.0, min(1.0, cagr(values) / config.CAGR_CAP)) * config.GROWTH_MAX
+    return round(direction * stability_k(values), config.GROWTH_ITEM_DECIMALS)
+
+
+def growth_score(
+    net_profit_series: Sequence[Any],
+    op_cashflow_series: Sequence[Any],
+) -> GrowthScore:
+    """两项成长分与合计 ``G``（§6：``G = 净利项 + 现金流项``）。
+
+    单项**先各自取整再相加**（``config.GROWTH_ITEM_DECIMALS``），禁止"先加总再取整"——
+    后者会让双引擎在此处分歧。两项各在 ``±GROWTH_MAX`` 内 ⇒ ``|G| ≤ GROWTH_MAX_TOTAL``
+    （由构造保证，不额外 clamp；§7 只在总分处 clamp）。
+    """
+    series_map: dict[str, Sequence[Any]] = {
+        "growth_np": net_profit_series,
+        "growth_ocf": op_cashflow_series,
+    }
+    items: dict[str, float] = {}
+    unavailable: list[str] = []
+    for key in GROWTH_ITEM_KEYS:
+        values = _clean_series(series_map[key])
+        if len(values) < MIN_GROWTH_POINTS:
+            unavailable.append(key)
+        items[key] = growth_item(values)
+    total = round(sum(items.values()), config.GROWTH_ITEM_DECIMALS)
+    return GrowthScore(items=items, total=total, unavailable=tuple(unavailable))
+
+
+def growth_from_rows(
+    financials: list[dict[str, Any]] | None,
+    *,
+    years: int = config.YEARS,
+    as_of: str | None = None,
+) -> GrowthScore:
+    """从财报行取近 ``years`` 个年报的净利 / 经营现金流序列并算成长分（供 M2-5 组装）。
+
+    窗口口径与 M2-1 完全一致（共用 :func:`~..engine.indicators.annual_rows`）：
+    **只吃年报**、升序、最多 ``config.YEARS`` 年。
+    """
+    rows = annual_rows(financials, years=years, as_of=as_of)
+    return growth_score(
+        [row.get(_SERIES_FIELDS["growth_np"]) for row in rows],
+        [row.get(_SERIES_FIELDS["growth_ocf"]) for row in rows],
+    )
+
+
 __all__ = [
     "ABS_INDICATOR_KEYS",
+    "GROWTH_ITEM_KEYS",
+    "MIN_GROWTH_POINTS",
+    "GrowthScore",
     "SubScores",
     "absolute_sub_score",
     "absolute_sub_scores",
+    "cagr",
+    "growth_from_rows",
+    "growth_item",
+    "growth_score",
     "interp_anchor",
+    "stability_k",
 ]
