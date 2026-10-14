@@ -79,6 +79,8 @@ AMOUNT_UNIT = "亿元"
 AMOUNT_DECIMALS = 2
 RATIO_DECIMALS = 4  # 汇率/比率展示精度（内部统一存小数）
 
+ADJ_FACTOR_DECIMALS = 6  # 复权因子精度（《数据字典》§5 DDL：DECIMAL(18,6)）
+
 # ── 行情复权口径（家法 R8 / 数据源规格 §5）───────────────────────────────
 # raw = 不复权原始价（家法 R8「原始价单独保留，不删除」）；月K/MACD 一律用 qfq。
 ADJUST_MODES = ("qfq", "hfq", "raw")
