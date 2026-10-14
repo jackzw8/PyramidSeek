@@ -9,3 +9,4 @@ duckdb==1.5.6
 requests==2.34.2
 jsonschema==4.23.0
 akshare==1.19.1
+pypdf==6.20.1  # 年报 PDF 文本抽取（D-11「年报 PDF → 三表结构化」）

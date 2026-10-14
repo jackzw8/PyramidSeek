@@ -63,6 +63,9 @@ DDL: dict[str, str] = {
           sub_roe DECIMAL(6,2), sub_net_profit_scale DECIMAL(6,2), sub_roa DECIMAL(6,2),
           sub_gross_margin DECIMAL(6,2), sub_cash_ratio DECIMAL(6,2),
           sub_asset_turnover DECIMAL(6,2),
+          radar_roe DECIMAL(6,2), radar_gross_margin DECIMAL(6,2),
+          radar_asset_turnover DECIMAL(6,2), radar_eps DECIMAL(6,2),
+          radar_cash_ratio DECIMAL(6,2), radar_net_margin DECIMAL(6,2),
           compare_level VARCHAR, compare_group VARCHAR, rank_in_group INT, is_top10pct BOOLEAN,
           PRIMARY KEY (code, snapshot_version)
         )""",

@@ -29,6 +29,7 @@ from .. import config
 
 # 通用工具（元→亿元、空值判定、代码市场判定、候选列取值）放在 akshare_src，
 # 此处复用而不另写一份 —— 家法 R13 的同一条理由：两份实现必然分叉。
+from . import report_parser
 from .akshare_src import is_missing, market_of, pick
 from .base import DataSourceError
 
@@ -128,9 +129,11 @@ class OfficialSource:
         backoff: tuple[int, ...] | None = None,
         timeout: float | None = None,
         min_interval: float | None = None,
+        text_extractor: Any | None = None,
     ) -> None:
         self._market = market
         self._session = session
+        self._extract_text = text_extractor or report_parser.extract_text
         self._sleep = sleep or time.sleep
         self._today = today or (lambda: datetime.now(UTC).date())
         self._clock = clock or time.monotonic
@@ -292,18 +295,30 @@ class OfficialSource:
         documents.sort(key=lambda item: item["report_period"], reverse=True)
         return documents[: max(years, 0)]
 
-    # ── 三表解析（M1-3 边界：骨架，未实现）────────────────────────────────
-    def parse_annual_report(self, document: dict[str, Any]) -> dict[str, Any]:
-        """把已下载的年报 PDF 解析为标准层 ``financial_report``（**未实现**）。
+    # ── 三表解析（D-11：年报 PDF → 标准层）────────────────────────────────
+    def parse_annual_report(self, document: dict[str, Any]) -> list[dict[str, Any]]:
+        """把已下载的年报 PDF 解析为标准层 ``financial_report`` 行（**本期 + 上期**）。
 
-        M1-3 只交付检索与下载；PDF 三表结构化的难点是版式差异大、需表格识别与勾稽校验，
-        单独排期为后续任务。此处**明确抛错**，而不是返回占位数值 —— 宁可失败，
-        也不让下游拿到看起来像真数据的假数据。
+        解析逻辑在 :mod:`report_parser`（数据源层内部工具）；文本抽取可注入
+        （构造参数 ``text_extractor``），便于离线测试与将来换 OCR。
         """
-        raise DataSourceError(
-            f"年报 PDF → 三表解析尚未实现（M1-3 边界）；文件已就位：{document.get('local_path')}",
+        code = document.get("code")
+        local_path = document.get("local_path")
+        if not local_path:
+            raise DataSourceError(f"年报缺少本地文件（{code}）", source=self.name, code=code)
+        text = self._extract_text(local_path)
+        if not text.strip():
+            raise DataSourceError(
+                f"年报 PDF 抽不到文本（{local_path}）：可能是扫描件，需要 OCR",
+                source=self.name,
+                code=code,
+            )
+        return report_parser.build_report_rows(
+            code,
+            text,
+            report_period=document["report_period"],
             source=self.name,
-            code=document.get("code"),
+            fetched_at=datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
 
     # ── DataSource 接口 ───────────────────────────────────────────────────
@@ -321,16 +336,18 @@ class OfficialSource:
                 source=self.name,
                 code=code,
             )
-        # 走到这一步说明检索与下载都成功，失败点只可能在解析（M1-3 边界）
         periods = "、".join(doc["report_period"] for doc in documents)
+        rows: list[dict[str, Any]] = []
         try:
-            return [self.parse_annual_report(doc) for doc in documents]
+            for document in documents:
+                rows.extend(self.parse_annual_report(document))
         except DataSourceError as exc:
             raise DataSourceError(
                 f"{exc}（已定位 {len(documents)} 份年报：{periods}）",
                 source=self.name,
                 code=code,
             ) from exc
+        return rows
 
     def price_daily(self, code: str, adjust: str = config.DEFAULT_ADJUST) -> list[dict[str, Any]]:
         raise DataSourceError(

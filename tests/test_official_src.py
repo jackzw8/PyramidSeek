@@ -59,6 +59,22 @@ class FakeSession:
 
 CNINFO_PDF = b"%PDF-1.4 fake annual report"
 
+# 贴近真实版式的三表片段（单位：元），供 D-11 解析链路复用
+MINI_REPORT_TEXT = """合并利润表
+项目 附注 本期金额 上期金额
+营业总收入 1 845,000,000.00 782,000,000.00
+营业成本 2 321,000,000.00 300,000,000.00
+归属于母公司所有者的净利润 3 325,000,000.00 272,000,000.00
+合并资产负债表
+项目 附注 期末余额 期初余额
+资产总计 1 620,000,000,000.00 610,000,000,000.00
+负债合计 2 352,000,000,000.00 348,000,000,000.00
+归属于母公司所有者权益合计 3 268,000,000,000.00 262,000,000,000.00
+合并现金流量表
+项目 附注 本期金额 上期金额
+经营活动产生的现金流量净额 1 596,000,000.00 647,000,000.00
+"""
+
 
 def cninfo_handler(periods, *, session_box=None):
     """巨潮：公告检索返回 JSON；PDF 下载返回字节。"""
@@ -262,37 +278,61 @@ def test_fallback_not_used_when_primary_succeeds(tmp_path) -> None:
 
 
 def test_fallback_used_when_primary_fails(tmp_path) -> None:
-    """官方源接下来也会因 M1-3 边界（解析未实现）失败，但**回退确实发生了**。"""
-    official = make_source(cninfo_handler([2024]), tmp_path)
+    """官方源这里也会失败（正文里没有三表），但**回退确实发生了**。"""
+    official = make_source(
+        cninfo_handler([2024]), tmp_path, text_extractor=lambda _path: "本公告不包含财务报表。"
+    )
     with pytest.raises(base.DataSourceError, match="已定位 1 份年报"):
         call_with_fallback(_FailSource(), official, "financials", "SH600900")
 
 
 def test_fallback_result_records_reason(tmp_path) -> None:
-    """把官方源的解析缺口绕开（打桩）后，回退结果应带 degraded 与原因。"""
-    official = make_source(cninfo_handler([2024]), tmp_path)
-    official.parse_annual_report = lambda doc: {
-        "code": doc["code"],
-        "report_period": doc["report_period"],
-    }
-
+    """官方源解析成功时，回退结果应带 degraded 与原因。"""
+    official = make_source(
+        cninfo_handler([2024]), tmp_path, text_extractor=lambda _path: MINI_REPORT_TEXT
+    )
     result = call_with_fallback(_FailSource(), official, "financials", "SH600900")
+
     assert result.degraded is True
     assert result.source == "official"
     assert result.reason is not None and "主源挂了" in result.reason
-    assert result.data[0]["report_period"] == "2024-12-31"
+    assert {row["report_period"] for row in result.data} == {"2024-12-31", "2023-12-31"}
 
 
-# ── M1-3 边界：解析未实现，但必须给出可行动的信息 ───────────────────────
-def test_financials_reports_located_reports_then_fails(tmp_path) -> None:
-    source = make_source(cninfo_handler([2022, 2023, 2024]), tmp_path)
+# ── D-11：年报 PDF → 三表结构化（官方源端到端）──────────────────────────
+def test_financials_end_to_end_parses_located_reports(tmp_path) -> None:
+    """检索 → 下载 → 解析：一份年报产出「本期 + 上期」两行（单位换算到亿元）。"""
+    source = make_source(
+        cninfo_handler([2024]), tmp_path, text_extractor=lambda _path: MINI_REPORT_TEXT
+    )
+    rows = source.financials("SH600900")
+
+    assert [row["report_period"] for row in rows] == ["2024-12-31", "2023-12-31"]
+    assert rows[0]["revenue"] == 8.45
+    assert rows[1]["net_profit"] == 2.72
+    assert rows[0]["source"] == "official"
+    assert set(base.FINANCIAL_REQUIRED_FIELDS) <= set(rows[0])
+
+
+def test_financials_reports_no_statements_with_located_list(tmp_path) -> None:
+    """正文里定位不到三表时，错误信息要带上「已定位到哪几份年报」。"""
+    source = make_source(
+        cninfo_handler([2022, 2023, 2024]), tmp_path, text_extractor=lambda _path: "没有报表"
+    )
     with pytest.raises(base.DataSourceError) as excinfo:
         source.financials("SH600900")
 
     message = str(excinfo.value)
-    assert "三表解析尚未实现" in message
+    assert "未在年报正文中定位到三表" in message
     assert "已定位 3 份年报" in message
     assert "2024-12-31" in message
+
+
+def test_financials_reports_scanned_pdf(tmp_path) -> None:
+    """抽取为空（扫描件）必须当成失败，不能当成「没有数字」。"""
+    source = make_source(cninfo_handler([2024]), tmp_path, text_extractor=lambda _path: "   ")
+    with pytest.raises(base.DataSourceError, match="抽不到文本"):
+        source.financials("SH600900")
 
 
 def test_financials_without_announcements_says_so(tmp_path) -> None:

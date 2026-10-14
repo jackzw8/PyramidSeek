@@ -350,3 +350,34 @@ def test_default_paths_live_under_data_dir() -> None:
     """默认落在 ``data/``（已 gitignore），不污染仓库。"""
     assert store.config.DATA_DIR.name == "data"
     assert store.config.DATA_DIR.parent == store.config.PROJECT_ROOT
+
+
+def test_score_snapshot_columns_include_radar_dimensions(tmp_path) -> None:
+    """D-14 闭环：radar 六维已补进《数据字典》§5 的 score_snapshot DDL。"""
+    columns = store.table_columns("score_snapshot", db_path=tmp_path / "standard.duckdb")
+    assert tuple(columns) == (
+        "code",
+        "snapshot_version",
+        "quality",
+        "growth",
+        "growth_np",
+        "growth_ocf",
+        "score",
+        "sub_roe",
+        "sub_net_profit_scale",
+        "sub_roa",
+        "sub_gross_margin",
+        "sub_cash_ratio",
+        "sub_asset_turnover",
+        # 雷达六维：顺序即雷达图顶点顺序（契约 §3.4：顶 ROE 顺时针）
+        "radar_roe",
+        "radar_gross_margin",
+        "radar_asset_turnover",
+        "radar_eps",
+        "radar_cash_ratio",
+        "radar_net_margin",
+        "compare_level",
+        "compare_group",
+        "rank_in_group",
+        "is_top10pct",
+    )
