@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .. import config
-from ..common import is_missing
+from ..common import is_missing, round_half_up
 
 # 值为负时子分强制 0 的指标（§8 只点名"规模分"；D-19 只施加于此）
 NEGATIVE_FORCES_ZERO: tuple[str, ...] = ("net_profit_scale",)
@@ -116,7 +116,11 @@ def percentile_score(values: Sequence[float], value: float) -> float:
         return 50.0
     less = sum(1 for item in values if item < value)
     equal = sum(1 for item in values if item == value)
-    return ((less + 0.5 * equal) / n) * config.PERCENTILE_SCALE
+    raw = ((less + 0.5 * equal) / n) * config.PERCENTILE_SCALE
+    # §4.2 伪代码没写取整；**对齐 engine.js 的 `toFixed(2)`** 取 2 位（D-18）。
+    # 用 round_half_up 而非内置 round：`(0+0.5×1)/16×100 = 3.125` 这种边界值
+    # 银行家舍入会给 3.12、JS 给 3.13 —— M2-6 逐项比对会失败。
+    return round_half_up(raw, config.PERCENTILE_DECIMALS)
 
 
 def pool_sub_scores(

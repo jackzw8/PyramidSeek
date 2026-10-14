@@ -50,7 +50,11 @@ ABS_ANCHORS: dict[str, list[tuple[float, float]]] = {
 # 行业分位映射：子分 = 跑赢同业比例 × PERCENTILE_SCALE
 PERCENTILE_SCALE = 100.0
 # 走行业分位的指标（其余走绝对值锚点）
-PERCENTILE_INDICATORS = ("net_profit_scale", "asset_turnover")
+# `eps` 一并走分位：§4.2 两种方式都没点它的名，但雷达六维需要它的子分，
+# 参考实现 engine.js 用的是分位（`pctScore(epv, ind.eps)`）→ 2026-10-14 定案（D-22）。
+PERCENTILE_INDICATORS = ("net_profit_scale", "asset_turnover", "eps")
+# 分位分子分取整位数：对齐 engine.js 的 `toFixed(2)`（D-18）
+PERCENTILE_DECIMALS = 2
 
 # ── 成长分 G（评分规格 §6）───────────────────────────────────────────────
 GROWTH_MAX = 100.0  # 单项上限（方向分上限）

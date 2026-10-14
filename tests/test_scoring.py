@@ -197,14 +197,14 @@ def test_end_to_end_with_real_fixture() -> None:
     subs = absolute_sub_scores(raw)
 
     annual = [row for row in stock["financials"].values() if row["report_type"] == "annual"]
-    manual_roe = round(
-        sum(row["net_profit"] / row["equity"] for row in annual) / len(annual),
-        config.RATIO_DECIMALS,
-    )
+    # 指标**不取整**（D-18）：手算值应与实现逐位吻合，不是"取整后相等"
+    manual_roe = sum(row["net_profit"] / row["equity"] for row in annual) / len(annual)
 
     assert subs.missing == ()
-    assert raw.values["roe"] == manual_roe  # 指标本身手算一致
-    assert subs.values["roe"] == pytest.approx(interp_anchor(manual_roe, config.ABS_ANCHORS["roe"]))
+    assert raw.values["roe"] == pytest.approx(manual_roe, rel=1e-12)
+    assert subs.values["roe"] == pytest.approx(
+        interp_anchor(raw.values["roe"], config.ABS_ANCHORS["roe"])
+    )
     assert 0.0 < subs.values["roe"] < 100.0  # 非退化：既不是全截断也不是异常值
     for value in subs.values.values():
         assert config.SUB_SCORE_MIN <= value <= config.SUB_SCORE_MAX

@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from . import config
@@ -96,6 +97,21 @@ def status_of(name: str) -> str:
     return "normal"
 
 
+def round_half_up(value: float, decimals: int) -> float:
+    """半进位舍入，**与 JS 的 ``Math.round(x*10^d)/10^d`` / ``toFixed`` 逐位一致**。
+
+    **不要用内置 ``round``**：它是「银行家舍入」（``.5`` 取偶），边界上会差一个单位。
+    反例：``round(3.125, 2) == 3.12``（Python）而 ``Math.round(312.5)/100 == 3.13``（JS）——
+    分位分 ``(0 + 0.5×1)/16×100 = 3.125`` 正好落在这种边界上（16 只股票的同业池，最低分就是它）。
+
+    **注意方向**：JS 的 ``Math.round`` / ``toFixed`` 遇 ``.5`` 一律**朝 ``+∞``** 取整，
+    对负数是"向零"（``Math.round(-2.5) === -2``，不是 ``-3``）。这里刻意保留这个**不对称**行为 ——
+    "更好看"的对称舍入反而会让 M2-6 双引擎逐项比对失败（《计划完成情况》D-18）。
+    """
+    factor = 10**decimals
+    return math.floor(value * factor + 0.5) / factor
+
+
 # ── 表格归一 ──────────────────────────────────────────────────────────────
 def _normalize_row(row: dict[str, Any]) -> dict[str, Any]:
     return {str(key): (None if is_missing(val) else val) for key, val in row.items()}
@@ -169,6 +185,7 @@ __all__ = [
     "pick",
     "report_period_of",
     "report_type_of",
+    "round_half_up",
     "status_of",
     "to_internal_billion",
     "to_records",

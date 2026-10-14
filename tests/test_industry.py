@@ -77,8 +77,19 @@ def test_single_member_pool_returns_fifty(values: list[float]) -> None:
 
 
 def test_pool_includes_the_stock_itself() -> None:
-    """池内**含自己**：若把自己排除，最高值会得 (1+0.5)/2×100=75 而不是 66.67。"""
-    assert percentile_score([1.0, 2.0, 3.0], 3.0) == pytest.approx(250 / 3)
+    """池内**含自己**：若把自己排除，最高值会得 (1+0.5)/2×100=75 而不是 83.33。
+
+    分位分按 D-18 取 2 位（对齐 engine.js 的 `toFixed(2)`）：250/3 = 83.333… → 83.33。
+    """
+    assert percentile_score([1.0, 2.0, 3.0], 3.0) == 83.33
+
+
+def test_percentile_rounding_is_half_up_like_js() -> None:
+    """**舍入模式钉子**：``(0+0.5×1)/16×100 = 3.125`` —— Python 内置 round 给 3.12（银行家舍入），
+    JS ``Math.round(312.5)/100`` 给 3.13。16 只股票的同业池 + 最低分正好落在这个边界上。"""
+    values = [float(index) for index in range(16)]  # 16 只，最低者 less=0、eq=1
+    assert percentile_score(values, 0.0) == 3.13
+    assert round(3.125, 2) == 3.12  # 反证：内置 round 与 JS 不一致
 
 
 def test_value_outside_pool_range_hits_bounds() -> None:
@@ -150,8 +161,8 @@ def test_pool_sub_scores_follow_percentile_formula() -> None:
     values = {"A600000": 1.0, "A600001": 2.0, "A600002": 3.0}
 
     subs = pool_sub_scores("asset_turnover", values, pools)
-    assert subs["A600000"] == pytest.approx(50 / 3)  # (0 + 0.5) / 3 × 100
-    assert subs["A600002"] == pytest.approx(250 / 3)  # (2 + 0.5) / 3 × 100
+    assert subs["A600000"] == 16.67  # (0 + 0.5) / 3 × 100 = 16.666… → 取 2 位（D-18）
+    assert subs["A600002"] == 83.33  # (2 + 0.5) / 3 × 100 = 83.333… → 取 2 位
 
 
 def test_negative_scale_sub_score_is_forced_to_zero_but_stays_in_pool() -> None:
@@ -174,7 +185,7 @@ def test_negative_asset_turnover_still_uses_percentile() -> None:
     values = {"A600000": -1.0, "A600001": 1.0, "A600002": 2.0}
 
     subs = pool_sub_scores("asset_turnover", values, pools)
-    assert subs["A600000"] == pytest.approx(50 / 3)  # 按分位给分，未强制 0
+    assert subs["A600000"] == 16.67  # 按分位给分（未强制 0）；16.666… 取 2 位（D-18）
 
 
 def test_missing_value_yields_none_not_zero() -> None:

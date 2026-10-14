@@ -89,15 +89,15 @@ def test_formulas_match_spec_section_3() -> None:
 
 
 def test_average_is_per_year_ratio_not_sum_over_sum() -> None:
-    """逐年比值再平均 ≠ 合计相除 —— 这是 §3 与原型的已知差异点，必须按 §3 实现。"""
+    """逐年比值再平均 ≠ 合计相除（§3 原文与参考实现一致，均按前者）。"""
     rows = [
         {"revenue": 100.0, "net_profit": 50.0, "total_assets": 100.0},
         {"revenue": 100.0, "net_profit": 10.0, "total_assets": 1900.0},
     ]
     result = raw_indicators(make_stock(), make_rows(rows, count=2))
-    # 逐年：0.5 与 0.005263… → 均值 ≈ 0.252632（合计相除只有 0.03）
-    assert result.values["roa"] == round((50 / 100 + 10 / 1900) / 2, config.RATIO_DECIMALS)
-    assert result.values["roa"] != round((50 + 10) / (100 + 1900), config.RATIO_DECIMALS)
+    # 逐年：0.5 与 0.005263… → 均值 ≈ 0.252632（"合计相除"只有 0.03，差一个量级）
+    assert result.values["roa"] == pytest.approx((50 / 100 + 10 / 1900) / 2)
+    assert result.values["roa"] != pytest.approx((50 + 10) / (100 + 1900))
 
 
 def test_periods_are_reported_in_ascending_order() -> None:
@@ -140,8 +140,8 @@ def test_negative_equity_gives_negative_roe_not_zero() -> None:
 def test_mixed_sign_years_average_arithmetically() -> None:
     rows = make_rows([{"net_profit": 30.0}, {"net_profit": -10.0}, {"net_profit": 0.0}], count=3)
     result = raw_indicators(make_stock(), rows)
-    assert result.values["net_profit_scale"] == round(20 / 3, config.AMOUNT_DECIMALS)
-    assert result.values["roe"] == round((0.3 - 0.1 + 0.0) / 3, config.RATIO_DECIMALS)
+    assert result.values["net_profit_scale"] == pytest.approx(20 / 3)  # 指标不取整（D-18）
+    assert result.values["roe"] == pytest.approx((0.3 - 0.1 + 0.0) / 3)
 
 
 # ── 边界：零值（0 是有效值，家法 R11）────────────────────────────────────
@@ -268,10 +268,9 @@ def test_annual_detection_falls_back_to_report_period() -> None:
 
 # ── 与评分规格的集合对齐（结构性断言，防漏算/多算指标）──────────────────
 def test_indicator_keys_cover_all_configured_groups() -> None:
-    """锚点表 + 分位表 + eps 必须恰好等于 8 项指标（config 是唯一来源，家法 R12）。"""
-    assert set(config.ABS_ANCHORS) | set(config.PERCENTILE_INDICATORS) | {"eps"} == set(
-        INDICATOR_KEYS
-    )
+    """锚点表 + 分位表必须恰好等于 8 项指标（config 是唯一来源，家法 R12）。"""
+    # eps 自 2026-10-14 起归入分位表（D-22），故这里不再额外并入
+    assert set(config.ABS_ANCHORS) | set(config.PERCENTILE_INDICATORS) == set(INDICATOR_KEYS)
     # 比率类与规模类互斥，且并集（补上 eps）恰好是 8 项 —— 防漏算 / 多算
     assert set(config.ABS_ANCHORS) <= set(indicators.RATIO_INDICATORS)
     assert set(indicators.RATIO_INDICATORS) & set(indicators.SCALE_INDICATORS) == set()

@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .. import config
-from ..common import is_missing
+from ..common import is_missing, round_half_up
 from .indicators import RawIndicators, annual_rows
 
 # 走绝对值锚点的指标（= config.ABS_ANCHORS 的键，顺序一致；家法 R12 唯一来源）
@@ -195,7 +195,8 @@ def stability_k(series: Sequence[float]) -> float:
         return float(config.K_MIN)
     ratio = (cv - config.CV_LOW) / (config.CV_HIGH - config.CV_LOW)
     span = config.K_MAX - config.K_MIN
-    return round(config.K_MAX - span * ratio, config.STABILITY_DECIMALS)
+    # 取整走 round_half_up（与 JS 的 Math.round 一致），不用内置 round（银行家舍入）
+    return round_half_up(config.K_MAX - span * ratio, config.STABILITY_DECIMALS)
 
 
 def growth_item(series: Sequence[float]) -> float:
@@ -207,7 +208,7 @@ def growth_item(series: Sequence[float]) -> float:
     if len(values) < MIN_GROWTH_POINTS:
         return 0.0
     direction = max(-1.0, min(1.0, cagr(values) / config.CAGR_CAP)) * config.GROWTH_MAX
-    return round(direction * stability_k(values), config.GROWTH_ITEM_DECIMALS)
+    return round_half_up(direction * stability_k(values), config.GROWTH_ITEM_DECIMALS)
 
 
 def growth_score(
@@ -231,7 +232,7 @@ def growth_score(
         if len(values) < MIN_GROWTH_POINTS:
             unavailable.append(key)
         items[key] = growth_item(values)
-    total = round(sum(items.values()), config.GROWTH_ITEM_DECIMALS)
+    total = round_half_up(sum(items.values()), config.GROWTH_ITEM_DECIMALS)
     return GrowthScore(items=items, total=total, unavailable=tuple(unavailable))
 
 

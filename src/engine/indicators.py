@@ -36,7 +36,7 @@ INDICATOR_KEYS: tuple[str, ...] = (
     "net_profit_scale",
     "eps",
 )
-# 比率类（无量纲，统一按 config.RATIO_DECIMALS 取整）
+# 比率类（无量纲）
 RATIO_INDICATORS: tuple[str, ...] = (
     "roe",
     "roa",
@@ -45,8 +45,10 @@ RATIO_INDICATORS: tuple[str, ...] = (
     "cash_ratio",
     "asset_turnover",
 )
-# 规模类（单位：亿元，按 config.AMOUNT_DECIMALS 取整）
+# 规模类（单位：亿元）
 SCALE_INDICATORS: tuple[str, ...] = ("net_profit_scale",)
+# 量纲分类仅用于**展示与落库取整**（如产物里保留几位）；**计算链路一律不取整**（D-18）：
+# 中间取整会让"接近但不等"的值被抹成并列，直接改变分位分（engine.js 也不取整）。
 
 _SHARES = "__shares__"  # 分母来自股票主数据（亿股），不在财报行里
 
@@ -131,11 +133,6 @@ def _year_ratio(numerator: Any, denominator: Any, *, has_denominator: bool = Tru
     return float(numerator) / bottom
 
 
-def _round(key: str, value: float) -> float:
-    decimals = config.AMOUNT_DECIMALS if key in SCALE_INDICATORS else config.RATIO_DECIMALS
-    return round(value, decimals)
-
-
 def raw_indicators(
     stock: dict[str, Any],
     financials: list[dict[str, Any]] | None = None,
@@ -183,7 +180,10 @@ def raw_indicators(
             if ratio is not None:
                 samples.append(ratio)
         if samples:
-            values[key] = _round(key, sum(samples) / len(samples))
+            # 计算链路**不取整**（D-18）：中间取整会把"接近但不等"的值抹成并列，
+            # 直接改变分位分；engine.js 同样不取整。取整只发生在「与 JS 对齐的点」
+            # 与「落库/产物字段」两处边界。
+            values[key] = sum(samples) / len(samples)
         else:
             values[key] = 0.0
             unavailable.append(key)
