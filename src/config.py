@@ -89,10 +89,12 @@ BALANCE_TOLERANCE = 0.05  # 勾稽：|资产 − (负债 + 权益)| / 资产 ≤
 MOM_CHANGE_THRESHOLD = 2.00  # 环比突变阈值 ±200% → 标记待确认
 MARKET_MISSING_RATE_MAX = 0.05  # 单市场缺失率 ≤ 5%，超阈值 → degraded
 
-# ── 数据源容错（数据源规格 §7）───────────────────────────────────────────
+# ── 数据源容错（数据源规格 §7 / §8）──────────────────────────────────────
 FETCH_RETRY_TIMES = 3  # 重试 3 次
-FETCH_RETRY_BACKOFF = (1, 3, 9)  # 指数退避（秒）
+FETCH_RETRY_BACKOFF = (1, 3, 9)  # 退避上限序列（秒）：3 次重试实际等待 2 次（1s、3s）
 FETCH_TIMEOUT_SECONDS = 15  # 单次请求超时（数据源规格 §7）
+FETCH_MIN_INTERVAL_SECONDS = 1.0  # 官方源请求间隔下限（§8：遵守目标站点抓取规范）
+HTTP_USER_AGENT = "PyramidSeek/0.1 (personal research; contact: local)"
 # 全量列表类接口（内部翻页）实测需十几分钟，见《计划完成情况》D-10；
 # 15s 是"单次请求"约束，套到批量接口上会让它必败，故单独给一个宽松上限。
 FETCH_TIMEOUT_SLOW_SECONDS = 1800
