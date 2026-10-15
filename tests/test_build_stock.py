@@ -318,6 +318,47 @@ def test_kline_omits_hfq_when_first_factor_is_negative(tmp_path: Path) -> None:
     assert "hfq" not in payload["kline"]  # 可选子对象缺省 → 前端禁用复权切换
 
 
+def test_kline_b_level_uses_qfq_ohlc_and_omits_hfq(tmp_path: Path) -> None:
+    """B 级降级（D-32 决策 1）：只有 qfq 序列（``adj_factor`` 全缺）→ 月K 主序列
+    直接用前复权 OHLC（factor 兜底 1.0），**不输出 ``hfq``**（避免把前复权序列
+    原样当后复权，语义错误）。"""
+    prices = {
+        "SH600900": [
+            {
+                "trade_date": "2024-01-02",
+                "open": 19.5,
+                "high": 19.8,
+                "low": 19.2,
+                "close": None,
+                "close_qfq": 19.6,
+                "adj_factor": None,
+                "volume": 1000,
+            },
+            {
+                "trade_date": "2024-01-31",
+                "open": 19.9,
+                "high": 20.1,
+                "low": 19.4,
+                "close": None,
+                "close_qfq": 20.0,
+                "adj_factor": None,
+                "volume": 1200,
+            },
+        ]
+    }
+    stocks = [_stock("SH600900")]
+    inputs = _inputs(stocks, {"SH600900": _rows()}, prices)
+    payload = _load(build_stock(inputs, "SH600900", tmp_path))
+
+    kline = payload["kline"]
+    assert kline["months"] == ["2024-01"]
+    assert kline["o"] == [19.5]
+    assert kline["h"] == [20.1]
+    assert kline["l"] == [19.2]
+    assert kline["c"] == [20.0]
+    assert "hfq" not in kline
+
+
 def test_write_is_deterministic(tmp_path: Path) -> None:
     stocks = [_stock("SH600900"), _stock("SH600011")]
     financials = {"SH600900": _rows(), "SH600011": _rows(net_profit=2.0)}

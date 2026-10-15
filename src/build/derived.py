@@ -184,17 +184,23 @@ def monthly_kline(price_rows: Iterable[Mapping[str, Any]]) -> dict[str, Any] | N
       （``= close_qfq / close``，M1-4 反算）换算；
     - ``hfq`` = 后复权 ``{o,h,l,c}`` = 未取整的前复权序列 **÷ 序列首日 ``adj_factor``**
       （期初归一到原始价；先除后取整，避免二次舍入）；
+    - ``adj_factor`` 缺失（**B 级降级**，D-32）→ 仅出主序列，不输出 ``hfq``；
     - 无任何有效行 → ``None``（产物省略 ``kline`` 键）。
     """
     buckets: dict[str, dict[str, float | None]] = {}
     base_factor: float | None = None
+    has_factor = True  # B 级信号：任何一行缺 ``adj_factor`` → 后复权不可算
     for row in sorted(price_rows, key=lambda item: str(item.get("trade_date") or "")):
         trade_date = str(row.get("trade_date") or "")[:10]
         close_qfq = row.get("close_qfq")
         if not trade_date or is_missing(close_qfq):
             continue
         factor_value = row.get("adj_factor")
-        factor = 1.0 if is_missing(factor_value) else float(factor_value)
+        if is_missing(factor_value):
+            has_factor = False
+            factor = 1.0
+        else:
+            factor = float(factor_value)
         if base_factor is None:
             base_factor = factor
         month = trade_date[:7]
@@ -214,12 +220,14 @@ def monthly_kline(price_rows: Iterable[Mapping[str, Any]]) -> dict[str, Any] | N
     for key, series in raw_series.items():
         result[key] = [round_value(value, config.PRICE_DECIMALS) for value in series]
 
-    # 后复权 = 前复权 ÷ 序列首日 ``adj_factor``；**仅当首日因子为正**才成立 ——
-    # 长期高分红的标的，其前复权价在早期可能为**负**（新浪口径：长江电力 2003 年 -8.33 元），
-    # 此时比率无意义、照算会反号 → 不输出 ``hfq``（契约 §3.4 里 hfq 是可选子对象，
-    # 前端据「有无 hfq」禁用复权切换）。
+    # 后复权 = 前复权 ÷ 序列首日 ``adj_factor``；两种情况不输出（契约 §3.4 里 hfq 是可选
+    # 子对象，前端据「有无 hfq」禁用复权切换）：
+    #   ① **B 级降级（D-32 决策 1）**：序列中任一行缺 ``adj_factor``（qfq-only 取数）→
+    #      ``base`` 会被兜底成 1.0，照算会把前复权序列原样当后复权（语义错误）；
+    #   ② **首日因子 ≤ 0**：长期高分红标的的前复权价早期可能为**负**
+    #      （新浪口径：长江电力 2003 年 -8.33 元）→ 比率无意义、照算会反号。
     base = base_factor if base_factor else 1.0
-    if base > 0:
+    if has_factor and base > 0:
         result["hfq"] = {
             key: [
                 round_value(None if value is None else value / base, config.PRICE_DECIMALS)

@@ -116,6 +116,7 @@ def fetch_universe(
     persist: bool = True,
     db_path: Path | None = None,
     parquet_dir: Path | None = None,
+    with_raw: bool = False,
 ) -> FetchOutcome:
     """按回退链采集 → 清洗 → 落库。
 
@@ -167,22 +168,29 @@ def fetch_universe(
         if rows:
             financials[code] = rows
 
-    # 行情：每只取「不复权 + 前复权」两次，再按交易日合并并反算 adj_factor（家法 R8；
-    # 合并规则见 ``clean.merge_price_rows``）。两道都拿不到就当该股无行情（产物省略 ``kline``）。
+    # 行情（D-32 决策 1/2）：**默认只取前复权**（1 次/只）—— `adjust="qfq"` 返回的 OHLC
+    # 本身就是前复权价，`clean.merge_price_rows` 走 qfq-only 形态（B 级降级：无 `adj_factor`，
+    # 产物 `kline` 照常出、`hfq` 省略）；`with_raw=True`（monthly/cold 模式）时额外取
+    # 「不复权」并合并反算 `adj_factor`，以输出 `hfq`。两道都拿不到才当该股无行情。
     prices: dict[str, list[dict[str, Any]]] = {}
     price_issues: list[Any] = []
     for row in stocks:
         code = str(row["code"])
-        raw_rows, source_raw, reasons_raw = _try_chain(
-            "price_daily", code, chain=chain, adjust="raw"
-        )
-        qfq_rows, _source_qfq, reasons_qfq = _try_chain(
+        raw_rows: list[dict[str, Any]] = []
+        if with_raw:
+            raw_rows, source_raw, reasons_raw = _try_chain(
+                "price_daily", code, chain=chain, adjust="raw"
+            )
+            outcome.sources[f"price_daily_raw:{code}"] = source_raw
+            if reasons_raw:
+                outcome.fallbacks[f"price_daily_raw:{code}"] = reasons_raw
+        qfq_rows, source_qfq, reasons_qfq = _try_chain(
             "price_daily", code, chain=chain, adjust=config.DEFAULT_ADJUST
         )
-        outcome.sources[f"price_daily:{code}"] = source_raw
-        if reasons_raw:
-            outcome.fallbacks[f"price_daily:{code}"] = reasons_raw
-        if not (raw_rows and qfq_rows):
+        outcome.sources[f"price_daily:{code}"] = source_qfq
+        if reasons_qfq:
+            outcome.fallbacks[f"price_daily:{code}"] = reasons_qfq
+        if not qfq_rows:
             continue
         merged, issues = clean.merge_price_rows(code, raw_rows, qfq_rows)
         price_issues.extend(issues)

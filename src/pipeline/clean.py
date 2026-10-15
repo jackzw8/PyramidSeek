@@ -325,31 +325,54 @@ def merge_price_rows(
     单次取数只给一种口径（见 :mod:`..datasource.akshare_src` 的边界说明），
     标准层要求 ``close`` 与 ``close_qfq`` 同时存在，故在此合并。
     ``adj_factor = close_qfq / close``（前复权价 / 原始价），保留 ``decimals`` 位。
+
+    **B 级降级（D-32 决策 1，qfq-only）**：``raw_rows`` 为空时，直接用 qfq 行作基础行 ——
+    ``adjust="qfq"`` 返回的 OHLC 本身就是前复权价，``close``（原始价）与 ``adj_factor``
+    置 ``None`` 且**不报错**；下游月K 主序列照常可出，仅 ``hfq`` 不可算
+    （:func:`..build.derived.monthly_kline` 据此不输出该子对象）。
     """
     issues: list[Issue] = []
+    qfq_only = not raw_rows
     by_date: dict[str, dict[str, Any]] = {}
-    for row in raw_rows:
-        trade_date = str(row.get("trade_date") or "")[:10]
-        if not trade_date:
-            continue
-        by_date[trade_date] = {**row, "code": row.get("code") or code, "close": row.get("close")}
+    if qfq_only:
+        for row in qfq_rows:
+            trade_date = str(row.get("trade_date") or "")[:10]
+            if not trade_date:
+                continue
+            by_date[trade_date] = {
+                **row,
+                "code": row.get("code") or code,
+                "close": None,  # 无原始价（B 级）：不冒充，诚实置空
+                "close_qfq": row.get("close_qfq"),
+                "adj_factor": None,
+            }
+    else:
+        for row in raw_rows:
+            trade_date = str(row.get("trade_date") or "")[:10]
+            if not trade_date:
+                continue
+            by_date[trade_date] = {
+                **row,
+                "code": row.get("code") or code,
+                "close": row.get("close"),
+            }
 
-    for row in qfq_rows:
-        trade_date = str(row.get("trade_date") or "")[:10]
-        if not trade_date:
-            continue
-        target = by_date.get(trade_date)
-        if target is None:
-            issues.append(
-                Issue(
-                    LEVEL_WARN,
-                    "trade_date",
-                    f"前复权行情 {trade_date} 在原始价序列中不存在，已忽略",
-                    code,
+        for row in qfq_rows:
+            trade_date = str(row.get("trade_date") or "")[:10]
+            if not trade_date:
+                continue
+            target = by_date.get(trade_date)
+            if target is None:
+                issues.append(
+                    Issue(
+                        LEVEL_WARN,
+                        "trade_date",
+                        f"前复权行情 {trade_date} 在原始价序列中不存在，已忽略",
+                        code,
+                    )
                 )
-            )
-            continue
-        target["close_qfq"] = row.get("close_qfq")
+                continue
+            target["close_qfq"] = row.get("close_qfq")
 
     merged: list[dict[str, Any]] = []
     for trade_date in sorted(by_date):
@@ -360,6 +383,10 @@ def merge_price_rows(
             issues.append(Issue(LEVEL_ERROR, "close_qfq", f"{trade_date} 缺前复权收盘价", code))
             continue
         if is_missing(close):
+            if qfq_only:
+                item["adj_factor"] = None  # B 级：缺原始价是预期形态，不算异常
+                merged.append(item)
+                continue
             issues.append(Issue(LEVEL_ERROR, "close", f"{trade_date} 缺原始收盘价", code))
             continue
         if float(close) == 0:

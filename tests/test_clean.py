@@ -260,6 +260,34 @@ def test_price_merge_warns_on_zero_close() -> None:
     assert any("无法反算复权因子" in issue.message for issue in issues)
 
 
+def test_price_merge_qfq_only_is_b_level() -> None:
+    """B 级降级（D-32 决策 1）：只有 qfq 也能合并出标准行 —— OHLC 直接用前复权价，
+    ``close`` / ``adj_factor`` 诚实置空且**不报错**。"""
+    qfq = [
+        {
+            "code": "SH600900",
+            "trade_date": "2024-06-28",
+            "open": 19.5,
+            "high": 19.8,
+            "low": 19.2,
+            "close": None,
+            "close_qfq": 19.6,
+            "adj_factor": None,
+            "volume": 1000,
+        }
+    ]
+    merged, issues = clean.merge_price_rows("SH600900", [], qfq)
+
+    assert issues == []
+    assert [row["trade_date"] for row in merged] == ["2024-06-28"]
+    assert merged[0]["open"] == 19.5
+    assert merged[0]["high"] == 19.8
+    assert merged[0]["low"] == 19.2
+    assert merged[0]["close_qfq"] == 19.6
+    assert merged[0]["close"] is None
+    assert merged[0]["adj_factor"] is None
+
+
 # ── 总入口：外键、覆盖度、日志 ────────────────────────────────────────────
 def test_clean_universe_orchestrates_and_logs(caplog) -> None:
     stocks = [

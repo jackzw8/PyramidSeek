@@ -365,6 +365,27 @@ def test_missing_price_data_alone_is_not_degraded() -> None:
     assert outcome.degraded is False
 
 
+def test_price_fetch_is_qfq_only_by_default() -> None:
+    """D-32 决策 2：默认**只取前复权**（1 次/只，B 级）；``with_raw=True``
+    （monthly/cold 模式）才补「不复权」以输出 ``hfq``。"""
+    chain = stub_chain()
+    outcome = fetch.fetch_universe(markets=("A",), chain=[chain["primary"]], persist=False)
+
+    calls = [call for call in chain["primary"].calls if call[0] == "price_daily"]
+    assert ("price_daily", "SH600900:qfq") in calls
+    assert ("price_daily", "SH600900:raw") not in calls
+    assert outcome.universe.prices["SH600900"]  # B 级：qfq-only 也有数据
+    assert outcome.sources["price_daily:SH600900"] == "akshare"
+
+    chain_with_raw = stub_chain()
+    fetch.fetch_universe(
+        markets=("A",), chain=[chain_with_raw["primary"]], persist=False, with_raw=True
+    )
+    calls_raw = [call for call in chain_with_raw["primary"].calls if call[0] == "price_daily"]
+    assert ("price_daily", "SH600900:raw") in calls_raw
+    assert ("price_daily", "SH600900:qfq") in calls_raw
+
+
 def test_cli_offline_smoke(capsys) -> None:
     assert fetch.main(["--offline", "--no-store", "--limit", "2"]) == 0
     printed = capsys.readouterr().out
