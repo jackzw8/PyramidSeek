@@ -52,6 +52,12 @@ def test_offline_batch_produces_full_products(tmp_path: Path) -> None:
     stock_files = sorted((out / "stock").glob("*.json"))
     assert len(stock_files) == 12  # fixtures 全量：A 8 + HK 4
 
+    index = json.loads((out / "search-index.json").read_text(encoding="utf-8"))
+    assert len(index["entries"]) == 12
+    assert {entry["code"] for entry in index["entries"]} == {path.stem for path in stock_files}
+    assert index["entries"][0]["py"]  # 已装 pypinyin → 拼音非空
+    assert {entry["market"] for entry in index["entries"]} == {"A", "HK"}
+
 
 def test_offline_batch_is_idempotent(tmp_path: Path) -> None:
     first, second = tmp_path / "a", tmp_path / "b"

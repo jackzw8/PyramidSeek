@@ -7,7 +7,7 @@ from pathlib import Path
 
 from src import config
 from src.build import BuildInputs
-from src.build.build_meta import build_industries, build_meta
+from src.build.build_meta import build_industries, build_meta, build_search_index
 from src.engine.indicators import raw_indicators
 from src.engine.industry import build_pools
 from src.engine.scoring import score_universe
@@ -88,6 +88,8 @@ def test_meta_carries_versions_dates_and_disclaimer(tmp_path: Path) -> None:
     assert payload["contractVersion"] == config.CONTRACT_VERSION
     assert payload["formulaVersion"] == config.FORMULA_VERSION
     assert payload["generatedAt"] == "2026-10-15T00:00:00Z"
+    assert payload["weights"] == dict(config.WEIGHTS)  # 前端「评分构成」直接读（R12）
+    assert sum(payload["weights"].values()) == 1000
     assert payload["dataDate"] == {"financial": "2024-12-31"}  # 无行情 → price 键缺省
     assert payload["degraded"] is True
     assert config.DISCLAIMER in payload["notes"]  # 家法 R20
@@ -156,3 +158,37 @@ def test_industries_is_deterministic(tmp_path: Path) -> None:
         build_industries(inputs, tmp_path / "a").read_bytes()
         == build_industries(inputs, tmp_path / "b").read_bytes()
     )
+
+
+# ── search-index.json（契约 §3.6）────────────────────────────────────────
+def test_search_index_entries_sorted_with_pinyin(tmp_path: Path) -> None:
+    stocks = [_stock("SH600519"), _stock("HK00700")]
+    stocks[0]["name"] = "贵州茅台"
+    stocks[1]["name"] = "腾讯控股"
+    payload = _load(build_search_index(_inputs(stocks), tmp_path))
+
+    assert [entry["code"] for entry in payload["entries"]] == ["HK00700", "SH600519"]  # code 升序
+    by_code = {entry["code"]: entry for entry in payload["entries"]}
+    assert by_code["SH600519"]["py"] == "gzmt"
+    assert by_code["HK00700"]["py"] == "txkg"
+    assert by_code["HK00700"]["market"] == "HK"
+    assert payload["contractVersion"] == config.CONTRACT_VERSION
+
+
+def test_search_index_keeps_non_han_characters(tmp_path: Path) -> None:
+    stocks = [_stock("SZ000001")]
+    stocks[0]["name"] = "TCL科技"
+    payload = _load(build_search_index(_inputs(stocks), tmp_path))
+
+    assert payload["entries"][0]["py"] == "TCLkj"  # 非汉字原样保留
+
+
+def test_search_index_degrades_without_pypinyin(tmp_path: Path, monkeypatch) -> None:
+    import sys
+
+    monkeypatch.setitem(sys.modules, "pypinyin", None)  # 模拟未安装 → import 抛 ImportError
+    stocks = [_stock("SH600519")]
+    stocks[0]["name"] = "贵州茅台"
+    payload = _load(build_search_index(_inputs(stocks), tmp_path))
+
+    assert payload["entries"][0]["py"] == ""  # 降级为空串，不阻塞跑批

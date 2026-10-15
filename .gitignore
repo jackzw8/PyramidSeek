@@ -14,6 +14,7 @@ venv/
 # 评分产物由 batch 生成（家法 R22），按 R21 提交到独立 data 分支，不进 main
 /public/data/*.json
 /public/data/ranking/
+/public/data/stock/
 !/public/data/.gitkeep
 
 # 编辑器 / 系统

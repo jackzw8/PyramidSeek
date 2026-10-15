@@ -246,6 +246,42 @@ def test_kline_aggregates_monthly_qfq(tmp_path: Path) -> None:
     assert kline["c"] == [11.0, 5.6]  # close_qfq 已是前复权价，不再乘因子
 
 
+def test_kline_hfq_divides_by_first_factor(tmp_path: Path) -> None:
+    # 首日 adj_factor 0.5 → hfq = qfq ÷ 0.5（期初归一到原始价，契约 §3.4）
+    prices = {
+        "SH600900": [
+            {
+                "trade_date": "2024-01-02",
+                "open": 5.0,
+                "high": 5.5,
+                "low": 4.8,
+                "close": 5.2,
+                "adj_factor": 0.5,
+                "close_qfq": 2.6,
+            },
+            {
+                "trade_date": "2024-02-01",
+                "open": 5.2,
+                "high": 5.6,
+                "low": 5.0,
+                "close": 5.4,
+                "adj_factor": 1.0,
+                "close_qfq": 5.4,
+            },
+        ]
+    }
+    stocks = [_stock("SH600900")]
+    payload = _load(
+        build_stock(_inputs(stocks, {"SH600900": _rows()}, prices), "SH600900", tmp_path)
+    )
+
+    kline = payload["kline"]
+    assert kline["c"] == [2.6, 5.4]  # 前复权 = close_qfq
+    assert kline["hfq"]["c"] == [5.2, 10.8]  # 后复权 = qfq ÷ 0.5
+    assert kline["hfq"]["o"] == [5.0, 10.4]  # 1 月原始价（5.0 × 0.5 ÷ 0.5）
+    assert kline["hfq"]["h"] == [5.5, 11.2]
+
+
 def test_write_is_deterministic(tmp_path: Path) -> None:
     stocks = [_stock("SH600900"), _stock("SH600011")]
     financials = {"SH600900": _rows(), "SH600011": _rows(net_profit=2.0)}

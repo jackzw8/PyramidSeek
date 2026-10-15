@@ -30,7 +30,12 @@ if __package__ in (None, ""):  # 支持 `python src/batch.py` 直接运行（家
 
 from src import config  # noqa: E402
 from src.build import BuildInputs  # noqa: E402
-from src.build.build_meta import build_industries, build_meta, market_standard  # noqa: E402
+from src.build.build_meta import (  # noqa: E402
+    build_industries,
+    build_meta,
+    build_search_index,
+    market_standard,
+)
 from src.build.build_ranking import build_ranking  # noqa: E402
 from src.build.build_stock import build_stock  # noqa: E402
 from src.build.validate import validate_products  # noqa: E402
@@ -146,7 +151,11 @@ def run(args: argparse.Namespace) -> int:
         print(f"[batch] 分析层落库 {stats.path}（{stats.rows}）")
 
     out_dir = Path(args.out)
-    written = [build_meta(inputs, out_dir), build_industries(inputs, out_dir)]
+    written = [
+        build_meta(inputs, out_dir),
+        build_industries(inputs, out_dir),
+        build_search_index(inputs, out_dir),
+    ]
     for market in config.MARKETS:
         written.append(build_ranking(inputs, market, out_dir))
     for score in inputs.scored:

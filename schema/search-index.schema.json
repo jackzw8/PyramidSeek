@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pyramidseek/schema/search-index.schema.json",
+  "type": "object",
+  "required": ["snapshotVersion", "contractVersion", "entries"],
+  "properties": {
+    "snapshotVersion": { "type": "string" },
+    "contractVersion": { "type": "string" },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "name", "market"],
+        "properties": {
+          "code": { "type": "string", "pattern": "^(SH|SZ|BJ|HK)\\d{5,6}$" },
+          "name": { "type": "string" },
+          "market": { "enum": ["A", "HK"] },
+          "py": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -55,6 +55,17 @@ def _check_schema(data: Any, schema_path: Path, label: str) -> list[str]:
 
 
 # ── 逐类校验 ─────────────────────────────────────────────────────────────
+def _check_versions(holder: dict[str, Any], label: str, meta: dict[str, Any]) -> list[str]:
+    """版本字段与 ``meta.json`` 一致（契约 §6 项 5）；``holder`` 为承载版本键的对象。"""
+    problems: list[str] = []
+    for key in VERSION_KEYS:
+        if holder.get(key) != meta.get(key):
+            problems.append(
+                f"{label}: {key} = {holder.get(key)!r} 与 meta.json 的 {meta.get(key)!r} 不一致"
+            )
+    return problems
+
+
 def _check_ranking(data: dict[str, Any], label: str, meta: dict[str, Any]) -> list[str]:
     problems: list[str] = []
     rows = data.get("rows") or []
@@ -68,12 +79,7 @@ def _check_ranking(data: dict[str, Any], label: str, meta: dict[str, Any]) -> li
     if overlap:
         problems.append(f"{label}: code 同时出现在 rows 与 excluded：{sorted(overlap)}")
 
-    for key in VERSION_KEYS:
-        if (data.get("meta") or {}).get(key) != meta.get(key):
-            problems.append(
-                f"{label}: meta.{key} = {(data.get('meta') or {}).get(key)!r} "
-                f"与 meta.json 的 {meta.get(key)!r} 不一致"
-            )
+    problems.extend(_check_versions(data.get("meta") or {}, f"{label} · meta", meta))
     return problems
 
 
@@ -159,15 +165,21 @@ def validate_products(data_dir: Path, *, schema_dir: Path | None = None) -> list
     if orphans:
         problems.append(f"引用完整性：stock/ 有而榜单未收录（孤儿文件）：{orphans}")
 
+    index, errors = _read_json(data_dir / "search-index.json")
+    problems.extend(errors)
+    if index is not None:
+        label = "search-index.json"
+        problems.extend(_check_schema(index, schema_dir / "search-index.schema.json", label))
+        problems.extend(_check_versions(index, label, meta))
+        index_codes = {str(entry.get("code")) for entry in index.get("entries") or []}
+        diff = sorted(index_codes ^ files_codes)
+        if diff:
+            problems.append(f"{label}: entries 与 stock/ 文件不一致：{diff}")
+
     industries, errors = _read_json(data_dir / "industries.json")
     problems.extend(errors)
     if industries is not None:
-        for key in VERSION_KEYS:
-            if industries.get(key) != meta.get(key):
-                problems.append(
-                    f"industries.json: {key} = {industries.get(key)!r} "
-                    f"与 meta.json 的 {meta.get(key)!r} 不一致"
-                )
+        problems.extend(_check_versions(industries, "industries.json", meta))
     return problems
 
 

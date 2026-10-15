@@ -42,6 +42,8 @@ def build_meta(inputs: BuildInputs, out_dir: Path) -> Path:
         "snapshotVersion": inputs.snapshot_version,
         "contractVersion": config.CONTRACT_VERSION,
         "formulaVersion": config.FORMULA_VERSION,
+        # 前端「评分构成」展示用（家法 R12：权重只从产物读，前端不复制常量）
+        "weights": dict(config.WEIGHTS),
         "generatedAt": inputs.generated_at,
         "dataDate": data_date,
         "industryStandard": {market: market_standard(inputs, market) for market in config.MARKETS},
@@ -96,4 +98,36 @@ def build_industries(inputs: BuildInputs, out_dir: Path) -> Path:
     return write_json(out_dir / "industries.json", payload)
 
 
-__all__ = ["build_industries", "build_meta", "market_standard"]
+def _pinyin_letters(name: str) -> str:
+    """名称 → 拼音首字母（非汉字原样保留，如 ``TCL科技`` → ``TCLkj``）。
+
+    未安装 ``pypinyin`` 时返回空串（索引降级，前端仍可用代码 / 名称匹配）——
+    延迟导入，与 ``duckdb`` / ``pymupdf`` 同一策略（家法 R16：离线也要能跑）。
+    """
+    try:
+        from pypinyin import Style, lazy_pinyin  # noqa: PLC0415  （刻意延迟导入）
+    except ImportError:
+        return ""
+    return "".join(lazy_pinyin(name, style=Style.FIRST_LETTER))
+
+
+def build_search_index(inputs: BuildInputs, out_dir: Path) -> Path:
+    """生成 ``search-index.json``（搜索索引，契约 §3.6），返回写出路径。"""
+    entries = [
+        {
+            "code": code,
+            "name": str(stock.get("name") or code),
+            "market": str(stock.get("market") or ""),
+            "py": _pinyin_letters(str(stock.get("name") or "")),
+        }
+        for code, stock in sorted(inputs.stocks_by_code.items())
+    ]
+    payload: dict[str, Any] = {
+        "snapshotVersion": inputs.snapshot_version,
+        "contractVersion": config.CONTRACT_VERSION,
+        "entries": entries,
+    }
+    return write_json(out_dir / "search-index.json", payload)
+
+
+__all__ = ["build_industries", "build_meta", "build_search_index", "market_standard"]

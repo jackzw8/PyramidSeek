@@ -176,14 +176,18 @@ def _adjusted(price: Any, factor: float) -> float | None:
     return None if is_missing(price) else float(price) * factor
 
 
-def monthly_kline(price_rows: Iterable[Mapping[str, Any]]) -> dict[str, list[Any]] | None:
-    """日行情 → 月K（**前复权**，契约 §3.4）。
+def monthly_kline(price_rows: Iterable[Mapping[str, Any]]) -> dict[str, Any] | None:
+    """日行情 → 月K（**前复权**为主序列，另附 ``hfq`` 后复权子对象；契约 §3.4）。
 
-    - ``o`` = 当月首个交易日、``h`` / ``l`` = 当月极值、``c`` = 当月最后一个交易日；
-    - 前复权价 = 原始价 × ``adj_factor``（``adj_factor = close_qfq / close``，M1-4 反算）；
+    - 主序列 ``{months, o, h, l, c}`` = 前复权：``o`` = 当月首个交易日、``h`` / ``l`` = 当月
+      极值、``c`` = 当月最后一个交易日（``close_qfq``）；o/h/l 按 ``adj_factor``
+      （``= close_qfq / close``，M1-4 反算）换算；
+    - ``hfq`` = 后复权 ``{o,h,l,c}`` = 未取整的前复权序列 **÷ 序列首日 ``adj_factor``**
+      （期初归一到原始价；先除后取整，避免二次舍入）；
     - 无任何有效行 → ``None``（产物省略 ``kline`` 键）。
     """
     buckets: dict[str, dict[str, float | None]] = {}
+    base_factor: float | None = None
     for row in sorted(price_rows, key=lambda item: str(item.get("trade_date") or "")):
         trade_date = str(row.get("trade_date") or "")[:10]
         close_qfq = row.get("close_qfq")
@@ -191,6 +195,8 @@ def monthly_kline(price_rows: Iterable[Mapping[str, Any]]) -> dict[str, list[Any
             continue
         factor_value = row.get("adj_factor")
         factor = 1.0 if is_missing(factor_value) else float(factor_value)
+        if base_factor is None:
+            base_factor = factor
         month = trade_date[:7]
         bucket = buckets.get(month)
         if bucket is None:
@@ -201,15 +207,23 @@ def monthly_kline(price_rows: Iterable[Mapping[str, Any]]) -> dict[str, list[Any
         bucket["c"] = float(close_qfq)
     if not buckets:
         return None
+
     months = sorted(buckets)
-    keys = ("o", "h", "l", "c")
-    return {
-        "months": months,
-        **{
-            key: [round_value(buckets[month][key], config.PRICE_DECIMALS) for month in months]
-            for key in keys
-        },
-    }
+    raw_series = {key: [buckets[month][key] for month in months] for key in ("o", "h", "l", "c")}
+    result: dict[str, Any] = {"months": months}
+    for key, series in raw_series.items():
+        result[key] = [round_value(value, config.PRICE_DECIMALS) for value in series]
+
+    base = base_factor if base_factor else 1.0
+    if base > 0:
+        result["hfq"] = {
+            key: [
+                round_value(None if value is None else value / base, config.PRICE_DECIMALS)
+                for value in series
+            ]
+            for key, series in raw_series.items()
+        }
+    return result
 
 
 # ── 同业 ROE 列表 ────────────────────────────────────────────────────────

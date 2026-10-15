@@ -107,6 +107,20 @@ def _write_products(base: Path) -> Path:
         ),
         encoding="utf-8",
     )
+    (data / "search-index.json").write_text(
+        json.dumps(
+            {
+                "snapshotVersion": "2026-10-15",
+                "contractVersion": config.CONTRACT_VERSION,
+                "entries": [
+                    {"code": "SH600900", "name": "公司SH600900", "market": "A", "py": "gssh600900"},
+                    {"code": "SH600011", "name": "公司SH600011", "market": "A", "py": "gssh600011"},
+                ],
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
     (data / "ranking" / "A.json").write_text(
         json.dumps(
             {
@@ -242,6 +256,23 @@ def test_missing_meta_fails(products: Path) -> None:
     (products / "meta.json").unlink()
 
     assert any("缺少产物文件" in problem for problem in validate_products(products))
+
+
+def test_search_index_mismatch_is_reported(products: Path) -> None:
+    _mutate(products / "search-index.json", lambda data: data["entries"].pop())
+
+    problems = validate_products(products)
+    assert any("search-index" in problem and "不一致" in problem for problem in problems)
+
+
+def test_search_index_version_mismatch_is_reported(products: Path) -> None:
+    _mutate(
+        products / "search-index.json",
+        lambda data: data.__setitem__("snapshotVersion", "2020-01-01"),
+    )
+
+    problems = validate_products(products)
+    assert any("search-index" in problem and "snapshotVersion" in problem for problem in problems)
 
 
 # ── CLI 退出码 ───────────────────────────────────────────────────────────

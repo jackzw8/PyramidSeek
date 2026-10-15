@@ -68,7 +68,16 @@
         "o": { "type": "array" },
         "h": { "type": "array" },
         "l": { "type": "array" },
-        "c": { "type": "array" }
+        "c": { "type": "array" },
+        "hfq": {
+          "type": "object",
+          "properties": {
+            "o": { "type": "array" },
+            "h": { "type": "array" },
+            "l": { "type": "array" },
+            "c": { "type": "array" }
+          }
+        }
       }
     },
     "peers": {

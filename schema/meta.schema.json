@@ -7,6 +7,7 @@
     "snapshotVersion": { "type": "string" },
     "contractVersion": { "type": "string" },
     "formulaVersion": { "type": "string" },
+    "weights": { "type": "object" },
     "generatedAt": { "type": "string", "format": "date-time" },
     "dataDate": {
       "type": "object",
