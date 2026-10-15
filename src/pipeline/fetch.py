@@ -301,14 +301,23 @@ def fetch_universe(
     return outcome
 
 
-def default_chain(*, offline: bool = False, fixtures_path: Path | None = None) -> list[Any]:
-    """默认回退链；``offline=True`` 时**只用 fixtures**（不打网络）。"""
+def default_chain(
+    *,
+    offline: bool = False,
+    fixtures_path: Path | None = None,
+    cache_partition: str | None = None,
+) -> list[Any]:
+    """默认回退链；``offline=True`` 时**只用 fixtures**（不打网络）。
+
+    :param cache_partition: 透传给各数据源的缓存分区（D-34）：``"cold"`` 用于
+        冷启动跑批的固定缓存目录（跨天续传）；``None`` = 按日分区（日常）。
+    """
     fixtures = FixturesSource(fixtures_path)
     if offline:
         return [fixtures]
     return [
-        AkShareSource(),
-        OfficialSource(),
+        AkShareSource(partition=cache_partition),
+        OfficialSource(partition=cache_partition),
         fixtures,
     ]
 

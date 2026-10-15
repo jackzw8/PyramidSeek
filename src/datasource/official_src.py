@@ -156,6 +156,7 @@ class OfficialSource:
         today: Callable[[], date] | None = None,
         clock: Callable[[], float] | None = None,
         cache_dir: Path | None = None,
+        partition: str | None = None,
         retry_times: int | None = None,
         backoff: tuple[int, ...] | None = None,
         timeout: float | None = None,
@@ -169,6 +170,7 @@ class OfficialSource:
         self._today = today or (lambda: datetime.now(UTC).date())
         self._clock = clock or time.monotonic
         self._cache_dir = Path(cache_dir) if cache_dir else config.DATA_DIR / "raw" / "official"
+        self._partition = partition
         self._retry_times = retry_times if retry_times is not None else config.FETCH_RETRY_TIMES
         self._backoff = backoff if backoff is not None else config.FETCH_RETRY_BACKOFF
         self._timeout = timeout if timeout is not None else config.FETCH_TIMEOUT_SECONDS
@@ -223,8 +225,10 @@ class OfficialSource:
             code=code,
         ) from last
 
-    # ── 缓存 ──────────────────────────────────────────────────────────────
+    # ── 缓存（日常按日分区；cold 模式固定分区做跨天续传，D-34）────────────
     def _cache_dir_today(self) -> Path:
+        if self._partition:
+            return self._cache_dir / self._partition
         return self._cache_dir / self._today().isoformat()
 
     def _read_json_cache(self, key: str) -> Any | None:

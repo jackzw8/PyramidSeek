@@ -103,7 +103,10 @@ _REPORT_SLUG = {REPORT_INCOME: "income", REPORT_BALANCE: "balance", REPORT_CASHF
 class AkShareSource:
     """AkShare 主源（M1-2）。
 
-    :param cache_dir: 原始返回缓存根目录；默认 ``data/raw/akshare/<日期>/``。
+    :param cache_dir: 原始返回缓存根目录；默认 ``data/raw/akshare/``。
+    :param partition: 缓存分区（D-34）：``None`` = 按日分区 ``<日期>/``（日常抓取，
+        天然按新鲜度淘汰）；指定名字（如 ``"cold"``）= 固定子目录 ``cold/``，
+        **冷启动跨天续传**用 —— 中断后隔天重跑仍命中昨日已抓缓存。
     :param sleep: 退避用的睡眠函数（离线测试注入，避免真等待）。
     :param ak: akshare 模块（离线测试注入假模块；``None`` 时延迟导入真库）。
     :param today: 返回当前日期的函数（测试注入，控制缓存分区）。
@@ -118,6 +121,7 @@ class AkShareSource:
         self,
         *,
         cache_dir: Path | None = None,
+        partition: str | None = None,
         sleep: Callable[[float], None] | None = None,
         ak: Any | None = None,
         today: Callable[[], date] | None = None,
@@ -127,6 +131,7 @@ class AkShareSource:
         slow_timeout: float | None = None,
     ) -> None:
         self._cache_dir = Path(cache_dir) if cache_dir else config.DATA_DIR / "raw" / "akshare"
+        self._partition = partition
         self._sleep = sleep or time.sleep
         self._ak = ak
         self._today = today or (lambda: datetime.now(UTC).date())
@@ -197,8 +202,10 @@ class AkShareSource:
             code=code,
         ) from last
 
-    # ── 本地缓存（原始返回按日期落盘）─────────────────────────────────────
+    # ── 本地缓存（日常按日分区；cold 模式固定分区做跨天续传，D-34）─────────
     def _cache_path(self, key: str) -> Path:
+        if self._partition:
+            return self._cache_dir / self._partition / f"{key}.json"
         return self._cache_dir / self._today().isoformat() / f"{key}.json"
 
     def _load_cache(self, key: str) -> list[dict[str, Any]] | None:

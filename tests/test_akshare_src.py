@@ -237,6 +237,31 @@ def test_cache_file_lands_under_date_directory(tmp_path) -> None:
     assert (tmp_path / "2026-10-14" / "list_A.json").exists()
 
 
+def test_partition_cache_lands_in_fixed_directory(tmp_path) -> None:
+    """D-34：指定 ``partition`` 时缓存落固定子目录（冷启动跨天续传）。"""
+    calls = {"n": 0}
+
+    def counter(**kwargs):
+        calls["n"] += 1
+        return [{"code": "600900", "name": "长江电力"}]
+
+    ak = SimpleNamespace(stock_info_a_code_name=counter)
+    src = make_source(ak, tmp_path, partition="cold")
+    src.list_stocks("A")
+    assert (tmp_path / "cold" / "list_A.json").exists()
+    assert not (tmp_path / "2026-10-14").exists()
+
+    # 隔天（today 变更）重跑仍命中固定分区缓存，不再打数据源
+    src_next_day = make_source(
+        SimpleNamespace(stock_info_a_code_name=counter),
+        tmp_path,
+        partition="cold",
+        today=lambda: FIXED_DAY.replace(day=15),
+    )
+    src_next_day.list_stocks("A")
+    assert calls["n"] == 1
+
+
 def test_corrupted_cache_falls_back_to_source(tmp_path) -> None:
     cache_file = tmp_path / "2026-10-14" / "list_A.json"
     cache_file.parent.mkdir(parents=True)

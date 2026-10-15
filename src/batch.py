@@ -192,7 +192,12 @@ def run(args: argparse.Namespace) -> int:
             markets=tuple(args.markets),
             codes=codes or None,
             limit=args.limit,
-            chain=fetch.default_chain(offline=args.offline, fixtures_path=args.fixtures),
+            chain=fetch.default_chain(
+                offline=args.offline,
+                fixtures_path=args.fixtures,
+                # 冷启动用固定缓存分区（D-34）：中断隔天重跑仍命中已抓缓存
+                cache_partition="cold" if args.mode == "cold" and not args.offline else None,
+            ),
             today=date.fromisoformat(as_of),
             persist=not args.no_store,
             db_path=args.db,
