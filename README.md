@@ -51,9 +51,17 @@ PyramidSeekApp/
 │   ├── engine/                     # 指标 / 评分 / 行业分位
 │   ├── build/                      # 产物生成（ranking/stock/meta/derived）+ 校验
 │   └── batch.py                    # 总入口：一条命令跑完
-├── schema/                         # 产物 JSON Schema（meta/ranking/stock，校验用）
+├── schema/                         # 产物 JSON Schema（meta/ranking/stock/search-index，校验用）
 ├── fixtures/                       # 示例数据（离线回归 + 黄金样本输入）
-├── public/                         # 前端静态站点（+ 产物 data/）
+├── public/                         # 前端静态站点（原生 HTML/CSS/JS + 手绘 SVG，零依赖）
+│   ├── index.html                  # 排行页（主榜 + 单列，筛选 / 分页 / 组内前 10% 高亮）
+│   ├── stock.html                  # 个股详情（评分构成 / 雷达 / 月K·MACD·年ROE / 四张表 / 同业面板）
+│   ├── watchlist.html              # 观察池（visitorId + 导出 / 导入）
+│   ├── css/style.css
+│   ├── js/api.js                   # 产物加载层（fetch + 缓存 + 降级 / 断产物提示）
+│   ├── js/common.js                # 公共工具（格式化「—」/ 搜索 / 收藏 / 导航）
+│   ├── js/{ranking,stock,watchlist}.js
+│   └── data/                       # 产物（跑批生成，gitignore）
 ├── tests/                          # 单元 / 回归 / 契约测试
 └── data/                           # 本地运行产物（gitignore）
 ```
@@ -79,6 +87,10 @@ pytest
 
 # 4) 单独校验已有产物（M3-5；失败非零退出）
 python -m src.build.validate [--data public/data]
+
+# 5) 本地预览前端（产物已在 public/data/；浏览器打开 http://localhost:8000/）
+cd public
+python -m http.server 8000
 ```
 
 跑批环境由环境变量 `PS_ENV` 区分（`local` | `ci`），脚本不写死绝对路径、不使用交互输入。
@@ -97,7 +109,7 @@ python -m src.build.validate [--data public/data]
 | **M1 数据层** | ✅ 数据源抽象 → AkShare → 官方源兜底 → 清洗 → DuckDB/Parquet |
 | **M2 计算层** | ✅ 指标 / 子分 / 成长分 / 行业分位 / 组装总分 / 双引擎黄金样本对账 |
 | **M3 产物层** | ✅ ranking（主榜 + 单列）/ stock / meta 产物 + schema 校验 + 跑批总入口 |
-| M4 前端 | ⬜ 待开工（排行 / 详情 / 观察池 / 搜索） |
+| **M4 前端** | ✅ 排行（主榜 + 单列、组内前 10% 高亮）/ 详情（雷达 / 月K·MACD / 四表 / 同业）/ 观察池 / 拼音搜索；数据全部来自产物 |
 | M5 发布 | ⬜ 待开工（Actions 跑批 + Pages 部署） |
 | M6 打磨 | ⬜ 待开工（告警 / 缓存 / 降级提示 / 文档） |
 

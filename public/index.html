@@ -1,36 +1,65 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>金字塔排行 · PyramidSeek</title>
-  <link rel="stylesheet" href="css/style.css" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>金字塔排行 · 金字塔选股 PyramidSeek</title>
+<link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-  <header class="page-header">
+<div id="ps-nav"></div>
+<main class="wrap">
+  <div class="page-head">
     <h1>金字塔排行</h1>
-    <nav>
-      <a href="index.html">排行</a>
-      <a href="watchlist.html">观察池</a>
-    </nav>
-  </header>
+    <div class="sub">按基本面综合评分（金字塔分）排序 ｜ 选市场 → 选板块/行业 → 看榜单 → 点进详情</div>
+  </div>
 
-  <main>
-    <p class="placeholder">
-      页面骨架占位（M0）。排行页的市场 / 板块 / 行业下拉筛选、分页、前 10% 高亮，
-      以及数据加载与降级提示，将在 <strong>M4-1 / M4-2 / M4-3</strong> 实现。
-    </p>
-    <p class="placeholder">
-      数据来自产物 <code>public/data/ranking/A.json</code>、<code>ranking/HK.json</code>。
-    </p>
-  </main>
+  <div class="card">
+    <div class="filters" id="filters"></div>
+    <table class="grid">
+      <thead><tr>
+        <th>#</th><th>名称 / 代码</th><th>市场</th><th>行业</th><th>对比池</th>
+        <th>金字塔分</th><th>ROE</th><th>毛利率</th><th>现金比率</th><th>负债率</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div id="pager" class="pager"></div>
+    <p class="note">高亮行 = <b>对比池内</b>排名前 10%（产物 <code>isTop10pct</code>）。金字塔分 = clamp(质量分 + 成长分, 0, 1000)。同行业对比：二级行业样本 &lt; 30 时回退一级。缺失值显示「—」。</p>
+  </div>
 
-  <footer>
-    <p class="disclaimer">
-      免责声明：本项目为学习/研究用途，所有评分与数据不构成任何投资建议。
-    </p>
-  </footer>
+  <div class="card" id="excluded-card" style="display:none">
+    <h3>单列（不参与主榜）<span class="sub" id="ex-sub"></span></h3>
+    <table class="grid">
+      <thead><tr>
+        <th>名称 / 代码</th><th>市场</th><th>行业</th><th>状态</th><th>原因</th>
+        <th>金字塔分</th><th>质量分</th><th>成长分</th>
+      </tr></thead>
+      <tbody id="ex-tbody"></tbody>
+    </table>
+    <p class="note">单列股票仍可点进详情页；评分照算但不参与主榜排名（《评分算法规格》§8）。ST / 停牌 / 退市来自状态标记，次新股为上市不足 5 年，行业未分类不参与行业分位。</p>
+  </div>
 
-  <script src="js/api.js"></script>
+  <div class="card" id="method">
+    <h3>评分说明</h3>
+    <p class="sub" style="color:var(--muted)">金字塔分 = clamp( 质量分 Q + 成长分 G , 0 , 1000 )</p>
+    <p><b>质量分 Q（0~1000）</b>：6 项财务质量指标加权，每项子分 0~100。</p>
+    <div class="method-list">
+      <div class="method-item"><b>ROE 净资产收益率 · 300</b><span class="r">核心；绝对值分段：10%→50、20%→80、35%→100</span></div>
+      <div class="method-item"><b>净利润规模 · 180</b><span class="r">重要；行业分位</span></div>
+      <div class="method-item"><b>ROA 总资产回报率 · 160</b><span class="r">重要；绝对值分段</span></div>
+      <div class="method-item"><b>毛利率 · 130</b><span class="r">辅助；20%→50、30%→80、40%→100</span></div>
+      <div class="method-item"><b>现金占总资产比率 · 120</b><span class="r">辅助；10%→50、25%→80、35%→100</span></div>
+      <div class="method-item"><b>总资产周转率 · 110</b><span class="r">辅助；行业分位</span></div>
+    </div>
+    <p style="margin-top:14px"><b>成长分 G（−200~+200）</b>：净利润、经营现金流各 −100~+100，
+      单项 = 方向分(CAGR) × 稳定性系数 k（CV 越小 k 越高，k∈[0.6,1]）。</p>
+    <p class="note">数据来源：AkShare 主源（失败自动回退官方披露源 / 示例数据），产物口径见《产物契约》；降级时页头有提示。本工具仅供学习研究，不构成任何投资建议。</p>
+  </div>
+</main>
+<div id="ps-foot"></div>
+<script src="js/api.js"></script>
+<script src="js/common.js"></script>
+<script src="js/search.js"></script>
+<script src="js/ranking.js"></script>
 </body>
 </html>

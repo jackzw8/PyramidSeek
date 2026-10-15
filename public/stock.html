@@ -1,33 +1,71 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>个股详情 · PyramidSeek</title>
-  <link rel="stylesheet" href="css/style.css" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>个股详情 · 金字塔选股 PyramidSeek</title>
+<link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-  <header class="page-header">
-    <h1>个股详情</h1>
-    <nav>
-      <a href="index.html">排行</a>
-      <a href="watchlist.html">观察池</a>
-    </nav>
-  </header>
+<div id="ps-nav"></div>
+<main class="wrap">
+  <div id="head" class="card"></div>
 
-  <main>
-    <p class="placeholder">
-      页面骨架占位（M0）。详情页布局为三列（评分构成 ｜ 雷达图 ｜ 同行业对比面板）+ 月K 整行卡，
-      数据来自 <code>public/data/stock/{code}.json</code>，将在 <strong>M4-1 / M4-4</strong> 实现。
-    </p>
-  </main>
+  <div class="grid3">
+    <div class="card"><h3>评分构成（可解释）</h3><div class="chart-box" id="t-sub"></div></div>
 
-  <footer>
-    <p class="disclaimer">
-      免责声明：本项目为学习/研究用途，所有评分与数据不构成任何投资建议。
-    </p>
-  </footer>
+    <div class="card">
+      <h3>雷达对比图</h3>
+      <div class="filters" style="margin-bottom:6px">
+        <label>同行业对比</label><select id="peer"></select>
+      </div>
+      <div class="chart-box" id="radar"></div>
+      <p class="note" style="font-size:12px">仅允许同行业对比；六维子分 0~100，本股为实线，对比股为虚线。也可在右侧「同行业对比」面板中悬停某股实时预览、点击进入其详情。</p>
+    </div>
 
-  <script src="js/api.js"></script>
+    <aside id="peer-panel" class="card">
+      <div class="pp-head">
+        <span class="pp-title">同行业对比</span>
+        <button class="pp-toggle" id="pp-toggle" title="收起 / 展开">—</button>
+      </div>
+      <div class="pp-body">
+        <div class="pp-sub" id="pp-sub"></div>
+        <div class="pp-list" id="pp-list"></div>
+        <div class="pp-tip">悬停预览雷达 · 点击进入详情</div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="card"><h3>获利能力 Profitability</h3><div class="chart-box" id="t-profit"></div></div>
+  <div class="card"><h3>财务结构 Financial Structure</h3><div class="chart-box" id="t-struct"></div></div>
+  <div class="card"><h3>经营能力 Operating Capability</h3><div class="chart-box" id="t-oper"></div></div>
+  <div class="card"><h3>现金流量 Cash Flow（单位：亿元）</h3><div class="chart-box" id="t-cash"></div></div>
+
+  <div class="card">
+    <div class="chart-head">
+      <div class="chart-title">
+        <h3>月K · MACD · 年ROE</h3>
+        <span class="chart-sub">Monthly Trend</span>
+      </div>
+      <div class="chart-ctrl">
+        <span class="tg" id="tg-range">
+          <button data-v="8y" class="on">近8年</button><button data-v="all">全部</button>
+        </span>
+        <span class="tg" id="tg-adj">
+          <button data-v="qfq" class="on">前复权</button><button data-v="hfq">后复权</button>
+        </span>
+      </div>
+    </div>
+    <div class="chart-box" id="kline"></div>
+    <p class="note" style="font-size:12px">红涨绿跌；DIF 蓝 / DEA 金；年ROE 柱自「报告期 + 4 个月」起生效（家法 R9）。月K 为<b>前复权</b>主序列（后复权可选），悬浮查看当月 OHLC、MACD 与生效年报 ROE；无行情数据时该卡给出提示。</p>
+  </div>
+
+  <p class="note">年ROE 柱「报告期 + 4 个月起生效」；四张财务表读自产物（《产物契约》§3.4），标准层暂缺的字段（如应收账款/固定资产周转）显示「—」。本工具仅供学习研究，不构成任何投资建议。</p>
+</main>
+<div id="ps-foot"></div>
+<script src="js/api.js"></script>
+<script src="js/common.js"></script>
+<script src="js/search.js"></script>
+<script src="js/stock.js"></script>
 </body>
 </html>
