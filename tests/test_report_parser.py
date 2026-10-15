@@ -330,7 +330,7 @@ HK_REPORT_TEXT = """綜合收益表
 人民幣百萬元
 附註 二零二五年 二零二四年
 收入 751,766 660,257
-銷售成本 329,173 311,011
+銷售成本 (329,173) (311,011)
 本公司權益持有人應佔盈利 224,842 194,073
 綜合財務狀況表
 人民幣百萬元
@@ -386,6 +386,9 @@ def test_hk_subjects_and_hundred_million_unit() -> None:
     current = rows[0]
 
     assert current["revenue"] == 7517.66  # 751,766 百万元
+    # 成本写在括号里（港股惯例，被解析成负数）→ 毛利必须是 revenue − |cost|，
+    # 不能是 revenue + cost（实测：腾讯毛利会变成 10809 亿，而年报里是 4225.93 亿）
+    assert current["gross_profit"] == 4225.93
     assert current["net_profit"] == 2248.42
     assert current["total_assets"] == 20389.86
     assert current["equity"] == 12410.65
@@ -427,6 +430,82 @@ def test_hk_missing_required_subject_still_errors() -> None:
     broken = HK_REPORT_TEXT.replace("本公司權益持有人應佔盈利 224,842 194,073\n", "")
     with pytest.raises(base.DataSourceError, match="必填科目缺失"):
         report_parser.build_report_rows("HK00700", broken, report_period="2025-12-31")
+
+
+# ── 港股真实版式的三条硬骨头（2026-10-14 实测取证，D-24 闭环时补的用例）────
+GROUPED_TOTAL_TEXT = """綜合收益表
+人民幣百萬元
+收入
+－增值服務 369,281 319,168
+－其他 8,077 7,759
+6 751,766 660,257
+下列人士應佔：
+本公司權益持有人 224,842 194,073
+"""
+
+
+def test_group_heading_takes_the_unlabelled_total() -> None:
+    """**「组头 + 明细 + 无标签合计」**版式：`收入` 的值在明细之后的合计行。
+
+    腾讯年报利润表就是这个样子：`收入` 单独一行，下面是明细，合计行**没有标签**。
+    只做相邻拼接时 `收入` 永远取不到值（曾因此选错整张表）。
+    """
+    rows = report_parser.build_report_rows(
+        "HK00700", GROUPED_TOTAL_TEXT, report_period="2025-12-31"
+    )
+    # 751,766 百万元 → 7517.66 亿元；绝不能取成第一个明细 369,281
+    assert rows[0]["revenue"] == 7517.66
+    assert rows[1]["revenue"] == 6602.57
+
+
+def test_values_only_detection() -> None:
+    """「纯数值行」判定：合计行没有科目名，别把它当科目行、也别把它当标题。"""
+    assert report_parser._is_values_only("6 751,766 660,257")
+    assert report_parser._is_values_only("1,154,152 973,548")
+    assert not report_parser._is_values_only("收入")
+    assert not report_parser._is_values_only("增值服務 369,281 319,168")
+
+
+RUNNING_HEADER_TEXT = """綜合財務狀況表
+人民幣百萬元
+資產總額 2,000,000 1,900,000
+綜合財務狀況表
+本公司權益持有人應佔權益
+－股本 10 10
+－保留盈利 1,100 1,000
+1,150,000 973,548
+負債總額 900,000 900,000
+綜合現金流量表
+人民幣百萬元
+經營活動所得現金流量淨額 300,000 250,000
+"""
+
+
+def test_statement_span_runs_to_the_next_different_statement() -> None:
+    """**页眉陷阱**：港股报表每页都有页眉（同名标题逐页重复）。
+
+    若把"下一个同名标题"当切分终点，切出来的永远是页眉之间的缝隙（实测只有 743 字符），
+    必填科目必然缺失。终点必须是"下一张**别的**表"。
+    """
+    rows = report_parser.build_report_rows(
+        "HK00700", RUNNING_HEADER_TEXT, report_period="2025-12-31"
+    )
+    assert len(rows) == 2  # 本期 + 上期
+    assert rows[0]["total_assets"] == 20000.0
+    assert rows[0]["equity"] == 11500.0  # 无标签合计行 1,150,000
+    assert rows[0]["total_liabilities"] == 9000.0
+    assert rows[0]["op_cashflow"] == 3000.0
+
+
+@pytest.mark.parametrize(
+    "label",
+    ["經營活動所得現金流量淨額", "經營活動所得現金淨額", "经营活动产生的现金流量净额"],
+)
+def test_hk_and_a_share_cashflow_wording_variants(label: str) -> None:
+    """现金流科目在两地/不同发行人有多种写法（腾讯用带「流量」的那条）。"""
+    text = f"綜合現金流量表\n人民幣百萬元\n{label} 300,000 250,000\n"
+    values = report_parser.parse_statement(text, kind="cashflow")
+    assert values["op_cashflow"] == [300_000.0, 250_000.0]
 
 
 # ── 抽取器链路：pymupdf 优先、pypdf 兜底（D-24）────────────────────────────

@@ -90,7 +90,8 @@ CURRENCY_UNIT_PATTERN = re.compile(
 SUBJECTS: dict[str, dict[str, tuple[str, ...]]] = {
     "income": {
         "revenue": ("营业收入", "营业总收入", "收入", "營業額", "营业额", "總收入", "总收入"),
-        "cost": ("营业成本", "营业总成本", "營業成本", "銷售成本", "销售成本"),
+        # 腾讯用「收入成本」，港交所系多用「營業成本」/「銷售成本」
+        "cost": ("营业成本", "营业总成本", "營業成本", "收入成本", "銷售成本", "销售成本"),
         # 只用**归母**口径：裸「净利润 / 盈利 / 溢利」都是含少数股东的总口径，两者不是一个数
         # （真实年报验证：长江电力 2025 总净利润 349.49 亿 vs 归母 345.03 亿）
         "net_profit": (
@@ -99,6 +100,10 @@ SUBJECTS: dict[str, dict[str, tuple[str, ...]]] = {
             "本公司權益持有人應佔盈利",
             "本公司擁有人應佔盈利",
             "本公司股東應佔盈利",
+            # 腾讯年报把它写成"下列人士應佔："块里的子行 `本公司權益持有人 224,842 194,073`
+            # （标签不含"應佔盈利"字样）—— 2026-10-14 实测取证（D-24）
+            "本公司權益持有人",
+            "本公司擁有人",
             "歸屬於本公司股東的淨利潤",
             "歸屬於母公司股東的淨利潤",
         ),
@@ -118,19 +123,52 @@ SUBJECTS: dict[str, dict[str, tuple[str, ...]]] = {
         "cash": ("货币资金", "貨幣資金", "現金及現金等價物", "现金及现金等价物"),
     },
     "cashflow": {
+        # 腾讯年报用「經營活動所得現金流量淨額」；也保留不带「流量」与简体的写法
+        # （2026-10-14 实测取证：差两个字就取不到值，D-24）
         "op_cashflow": (
             "经营活动产生的现金流量净额",
+            "經營活動所得現金流量淨額",
             "經營活動所得現金淨額",
             "經營活動產生的現金流量淨額",
         ),
-        "icf": ("投资活动产生的现金流量净额", "投資活動所得現金淨額"),
-        "fcf": ("筹资活动产生的现金流量净额", "融資活動所得現金淨額"),
+        "icf": (
+            "投资活动产生的现金流量净额",
+            "投資活動耗用現金流量淨額",  # 「耗用」= 净流出（值为负）
+            "投資活動所得現金流量淨額",
+            "投資活動所得現金淨額",
+        ),
+        "fcf": (
+            "筹资活动产生的现金流量净额",
+            "融資活動耗用現金流量淨額",
+            "融資活動所得現金流量淨額",
+            "融資活動所得現金淨額",
+        ),
     },
 }
 
+# 视觉行重建的 y 容差（pt）：同一行的单词 y 会差零点几，不同行至少差 8pt 以上
+_PAGE_ROW_TOLERANCE = 3.0
+
+# 「一张表」的正文窗口：标题之后取这么长的文本。
+# 定长是为了兼顾两种真实情况 —— 港股报表每页都有页眉（同名标题反复出现，
+# 按"下一个同名标题"切只剩几百字符），而看"下一个别的表"又会让片段跨进附注区。
+_SPAN_WINDOW = 12000
+
 # 这些候选名**只允许精确匹配**：太短或太常见，宽松（子串）匹配会命中
 # 「其他收入」「經營盈利」这类**完全不同**的行 —— 宁可失败也不写错值（延续 D-11）。
-EXACT_ONLY_CANDIDATES = ("收入", "营业额", "營業額", "總收入", "总收入", "總資產", "總負債")
+EXACT_ONLY_CANDIDATES = (
+    "收入",
+    "营业额",
+    "營業額",
+    "總收入",
+    "总收入",
+    "總資產",
+    "總負債",
+    # 港股「下列人士應佔：」块里的子行标签就是这两个词；宽松匹配会命中
+    # 「本公司權益持有人應佔**權益**」（资产负债表）→ 跨表取到错值（实测踩过）
+    "本公司權益持有人",
+    "本公司擁有人",
+)
 
 # 每张表必须命中的科目（缺失 → 报错，不猜）
 REQUIRED_SUBJECTS: dict[str, tuple[str, ...]] = {
@@ -161,32 +199,38 @@ def _pypdf_text(pdf_path: str | Path) -> str:
 
 
 def _pymupdf_text(pdf_path: str | Path) -> str:
-    """用 ``pymupdf`` 抽文本。
+    """用 ``pymupdf`` 抽文本，并**按 y 坐标重建视觉行**。
 
-    它能正确解码**没有 ``/ToUnicode`` 映射的 CID 中文字体**（自带 CMap 兜底），
+    ① 它能正确解码**没有 ``/ToUnicode`` 映射的 CID 中文字体**（自带 CMap 兜底），
     而 pypdf 对这种字体只能输出错码位 —— 港股年报的普遍情况（D-24 实测：
     同一份腾讯年报，pypdf 抽出 0 个 CJK 字符、pymupdf 抽出 13 万个）。
+
+    ② 但 ``get_text("text")`` 对"表格里一个单元格一行"的版式按**内容流顺序**输出，
+    会把同一视觉行拆开：标签（``收入``）在前、金额（``751,766 660,257``）在后，
+    中间夹着十几行子项 —— 标签与金额对不上，科目就全丢了（D-24 实测，腾讯年报利润表）。
+    改用 ``get_text("words")``：**把同一 y 的单词聚成一行、行内按 x 排序**，
+    于是"一个文本行 = 一个视觉行"。
 
     刻意延迟导入：未安装时由 :func:`extract_text` 自动回落到 pypdf。
     """
     import pymupdf  # noqa: PLC0415
 
-    class _Page:
-        def __init__(self, page: Any) -> None:
-            self._page = page
-
-        def extract_text(self, **_: object) -> str:
-            return self._page.get_text("text")
-
-    class _Reader:
-        def __init__(self, path: str) -> None:
-            self._doc = pymupdf.open(str(path))
-
-        @property
-        def pages(self) -> list[Any]:
-            return [_Page(page) for page in self._doc]
-
-    return _join_pages(_Reader(str(pdf_path)))
+    pages: list[str] = []
+    for page in pymupdf.open(str(pdf_path)):
+        # words: (x0, y0, x1, y1, word, block_no, line_no, word_no)
+        entries = sorted(
+            ((float(item[1]), float(item[0]), str(item[4])) for item in page.get_text("words")),
+            key=lambda entry: (entry[0], entry[1]),
+        )
+        rows: list[list[tuple[float, str]]] = []
+        row_y: float | None = None
+        for y, x, word in entries:
+            if row_y is None or y - row_y > _PAGE_ROW_TOLERANCE:
+                rows.append([])
+                row_y = y
+            rows[-1].append((x, word))
+        pages.append("\n".join(" ".join(word for _x, word in sorted(row)) for row in rows))
+    return "\n".join(pages)
 
 
 _EXTRACTORS: dict[str, Any] = {"pymupdf": _pymupdf_text, "pypdf": _pypdf_text}
@@ -303,23 +347,56 @@ def _is_note_column(token: str) -> bool:
     return text.isdigit() and int(text) < 1000
 
 
+def _is_separator(text: str) -> bool:
+    """两个数字之间只有空白 / 括号之类的分隔符 —— 说明它们属于**同一段**数字列。"""
+    cleaned = (
+        text.replace(" ", "").replace("(", "").replace(")", "").replace("（", "").replace("）", "")
+    )
+    return not cleaned.strip()
+
+
+def _row_segments(line: str) -> list[tuple[str, list[float | None]]]:
+    """把一行切成若干 ``(科目名, 各列金额)`` 段。
+
+    **为什么不能只认"行首的科目名"**：一行的左右可能并排**两张表** —— A 股资产负债表就是
+    "资产"在左、"负债和所有者权益"在右；y 坐标重建视觉行后，左右两栏会并成同一行，
+    于是 `归属于母公司所有者权益合计` 跑到行中间，只认行首就会把 equity 整个丢掉
+    （2026-10-14 实测，D-24）。这里按"文字 + 紧邻的一串数字"切段，逐段匹配。
+
+    年报三表首列常是**附注号**（附注列），识别到就丢掉，只保留金额列。
+    """
+    matches = list(_NUMBER_PATTERN.finditer(line))
+    if not matches:
+        return []
+
+    runs: list[list[re.Match[str]]] = []
+    for match in matches:
+        if runs and _is_separator(line[runs[-1][-1].end() : match.start()]):
+            runs[-1].append(match)
+        else:
+            runs.append([match])
+
+    segments: list[tuple[str, list[float | None]]] = []
+    previous_end = 0
+    for run in runs:
+        subject = normalize_subject(line[previous_end : run[0].start()])
+        tokens = [item.group() for item in run]
+        if len(tokens) >= 2 and _is_note_column(tokens[0]):
+            tokens = tokens[1:]
+        # 科目名至少 2 个字符：单字（如日期被数字切断后的「年」）不是科目名
+        if len(subject) >= 2 and tokens and not any(char.isdigit() for char in subject):
+            segments.append((subject, [parse_amount(token) for token in tokens]))
+        previous_end = run[-1].end()
+    return segments
+
+
 def parse_line(line: str) -> tuple[str, list[float | None]] | None:
     """解析一行报表 → ``(科目名, [各列金额])``；不是科目行则返回 ``None``。
 
-    年报三表首列常是**附注号**（附注列），识别到就丢掉，只保留金额列，
-    因此返回的金额按「本期、上期」顺序排列（供 :func:`parse_statement` 使用）。
+    只取**第一段**；一行里并排两张表时用 :func:`_row_segments` 取全部段。
     """
-    body = strip_ordinal(line)
-    match = _NUMBER_PATTERN.search(body)
-    if match is None:
-        return None
-    subject = normalize_subject(body[: match.start()])
-    if not subject or any(char.isdigit() for char in subject):
-        return None
-    tokens = _NUMBER_PATTERN.findall(body[match.start() :])
-    if len(tokens) >= 2 and _is_note_column(tokens[0]):
-        tokens = tokens[1:]
-    return subject, [parse_amount(token) for token in tokens]
+    segments = _row_segments(strip_ordinal(line))
+    return segments[0] if segments else None
 
 
 def _in_summary_table(text: str, position: int) -> bool:
@@ -366,10 +443,15 @@ def split_statements(text: str) -> dict[str, str]:
     #   ② 其次看金额数量；③ 最后才比"合并口径"。
     # 只靠"金额最多"会输给财务报**附注**（附注里数字更多）；只靠"先到先得"会选中
     # **目录页**（腾讯年报目录把三个标题排在相邻三行，选出来只有 5 个字符）。
+    # **切分终点 = 标题之后的定长窗口**（不看下一个标题）。两种"看下一个标题"的写法都踩过：
+    # ① 看下一个**同名**标题 → 港股每页都有页眉（`綜合財務狀況表` 逐页重复），切出来只有 743
+    #    字符的"页眉缝隙"，必填科目全缺；
+    # ② 看下一个**别的表**标题 → 片段会一路跨到附注区，A 股的 balance 因此选成附注表。
+    # 定长窗口不依赖任何"标题重复模式"，配合下面的解析质量评分一起用才稳。
     chosen: dict[str, tuple[tuple[int, int, bool], dict[str, Any]]] = {}
-    for index, span in enumerate(spans):
-        stop = spans[index + 1]["start"] if index + 1 < len(spans) else len(text)
-        sample = text[span["end"] : stop][:12000]
+    for span in spans:
+        stop = min(span["end"] + _SPAN_WINDOW, len(text))
+        sample = text[span["end"] : stop]
         missing = missing_subjects(span["kind"], parse_statement(sample, kind=span["kind"]))
         score = (
             len(REQUIRED_SUBJECTS[span["kind"]]) - len(missing),
@@ -387,15 +469,32 @@ def _is_merged_title(title: str) -> bool:
     return any(marker in title for marker in MERGED_MARKERS)
 
 
-def _candidate_lines(text: str, *, lookahead: int = 3) -> list[str]:
-    """匹配用的候选行：**原行 + 「本行 + 后 N 行」的各种拼接**。
+def _is_values_only(line: str) -> bool:
+    """该行**只有数字**（没有科目名）——报表里的"合计行"常常长这样。
 
-    两种真实版式都靠它兜住（2026-10-14 实测）：
+    判定：把所有数字 token 抠掉后只剩空白与括号之类的分隔符。
+    """
+    remainder = _NUMBER_PATTERN.sub(" ", line)
+    return not remainder.replace(" ", "").replace("(", "").replace(")", "").strip()
+
+
+def _has_label(line: str) -> bool:
+    """该行含**非数字的文字**（即像科目名）。"""
+    return bool(line.strip()) and not _is_values_only(line)
+
+
+def _candidate_lines(text: str, *, lookahead: int = 3, group_lookahead: int = 40) -> list[str]:
+    """匹配用的候选行：**原行 + 「本行 + 后 N 行」的拼接 + 「组头 + 无标签合计」的拼接**。
+
+    三种真实版式都靠它兜住（2026-10-14 实测）：
     - A 股：标签被换行切断（``归属于母公司股东权益合`` / ``计 221,338,…``）；
-    - 港股（pymupdf 抽取）：**一个单元格一行**，标签与金额差好几行
-      （``收入`` / ``751,766`` / ``660,257``）→ 只看相邻两行仍然匹配不上。
+    - 港股（pymupdf 抽取）：**一个单元格一行**，标签与金额差好几行；
+    - **港股"组头 + 明细 + 无标签合计"版式**（腾讯年报利润表 / 资产负债表的核心难点）：
+      ``收入`` 单独一行作组头，下面跟一串明细，**合计行没有标签**：
+      ``增值服務 369,281`` … ``751,766 660,257``。只做相邻拼接时 ``收入`` 永远取不到值。
 
-    ``lookahead`` 越大覆盖越好、也越慢；3 行足够覆盖"标签 + 本期 + 上期"。
+    ``lookahead`` 覆盖"标签 + 本期 + 上期"；``group_lookahead`` 覆盖组头到合计的距离
+    （实务里几十行以内）。
 
     **注意**：拼接会让 subject 变长（如 ``收入 －中國內地``），配合
     :data:`EXACT_ONLY_CANDIDATES` 才不会把附注里的分类行误当科目。
@@ -406,11 +505,45 @@ def _candidate_lines(text: str, *, lookahead: int = 3) -> list[str]:
         for step in range(1, lookahead + 1):
             if index + step < len(raw):
                 out.append(" ".join(raw[index : index + step + 1]))
+
+    # 组头 → 块内第一个"纯数值行"（= 该组合计）；遇到下一个组头就换块
+    for index, line in enumerate(raw):
+        if _is_values_only(line):
+            continue
+        for following in raw[index + 1 : index + 1 + group_lookahead]:
+            if _has_label(following) and not _NUMBER_PATTERN.search(following):
+                break  # 下一个组头（这一行只有文字）→ 本块结束
+            if _is_values_only(following):
+                out.append(f"{line} {following}")
+                break
+
+    # 标签被换行**拆字**、且尾巴落在数值行之后：A 股的
+    # ``归属于母公司股东权益合`` / ``221,338,…  210,348,…`` / ``计``
+    # 三种相邻拼接都拼不出「合计」，equity 会整个丢掉（2026-10-14 实测）。
+    # 这里把「标签 + 数值行 + 紧跟的短文字尾巴」拼成一行。
+    for index, line in enumerate(raw):
+        if _NUMBER_PATTERN.search(line):
+            continue
+        for offset in range(1, 3):
+            following = raw[index + offset] if index + offset < len(raw) else None
+            if following is None:
+                break
+            if not _NUMBER_PATTERN.search(following):
+                continue
+            tail_index = index + offset + 1
+            tail = raw[tail_index] if tail_index < len(raw) else ""
+            if tail and len(tail) <= 4 and not _NUMBER_PATTERN.search(tail):
+                out.append(f"{line} {tail} {following}")
+            break
     return out
 
 
 def parse_statement(text: str, *, kind: str) -> dict[str, list[float | None]]:
-    """在一张表里按科目名取**各列**金额（第 1 列=本期，第 2 列=上期）。"""
+    """在一张表里按科目名取**各列**金额（第 1 列=本期，第 2 列=上期）。
+
+    逐行、**逐段**匹配（一行里可能并排两张表，见 :func:`_row_segments`）；
+    每个候选名先找精确匹配、退而求其次找子串匹配。
+    """
     lines = _candidate_lines(text)
     values: dict[str, list[float | None]] = {}
     for field_name, candidates in SUBJECTS[kind].items():
@@ -419,20 +552,19 @@ def parse_statement(text: str, *, kind: str) -> dict[str, list[float | None]]:
             exact: list[float | None] | None = None
             loose: list[float | None] | None = None
             for line in lines:
-                parsed = parse_line(line)
-                if parsed is None:
-                    continue
-                subject, amounts = parsed
-                if not amounts:
-                    continue
-                if subject == candidate and exact is None:
-                    exact = amounts
-                elif (
-                    loose is None
-                    and candidate not in EXACT_ONLY_CANDIDATES
-                    and candidate in subject
-                ):
-                    loose = amounts
+                for subject, amounts in _row_segments(line):
+                    if not amounts:
+                        continue
+                    if subject == candidate and exact is None:
+                        exact = amounts
+                    elif (
+                        loose is None
+                        and candidate not in EXACT_ONLY_CANDIDATES
+                        and candidate in subject
+                    ):
+                        loose = amounts
+                if exact is not None:
+                    break
             found = exact if exact is not None else loose
             if found is not None:
                 break
@@ -518,7 +650,11 @@ def build_report_rows(
         cost = cell("income", "cost")
         gross = None
         if revenue is not None and cost is not None:
-            gross = round(revenue - cost, config.AMOUNT_DECIMALS)
+            # **成本的正负号两地不同**：A 股写正数（`营业成本 33,057,…`），港股写在括号里
+            # （`收入成本 (329,173)`）→ 被解析成负数。统一按"费用取绝对值"再减，
+            # 否则港股会算成 revenue + cost（实测腾讯毛利会变成 10809 亿，
+            # 而年报里的毛利是 4225.93 亿 —— D-24 验收时抓到的错值）。
+            gross = round(revenue - abs(cost), config.AMOUNT_DECIMALS)
 
         rows.append(
             {
