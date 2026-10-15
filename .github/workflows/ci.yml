@@ -39,3 +39,7 @@ jobs:
 
       - name: Test (pytest)
         run: pytest
+
+      # M3-5：离线跑批产出全部产物并校验（schema + 引用完整性），坏产物直接拦下
+      - name: Batch + validate (offline)
+        run: python -m src.batch --offline

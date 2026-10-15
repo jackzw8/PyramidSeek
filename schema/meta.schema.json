@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pyramidseek/schema/meta.schema.json",
+  "type": "object",
+  "required": ["snapshotVersion", "contractVersion", "formulaVersion", "generatedAt", "degraded"],
+  "properties": {
+    "snapshotVersion": { "type": "string" },
+    "contractVersion": { "type": "string" },
+    "formulaVersion": { "type": "string" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "dataDate": {
+      "type": "object",
+      "properties": {
+        "financial": { "type": "string", "format": "date" },
+        "price": { "type": "string", "format": "date" }
+      }
+    },
+    "industryStandard": {
+      "type": "object",
+      "properties": { "A": { "type": "string" }, "HK": { "type": "string" } }
+    },
+    "degraded": { "type": "boolean" },
+    "notes": { "type": "string" }
+  }
+}

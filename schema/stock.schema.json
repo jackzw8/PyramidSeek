@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pyramidseek/schema/stock.schema.json",
+  "type": "object",
+  "required": ["code", "name", "market", "score", "quality", "growth", "years", "radar", "qualitySubs"],
+  "properties": {
+    "code": { "type": "string", "pattern": "^(SH|SZ|BJ|HK)\\d{5,6}$" },
+    "name": { "type": "string" },
+    "market": { "enum": ["A", "HK"] },
+    "exchange": { "type": "string" },
+    "l1": { "type": "string" },
+    "l2": { "type": "string" },
+    "group": { "type": "string" },
+    "level": { "enum": ["L1", "L2", ""] },
+    "industryStd": { "type": "string" },
+    "listedAt": { "type": "string" },
+    "score": { "type": "number", "minimum": 0, "maximum": 1000 },
+    "quality": { "type": "number" },
+    "growth": { "type": "number" },
+    "growthDetail": { "type": "object" },
+    "qualitySubs": { "type": "object" },
+    "radar": {
+      "type": "object",
+      "required": ["roe", "gross_margin", "asset_turnover", "eps", "cash_ratio", "net_margin"]
+    },
+    "years": { "type": "array", "items": { "type": "string" } },
+    "profitability": {
+      "type": "object",
+      "properties": {
+        "roe": { "type": "array" },
+        "roa": { "type": "array" },
+        "gross_margin": { "type": "array" },
+        "net_margin": { "type": "array" },
+        "eps": { "type": "array" }
+      }
+    },
+    "structure": {
+      "type": "object",
+      "properties": {
+        "cash_ratio": { "type": "array" },
+        "debt_ratio": { "type": "array" }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "properties": {
+        "ar_turnover": { "type": "array" },
+        "ar_days": { "type": "array" },
+        "fa_turnover": { "type": "array" },
+        "asset_turnover": { "type": "array" }
+      }
+    },
+    "cashflow": {
+      "type": "object",
+      "properties": {
+        "cash": { "type": "array" },
+        "net_profit": { "type": "array" },
+        "ocf": { "type": "array" },
+        "icf": { "type": "array" },
+        "fcf": { "type": "array" },
+        "ncf": { "type": "array" }
+      }
+    },
+    "kline": {
+      "type": "object",
+      "properties": {
+        "months": { "type": "array", "items": { "type": "string" } },
+        "o": { "type": "array" },
+        "h": { "type": "array" },
+        "l": { "type": "array" },
+        "c": { "type": "array" }
+      }
+    },
+    "peers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "name"],
+        "properties": {
+          "code": { "type": "string" },
+          "name": { "type": "string" },
+          "roe5y": { "type": ["number", "null"] }
+        }
+      }
+    }
+  }
+}

@@ -47,10 +47,11 @@ PyramidSeekApp/
 ├── src/
 │   ├── config.py                   # 权重/锚点/阈值/分类标准（常量唯一来源）
 │   ├── datasource/                 # 数据源抽象 + AkShare + 官方源兜底
-│   ├── pipeline/                   # 采集 / 清洗 / 落库
+│   ├── pipeline/                   # 采集 / 清洗 / 落库（标准层 + 分析层）
 │   ├── engine/                     # 指标 / 评分 / 行业分位
-│   ├── build/                      # 产物生成 + 校验
+│   ├── build/                      # 产物生成（ranking/stock/meta/derived）+ 校验
 │   └── batch.py                    # 总入口：一条命令跑完
+├── schema/                         # 产物 JSON Schema（meta/ranking/stock，校验用）
 ├── fixtures/                       # 示例数据（离线回归 + 黄金样本输入）
 ├── public/                         # 前端静态站点（+ 产物 data/）
 ├── tests/                          # 单元 / 回归 / 契约测试
@@ -67,16 +68,24 @@ PyramidSeekApp/
 # 1) 安装依赖
 python -m pip install -r requirements.txt -r requirements-dev.txt
 
-# 2) 离线跑通整链（仅用 fixtures/，不联网）
+# 2) 离线跑通整链（仅用 fixtures/，不联网；跑完自动做产物校验）
+python -m src.batch --offline
+
+# 2b) 联网跑批（AkShare → 官方源 → fixtures 三级回退，失败自动降级）
 python -m src.batch
 
 # 3) 运行测试
 pytest
+
+# 4) 单独校验已有产物（M3-5；失败非零退出）
+python -m src.build.validate [--data public/data]
 ```
 
 跑批环境由环境变量 `PS_ENV` 区分（`local` | `ci`），脚本不写死绝对路径、不使用交互输入。
+需要完全可复现的产物时固定时间戳：`python -m src.batch --offline --generated-at 2026-10-15T00:00:00Z`。
 
-产物输出目录（默认）：`public/data/`，含 `meta.json`、`industries.json`、`ranking/{A,HK}.json`。
+产物输出目录（默认）：`public/data/`，含 `meta.json`、`industries.json`、
+`ranking/{A,HK}.json`（`rows` 主榜 + `excluded` 单列）、`stock/{code}.json`（一码一文件）。
 
 ---
 
@@ -84,15 +93,13 @@ pytest
 
 | 里程碑 | 状态 |
 |---|---|
-| **M0 骨架与规范** | ✅ 仓库结构 / `config.py` / `fixtures` / CI 空跑；`python -m src.batch` 可读 fixtures 输出**占位产物** |
-| M1 数据层 | ⬜ 待开工（数据源抽象 → AkShare → 官方源兜底 → 清洗 → DuckDB/Parquet） |
-| M2 计算层 | ⬜ 待开工（指标 / 子分 / 成长分 / 行业分位 / 双引擎黄金样本对账） |
-| M3 产物层 | ⬜ 待开工（ranking / stock / meta 产物 + schema 校验） |
+| **M0 骨架与规范** | ✅ 仓库结构 / `config.py` / `fixtures` / CI |
+| **M1 数据层** | ✅ 数据源抽象 → AkShare → 官方源兜底 → 清洗 → DuckDB/Parquet |
+| **M2 计算层** | ✅ 指标 / 子分 / 成长分 / 行业分位 / 组装总分 / 双引擎黄金样本对账 |
+| **M3 产物层** | ✅ ranking（主榜 + 单列）/ stock / meta 产物 + schema 校验 + 跑批总入口 |
 | M4 前端 | ⬜ 待开工（排行 / 详情 / 观察池 / 搜索） |
 | M5 发布 | ⬜ 待开工（Actions 跑批 + Pages 部署） |
 | M6 打磨 | ⬜ 待开工（告警 / 缓存 / 降级提示 / 文档） |
-
-> M0 阶段的产物是**占位产物**（`score = 0`，评分引擎未实现），仅用于验证「读 fixtures → 出产物」链路与目录/契约形状；正式数值在 M2/M3 落位。
 
 ---
 
@@ -103,4 +110,4 @@ pytest
 3. 双引擎（Python / JS）逐字对齐，用同一份 `fixtures` 做黄金样本对账，CI 强制。
 4. 离线永远可跑：任何改动不得破坏「仅用 `fixtures/` 跑通整链」。
 5. 跑批幂等、产物不手改；产物只由 `batch` 生成。
-6. 一任务一分支；评分产物提交到独立 `data` 分支（强制单提交）。
+6. **按需**开任务分支（判据：做坏了能否干净回退）；评分产物提交到独立 `data` 分支（强制单提交）。

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pyramidseek/schema/ranking.schema.json",
+  "type": "object",
+  "required": ["meta", "market", "columns", "rows"],
+  "properties": {
+    "meta": { "type": "object" },
+    "market": { "enum": ["A", "HK"] },
+    "columns": { "type": "array", "items": { "type": "string" } },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rank", "code", "name", "market", "group", "level", "score", "quality", "growth", "isTop10pct"],
+        "properties": {
+          "rank": { "type": "integer", "minimum": 1 },
+          "code": { "type": "string", "pattern": "^(SH|SZ|BJ|HK)\\d{5,6}$" },
+          "name": { "type": "string" },
+          "market": { "enum": ["A", "HK"] },
+          "l1": { "type": "string" },
+          "l2": { "type": "string" },
+          "group": { "type": "string" },
+          "level": { "enum": ["L1", "L2"] },
+          "score": { "type": "number", "minimum": 0, "maximum": 1000 },
+          "quality": { "type": "number", "minimum": 0, "maximum": 1000 },
+          "growth": { "type": "number", "minimum": -200, "maximum": 200 },
+          "roe": { "type": ["number", "null"] },
+          "gross_margin": { "type": ["number", "null"] },
+          "cash_ratio": { "type": ["number", "null"] },
+          "debt_ratio": { "type": ["number", "null"] },
+          "isTop10pct": { "type": "boolean" }
+        }
+      }
+    },
+    "excluded": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "name", "market", "status", "reason", "score", "quality", "growth"],
+        "properties": {
+          "code": { "type": "string", "pattern": "^(SH|SZ|BJ|HK)\\d{5,6}$" },
+          "name": { "type": "string" },
+          "market": { "enum": ["A", "HK"] },
+          "l1": { "type": "string" },
+          "l2": { "type": "string" },
+          "status": { "enum": ["normal", "ST", "suspended", "delisted", "new"] },
+          "reason": { "type": "string" },
+          "score": { "type": "number", "minimum": 0, "maximum": 1000 },
+          "quality": { "type": "number", "minimum": 0, "maximum": 1000 },
+          "growth": { "type": "number", "minimum": -200, "maximum": 200 }
+        }
+      }
+    }
+  }
+}
