@@ -124,6 +124,9 @@ FETCH_MIN_INTERVAL_SECONDS = 1.0  # 官方源请求间隔下限（§8：遵守�
 # 需要请求间隔；抖动时给中等超时（默认 15s 会误杀，见 D-8）。逐个失败只跳过该行业。
 INDUSTRY_CONS_TIMEOUT_SECONDS = 120
 INDUSTRY_CONS_INTERVAL_SECONDS = 0.5
+# 「单股批量接口」的中等超时：三表（实测 ~44s/张）与行情（~22s/次）远超默认 15s，
+# 但也不该套用 1800s 的「全量翻页」上限 —— 目标站点挂起时会白等半小时（D-8 实跑踩到）。
+FETCH_TIMEOUT_MEDIUM_SECONDS = 300
 HTTP_USER_AGENT = "PyramidSeek/0.1 (personal research; contact: local)"
 # 全量列表类接口（内部翻页）实测需十几分钟，见《计划完成情况》D-10；
 # 15s 是"单次请求"约束，套到批量接口上会让它必败，故单独给一个宽松上限。

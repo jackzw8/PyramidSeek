@@ -490,8 +490,8 @@ def test_slow_endpoint_uses_slow_timeout(tmp_path) -> None:
     assert source.list_stocks("A")[0]["code"] == "SH600900"
 
 
-def test_slow_endpoint_gets_wide_timeout(tmp_path) -> None:
-    """慢接口（三表 / 行情）用宽限超时：延迟 0.15s 不再被 0.02s 误杀（D-8 修复）。"""
+def test_single_stock_endpoints_use_medium_timeout(tmp_path) -> None:
+    """单股批量接口（行情 / 三表）走**中等超时**（300s）：0.15s 的延迟不再被 0.02s 误杀（D-8）。"""
 
     def stock_zh_a_hist(**kwargs):
         time.sleep(0.15)

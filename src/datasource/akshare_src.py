@@ -80,12 +80,11 @@ SLOW_ENDPOINTS: frozenset[str] = frozenset(
         "stock_hk_spot_em",
         "stock_board_industry_name_em",
         "stock_hk_industry_name_em",
-        # 单只股票的批量接口实测也远超 15s（2026-10-15 联网实测，见 D-8）：
-        "stock_financial_report_sina",  # 三表：单张约 44s（每只 3 张）
-        "stock_zh_a_hist",  # A股日线：单次约 22s（每只 2 次：raw + qfq）
-        "stock_hk_hist",  # 港股日线（同族，保守纳入）
     }
 )
+# 「单股批量接口」（三表 / 行情）**不在上面的名单里**：它们实测 ~20-45s（远超默认 15s，
+# 2026-10-15 见 D-8），但也不该套用 1800s 的「全量翻页」上限 —— 目标站点挂起时会白等半小时。
+# 改用 `config.FETCH_TIMEOUT_MEDIUM_SECONDS`（300s）在 `financials` / `price_daily` 里显式传参。
 
 # 三表名称（akshare financial_a 的 symbol 参数）
 REPORT_INCOME = "利润表"
@@ -307,6 +306,7 @@ class AkShareSource:
                 getattr(self.ak, ENDPOINTS["financial_a"]),
                 what=f"财报（{code} / {report}）",
                 code=code,
+                timeout=config.FETCH_TIMEOUT_MEDIUM_SECONDS,  # 单张实测 ~44s，见 D-8
                 stock=code.lower(),
                 symbol=report,
             )
@@ -324,6 +324,7 @@ class AkShareSource:
             getattr(self.ak, endpoint),
             what=f"日行情（{code} / {adjust}）",
             code=code,
+            timeout=config.FETCH_TIMEOUT_MEDIUM_SECONDS,  # 单次实测 ~22s，见 D-8
             symbol=code if market == "HK" else code[2:],
             period="daily",
             adjust=_ADJUST_TO_AK.get(adjust, adjust),
