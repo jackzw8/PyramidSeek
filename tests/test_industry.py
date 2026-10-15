@@ -11,7 +11,7 @@ import json
 
 import pytest
 
-from src import batch, config
+from src import config
 from src.engine import indicators
 from src.engine.industry import (
     build_pools,
@@ -230,21 +230,21 @@ def test_deterministic() -> None:
     )
 
 
-# ── 与 M0 的 `batch.resolve_pools` 交叉验证（防两套口径分叉）───────────────
-def test_real_fixtures_pools_match_batch_resolver() -> None:
+# ── 真实 fixtures 上的池口径（M0 的 `batch.resolve_pools` 已在 M3-4 退役，
+#    池的唯一实现 = engine.industry.build_pools）────────────────────────────
+def test_real_fixtures_pools_cover_all_and_fall_back() -> None:
     payload = json.loads(config.FIXTURES_FILE.read_text(encoding="utf-8"))
     stocks = list(payload["stocks"])
 
     pools = build_pools(stocks)
-    legacy = batch.resolve_pools(stocks)
 
-    assert set(pools) == set(legacy)
-    for code, info in pools.items():
-        assert info.level == legacy[code]["level"]
-        assert info.group == legacy[code]["group"]
-        assert info.size == legacy[code]["count"]
-        assert info.use_fallback is legacy[code]["use_fallback"]
+    assert set(pools) == {str(stock["code"]) for stock in stocks}  # 全部有池（无未分类）
     assert all(info.use_fallback for info in pools.values())  # 12 只样本 → 全部二级不足 30
+    assert all(info.level == config.COMPARE_LEVEL_FALLBACK for info in pools.values())
+    assert all(
+        info.group == next(s["l1_name"] for s in stocks if s["code"] == code)
+        for code, info in pools.items()
+    )
 
 
 def test_real_fixtures_percentile_subs_are_bounded() -> None:

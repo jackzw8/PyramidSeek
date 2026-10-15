@@ -19,6 +19,7 @@ DDL 来源：
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -134,9 +135,51 @@ COLUMNS: dict[str, tuple[str, ...]] = {
         "adj_factor",
         "close_qfq",
     ),
+    # 分析层（M3-4 由 batch 写入；列序 = DDL）
+    "score_snapshot": (
+        "code",
+        "snapshot_version",
+        "quality",
+        "growth",
+        "growth_np",
+        "growth_ocf",
+        "score",
+        "sub_roe",
+        "sub_net_profit_scale",
+        "sub_roa",
+        "sub_gross_margin",
+        "sub_cash_ratio",
+        "sub_asset_turnover",
+        "radar_roe",
+        "radar_gross_margin",
+        "radar_asset_turnover",
+        "radar_eps",
+        "radar_cash_ratio",
+        "radar_net_margin",
+        "compare_level",
+        "compare_group",
+        "rank_in_group",
+        "is_top10pct",
+    ),
+    "meta_snapshot": (
+        "snapshot_version",
+        "data_date_financial",
+        "data_date_price",
+        "industry_std",
+        "formula_version",
+        "degraded",
+        "notes",
+    ),
 }
 # 日期 / 时间戳列（需要在写入前归一格式）
-DATE_COLUMNS = ("listed_at", "report_period", "effective_date", "trade_date")
+DATE_COLUMNS = (
+    "listed_at",
+    "report_period",
+    "effective_date",
+    "trade_date",
+    "data_date_financial",
+    "data_date_price",
+)
 TIMESTAMP_COLUMNS = ("updated_at", "fetched_at")
 
 
@@ -274,6 +317,41 @@ def write_standard(
     return StoreStats(path=db_path, rows=counts, parquet=written)
 
 
+def write_analytics(
+    scores: Sequence[Any],
+    *,
+    snapshot_version: str,
+    meta: dict[str, Any] | None = None,
+    db_path: Path | None = None,
+) -> StoreStats:
+    """把**分析层**落库（M3-4 跑批调用）。
+
+    两张表：评分结果 ``score_snapshot`` + 快照元数据 ``meta_snapshot``。
+
+    :param scores: ``engine.scoring.StockScore`` 序列（需有 ``snapshot_row(snapshot_version)``，
+        列名与 DDL 逐字对齐）。
+    :param meta: ``meta_snapshot`` 行（``data_date_financial`` / ``data_date_price`` /
+        ``industry_std`` / ``formula_version`` / ``degraded`` / ``notes``）。
+    :param db_path: DuckDB 路径，默认与标准层同库（``data/standard.duckdb``）。
+    """
+    db_path = Path(db_path) if db_path else config.DATA_DIR / "standard.duckdb"
+    rows = [score.snapshot_row(snapshot_version) for score in scores]
+    meta_row: dict[str, Any] = {"snapshot_version": snapshot_version, **(meta or {})}
+
+    conn = _connect(db_path)
+    try:
+        init_schema(conn)
+        counts = {
+            "score_snapshot": upsert(conn, "score_snapshot", rows),
+            "meta_snapshot": upsert(conn, "meta_snapshot", [meta_row]),
+        }
+    finally:
+        conn.close()
+
+    logger.info("分析层落库完成：%s（%s）", db_path, counts)
+    return StoreStats(path=db_path, rows=counts, parquet=[])
+
+
 def read_table(table: str, *, db_path: Path | None = None) -> list[dict[str, Any]]:
     """读回整张表（便于 M1-6 校验与排查）。"""
     db_path = Path(db_path) if db_path else config.DATA_DIR / "standard.duckdb"
@@ -317,5 +395,6 @@ __all__ = [
     "to_db_date",
     "to_db_timestamp",
     "upsert",
+    "write_analytics",
     "write_standard",
 ]

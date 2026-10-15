@@ -197,9 +197,9 @@ def fetch_universe(
     return outcome
 
 
-def default_chain(*, offline: bool = False) -> list[Any]:
+def default_chain(*, offline: bool = False, fixtures_path: Path | None = None) -> list[Any]:
     """默认回退链；``offline=True`` 时**只用 fixtures**（不打网络）。"""
-    fixtures = FixturesSource()
+    fixtures = FixturesSource(fixtures_path)
     if offline:
         return [fixtures]
     return [
