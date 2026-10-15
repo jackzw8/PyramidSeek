@@ -1,0 +1,314 @@
+[
+ {
+  "code": "SH600519",
+  "compare_level": "L1",
+  "compare_group": "食品饮料",
+  "quality": 885.7810000000001,
+  "growth": 149.31,
+  "growth_np": 78.7,
+  "growth_ocf": 70.61,
+  "score": 1000.0,
+  "subs": {
+   "roe": 95.8077429377366,
+   "net_profit_scale": 75.0,
+   "roa": 100.0,
+   "gross_margin": 100.0,
+   "cash_ratio": 75.71477921620902,
+   "asset_turnover": 75.0
+  },
+  "radar": {
+   "roe": 95.8077429377366,
+   "gross_margin": 100.0,
+   "asset_turnover": 75.0,
+   "eps": 75.0,
+   "cash_ratio": 75.71477921620902,
+   "net_margin": 100.0
+  }
+ },
+ {
+  "code": "SZ000858",
+  "compare_level": "L1",
+  "compare_group": "食品饮料",
+  "quality": 735.7124,
+  "growth": 149.25,
+  "growth_np": 61.51,
+  "growth_ocf": 87.74,
+  "score": 884.96,
+  "subs": {
+   "roe": 84.40411868468284,
+   "net_profit_scale": 25.0,
+   "roa": 100.0,
+   "gross_margin": 100.0,
+   "cash_ratio": 100.0,
+   "asset_turnover": 25.0
+  },
+  "radar": {
+   "roe": 84.40411868468284,
+   "gross_margin": 100.0,
+   "asset_turnover": 25.0,
+   "eps": 25.0,
+   "cash_ratio": 100.0,
+   "net_margin": 100.0
+  }
+ },
+ {
+  "code": "SZ000333",
+  "compare_level": "L1",
+  "compare_group": "家用电器",
+  "quality": 672.9578,
+  "growth": 109.77,
+  "growth_np": 24.22,
+  "growth_ocf": 85.55,
+  "score": 782.73,
+  "subs": {
+   "roe": 79.11065366474602,
+   "net_profit_scale": 50.0,
+   "roa": 55.847970447182085,
+   "gross_margin": 61.99841364591885,
+   "cash_ratio": 77.64259860234044,
+   "asset_turnover": 75.0
+  },
+  "radar": {
+   "roe": 79.11065366474602,
+   "gross_margin": 61.99841364591885,
+   "asset_turnover": 75.0,
+   "eps": 25.0,
+   "cash_ratio": 77.64259860234044,
+   "net_margin": 37.366765336527784
+  }
+ },
+ {
+  "code": "SZ000651",
+  "compare_level": "L1",
+  "compare_group": "家用电器",
+  "quality": 678.8877,
+  "growth": 92.52,
+  "growth_np": 49.1,
+  "growth_ocf": 43.42,
+  "score": 771.41,
+  "subs": {
+   "roe": 83.93072877957833,
+   "net_profit_scale": 50.0,
+   "roa": 65.66472871992575,
+   "gross_margin": 65.02458000976455,
+   "cash_ratio": 100.0,
+   "asset_turnover": 25.0
+  },
+  "radar": {
+   "roe": 83.93072877957833,
+   "gross_margin": 65.02458000976455,
+   "asset_turnover": 25.0,
+   "eps": 75.0,
+   "cash_ratio": 100.0,
+   "net_margin": 61.471753760418004
+  }
+ },
+ {
+  "code": "SH600900",
+  "compare_level": "L1",
+  "compare_group": "公用事业",
+  "quality": 575.0980999999999,
+  "growth": 73.43,
+  "growth_np": 27.17,
+  "growth_ocf": 46.26,
+  "score": 648.53,
+  "subs": {
+   "roe": 59.87972571724441,
+   "net_profit_scale": 75.0,
+   "roa": 58.03393490261207,
+   "gross_margin": 100.0,
+   "cash_ratio": 8.420509090922517,
+   "asset_turnover": 25.0
+  },
+  "radar": {
+   "roe": 59.87972571724441,
+   "gross_margin": 100.0,
+   "asset_turnover": 25.0,
+   "eps": 75.0,
+   "cash_ratio": 8.420509090922517,
+   "net_margin": 100.0
+  }
+ },
+ {
+  "code": "SH600011",
+  "compare_level": "L1",
+  "compare_group": "公用事业",
+  "quality": 199.02599999999998,
+  "growth": 122.84,
+  "growth_np": 60.0,
+  "growth_ocf": 62.84,
+  "score": 321.87,
+  "subs": {
+   "roe": 1.1650920974450376,
+   "net_profit_scale": 25.0,
+   "roa": 0.7089737396259139,
+   "gross_margin": 34.515659585740025,
+   "cash_ratio": 18.35497027127462,
+   "asset_turnover": 75.0
+  },
+  "radar": {
+   "roe": 1.1650920974450376,
+   "gross_margin": 34.515659585740025,
+   "asset_turnover": 75.0,
+   "eps": 25.0,
+   "cash_ratio": 18.35497027127462,
+   "net_margin": 0.6873250685413638
+  }
+ },
+ {
+  "code": "SH601398",
+  "compare_level": "L1",
+  "compare_group": "银行",
+  "quality": 311.06669999999997,
+  "growth": 55.7,
+  "growth_np": 18.42,
+  "growth_ocf": 37.28,
+  "score": 366.77,
+  "subs": {
+   "roe": 50.65163497827905,
+   "net_profit_scale": 50.0,
+   "roa": 8.81984293161794,
+   "gross_margin": 0.0,
+   "cash_ratio": 0.0,
+   "asset_turnover": 50.0
+  },
+  "radar": {
+   "roe": 50.65163497827905,
+   "gross_margin": 0.0,
+   "asset_turnover": 50.0,
+   "eps": 50.0,
+   "cash_ratio": 0.0,
+   "net_margin": 100.0
+  }
+ },
+ {
+  "code": "SZ000620",
+  "compare_level": "L1",
+  "compare_group": "房地产",
+  "quality": 224.2064,
+  "growth": 0.0,
+  "growth_np": 0.0,
+  "growth_ocf": 0.0,
+  "score": 224.21,
+  "subs": {
+   "roe": 0.0,
+   "net_profit_scale": 50.0,
+   "roa": 0.0,
+   "gross_margin": 60.927988420248475,
+   "cash_ratio": 0.0,
+   "asset_turnover": 50.0
+  },
+  "radar": {
+   "roe": 0.0,
+   "gross_margin": 60.927988420248475,
+   "asset_turnover": 50.0,
+   "eps": 50.0,
+   "cash_ratio": 0.0,
+   "net_margin": 0.0
+  }
+ },
+ {
+  "code": "HK00700",
+  "compare_level": "L1",
+  "compare_group": "通信服务",
+  "quality": 741.0146000000001,
+  "growth": 60.53,
+  "growth_np": 23.92,
+  "growth_ocf": 36.61,
+  "score": 801.54,
+  "subs": {
+   "roe": 80.93998546972418,
+   "net_profit_scale": 50.0,
+   "roa": 86.41996321073071,
+   "gross_margin": 100.0,
+   "cash_ratio": 70.76890315336989,
+   "asset_turnover": 50.0
+  },
+  "radar": {
+   "roe": 80.93998546972418,
+   "gross_margin": 100.0,
+   "asset_turnover": 50.0,
+   "eps": 50.0,
+   "cash_ratio": 70.76890315336989,
+   "net_margin": 100.0
+  }
+ },
+ {
+  "code": "HK09618",
+  "compare_level": "L1",
+  "compare_group": "可选消费",
+  "quality": 607.8597,
+  "growth": -35.49,
+  "growth_np": -65.82,
+  "growth_ocf": 30.33,
+  "score": 572.37,
+  "subs": {
+   "roe": 58.698917722614404,
+   "net_profit_scale": 75.0,
+   "roa": 54.40605897486772,
+   "gross_margin": 33.113901453638114,
+   "cash_ratio": 70.13767868113104,
+   "asset_turnover": 75.0
+  },
+  "radar": {
+   "roe": 58.698917722614404,
+   "gross_margin": 33.113901453638114,
+   "asset_turnover": 75.0,
+   "eps": 75.0,
+   "cash_ratio": 70.13767868113104,
+   "net_margin": 15.70885941219668
+  }
+ },
+ {
+  "code": "HK03690",
+  "compare_level": "L1",
+  "compare_group": "可选消费",
+  "quality": 307.5302,
+  "growth": 120.0,
+  "growth_np": 60.0,
+  "growth_ocf": 60.0,
+  "score": 427.53,
+  "subs": {
+   "roe": 8.591678611243827,
+   "net_profit_scale": 25.0,
+   "roa": 11.248454986701327,
+   "gross_margin": 82.30470181435531,
+   "cash_ratio": 70.21797134064283,
+   "asset_turnover": 25.0
+  },
+  "radar": {
+   "roe": 8.591678611243827,
+   "gross_margin": 82.30470181435531,
+   "asset_turnover": 25.0,
+   "eps": 25.0,
+   "cash_ratio": 70.21797134064283,
+   "net_margin": 3.553832368686083
+  }
+ },
+ {
+  "code": "HK01810",
+  "compare_level": "L1",
+  "compare_group": "信息技术",
+  "quality": 529.895,
+  "growth": 59.34,
+  "growth_np": 15.46,
+  "growth_ocf": 43.88,
+  "score": 589.24,
+  "subs": {
+   "roe": 52.52860984121551,
+   "net_profit_scale": 50.0,
+   "roa": 52.52860984121551,
+   "gross_margin": 46.215841635206104,
+   "cash_ratio": 69.31897621288611,
+   "asset_turnover": 50.0
+  },
+  "radar": {
+   "roe": 52.52860984121551,
+   "gross_margin": 46.215841635206104,
+   "asset_turnover": 50.0,
+   "eps": 50.0,
+   "cash_ratio": 69.31897621288611,
+   "net_margin": 27.936812936447897
+  }
+ }
+]
