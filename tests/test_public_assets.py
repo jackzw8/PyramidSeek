@@ -57,6 +57,13 @@ def test_js_files_exist() -> None:
     assert expected <= actual, f"缺少前端脚本：{sorted(expected - actual)}"
 
 
+def test_detail_grid_keeps_three_columns_wide() -> None:
+    """详情页三列（评分构成｜雷达｜同业）在 ≥960px 同排；断点不得回退到过保守的值。"""
+    css = (PUBLIC / "css" / "style.css").read_text(encoding="utf-8")
+    assert ".grid3{display:grid;grid-template-columns:1.1fr 1fr 232px" in css, "三列列宽声明被改动"
+    assert "@media(max-width:960px)" in css, "三列断点应为 960px"
+
+
 def test_method_card_carries_config_values() -> None:
     """排行页「评分说明」卡的权重与锚点是静态文案 —— 断言与 config 一致，防公式漂移。"""
     text = (PUBLIC / "index.html").read_text(encoding="utf-8")

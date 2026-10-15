@@ -274,19 +274,17 @@
     document.getElementById('head').innerHTML = `
       <a class="btn" href="index.html">← 返回榜单</a>
       <div class="detail-head" style="margin-top:12px">
-        <div class="ttl">
-          <h1>${PS.esc(self.name)} <span class="code">${self.code}</span></h1>
-          <div class="kv">
-            <span>市场 <b>${self.market}</b></span><span>交易所 <b>${exch}</b></span>
-            <span>板块 <b>${PS.esc(self.l1)}</b></span><span>行业 <b>${PS.esc(self.l2)}</b></span>
-            <span>对比池 <b>${PS.esc(self.group || '未分类')}${self.level ? ' · ' + self.level : ''}</b>（${peerList.length} 只）</span>
-            <span>上市 <b>${PS.esc(self.listedAt || '—')}</b></span>
-            <span>${rankText}</span>
-          </div>
-        </div>
+        <div class="ttl"><h1>${PS.esc(self.name)} <span class="code">${self.code}</span></h1></div>
         <div class="score-badge"><div class="v">${F.score(self.score)}</div><div class="l">金字塔分</div>
           <div class="l">质量 ${F.score(self.quality)} ｜ 成长 ${F.growth(self.growth)}</div></div>
         <button class="btn star${PS.watchlist.has(self.code) ? ' on' : ''}" id="wl">${PS.watchlist.has(self.code) ? '★ 已收藏' : '☆ 加入观察池'}</button>
+        <div class="kv">
+          <span>市场 <b>${self.market}</b></span><span>交易所 <b>${exch}</b></span>
+          <span>板块 <b>${PS.esc(self.l1)}</b></span><span>行业 <b>${PS.esc(self.l2)}</b></span>
+          <span>对比池 <b>${PS.esc(self.group || '未分类')}${self.level ? ' · ' + self.level : ''}</b>（${peerList.length} 只）</span>
+          <span>上市 <b>${PS.esc(self.listedAt || '—')}</b></span>
+          <span>${rankText}</span>
+        </div>
       </div>`;
     document.getElementById('wl').onclick = (e) => {
       const on = PS.watchlist.toggle(self.code);
