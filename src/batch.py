@@ -167,6 +167,13 @@ def run(args: argparse.Namespace) -> int:
         }[args.mode]
 
     codes = list(args.codes or [])
+    if args.codes_file:
+        lines = [
+            line.strip()
+            for line in args.codes_file.read_text(encoding="utf-8").splitlines()
+            if line.strip() and not line.strip().startswith("#")
+        ]
+        codes.extend(lines)
     if args.mode == "retry" and not args.offline:
         pending_path = config.DATA_DIR / "_pending.json"
         pending_codes = _read_pending(pending_path)
@@ -275,6 +282,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--offline", action="store_true", help="只用 fixtures，不打网络")
     parser.add_argument("--markets", nargs="+", default=list(config.MARKETS), help="市场列表")
     parser.add_argument("--codes", nargs="+", default=None, help="只跑这些标的（小样本冒烟）")
+    parser.add_argument(
+        "--codes-file",
+        type=Path,
+        default=None,
+        help="标的清单文件（每行一个代码，# 开头为注释；与 --codes 合并去重）",
+    )
     parser.add_argument("--limit", type=int, default=None, help="每个市场最多取多少只")
     parser.add_argument("--fixtures", type=Path, default=config.FIXTURES_FILE, help="fixtures 路径")
     parser.add_argument("--out", type=Path, default=config.PUBLIC_DATA_DIR, help="产物输出目录")
