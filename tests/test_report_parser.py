@@ -311,3 +311,242 @@ def test_build_report_rows_works_on_real_layout() -> None:
     assert current["revenue"] == round(86_241_940_222.20 / 1e8, 2)
     assert current["net_profit"] == round(34_502_809_176.39 / 1e8, 2)
     assert current["equity"] == round(221_338_010_639.92 / 1e8, 2)
+
+
+# ── 港股版式（2026-10-14 用腾讯 2025 年报实测取证，见《计划完成情况》D-24）────
+# 繁体 + HKFRS 命名：「綜合收益表」是利润表、「財務狀況表」是资产负债表、
+# 单位写成「人民幣百萬元」（**没有**「单位：」前缀）、用「盈利」而不是「溢利」。
+HK_SUMMARY_TEXT = """二零二五年年報
+財務概要
+簡明綜合全面收益表
+截至十二月三十一日止年度
+人民幣百萬元
+收入 560,118 554,552 609,015 660,257 751,766
+毛利 245,944 238,746 293,109 349,246 422,593
+"""
+
+HK_REPORT_TEXT = """綜合收益表
+截至二零二五年十二月三十一日止年度
+人民幣百萬元
+附註 二零二五年 二零二四年
+收入 751,766 660,257
+銷售成本 (329,173) (311,011)
+本公司權益持有人應佔盈利 224,842 194,073
+綜合財務狀況表
+人民幣百萬元
+資產總額 2,038,986 1,780,995
+負債總額 797,921 727,099
+本公司權益持有人應佔權益 1,241,065 1,053,896
+現金及現金等價物 141,000 132,000
+綜合現金流量表
+人民幣百萬元
+經營活動所得現金淨額 210,000 200,000
+"""
+
+
+def test_hk_titles_are_located_by_traditional_names() -> None:
+    statements = report_parser.split_statements(HK_REPORT_TEXT)
+    assert set(statements) == {"income", "balance", "cashflow"}
+    assert "收入" in statements["income"]
+    assert "資產總額" in statements["balance"]
+    assert "經營活動所得現金淨額" in statements["cashflow"]
+
+
+def test_summary_table_is_not_used_as_data_source() -> None:
+    """「簡明」概要表（五年财务概要）必须被跳过 —— 否则会把五年前的数当本期。
+
+    概要表排在正式报表**之前**（真实年报就是第 4 页 vs 第 129 页），若不过滤就会先命中它。
+    """
+    rows = report_parser.build_report_rows(
+        "HK00700", HK_SUMMARY_TEXT + HK_REPORT_TEXT, report_period="2025-12-31"
+    )
+    current = rows[0]
+    # 概要表首列是 560,118（五年前）；正式表首列才是 751,766
+    assert current["revenue"] == round(751_766 * 1e6 / 1e8, 2) == 7517.66
+
+
+def test_toc_entries_do_not_win_over_real_statements() -> None:
+    """**目录页陷阱**：目录里三个标题紧挨着，若按"先到先得"选出的是几字符的空片段。
+
+    真实年报（腾讯 2025）目录就是 `130 綜合收益表 / 131 綜合財務狀況表 / 138 綜合現金流量表`，
+    2026-10-14 实测时正是这里导致「必填科目全缺」。
+    """
+    toc = "目錄\n130 綜合收益表\n131 綜合財務狀況表\n138 綜合現金流量表\n"
+    rows = report_parser.build_report_rows(
+        "HK00700", toc + HK_REPORT_TEXT, report_period="2025-12-31"
+    )
+
+    assert rows[0]["revenue"] == 7517.66  # 取的是真报表，不是目录行
+    assert rows[0]["total_assets"] == 20389.86
+
+
+def test_hk_subjects_and_hundred_million_unit() -> None:
+    """「人民幣百萬元」→ ×1e6；科目用繁体 + 「盈利」写法。"""
+    rows = report_parser.build_report_rows("HK00700", HK_REPORT_TEXT, report_period="2025-12-31")
+    current = rows[0]
+
+    assert current["revenue"] == 7517.66  # 751,766 百万元
+    # 成本写在括号里（港股惯例，被解析成负数）→ 毛利必须是 revenue − |cost|，
+    # 不能是 revenue + cost（实测：腾讯毛利会变成 10809 亿，而年报里是 4225.93 亿）
+    assert current["gross_profit"] == 4225.93
+    assert current["net_profit"] == 2248.42
+    assert current["total_assets"] == 20389.86
+    assert current["equity"] == 12410.65
+    assert current["op_cashflow"] == 2100.00
+    assert current["currency"] == "CNY"
+    # 上期列
+    assert rows[1]["revenue"] == 6602.57
+
+
+def test_unit_is_detected_per_statement_not_from_document_head() -> None:
+    """单位必须按**单张表**识别。
+
+    整本的第 1 页只有封面，从那儿找不到单位会默认成「元」→ 结果整体差 100 倍。
+    """
+    assert report_parser.detect_unit_multiplier(HK_REPORT_TEXT[:200]) == 1e6
+    # 同样的「人民幣百萬元」若放在很后面（超出 head 窗口），识别不到 → 默认「元」
+    assert (
+        report_parser.detect_unit_multiplier("封面\n" * 500 + "人民幣百萬元", head_chars=200) == 1.0
+    )
+
+
+def test_detect_currency_only_accepts_currency_next_to_unit() -> None:
+    assert report_parser.detect_currency("人民幣百萬元") == "CNY"
+    assert report_parser.detect_currency("港幣千元") == "HKD"
+    assert report_parser.detect_currency("US$ million") is None  # 未支持的写法 → 不猜
+    # 正文里顺带提到别的币种不改判报表币种
+    assert report_parser.detect_currency("本公司以港幣派息，報表以人民幣百萬元列示") == "CNY"
+
+
+def test_short_candidates_are_exact_only() -> None:
+    """「收入」这类短名只允许精确匹配：否则会命中「其他收入」这种**完全不同**的行。"""
+    text = "綜合收益表\n人民幣百萬元\n其他收入 9,999 9,999\n"
+    values = report_parser.parse_statement(text, kind="income")
+    assert values["revenue"] == [None]  # 宁可失败，也不把「其他收入」当营业收入
+
+
+def test_hk_missing_required_subject_still_errors() -> None:
+    """缺必填科目依然报错（D-11 原则在港股版式下同样成立）。"""
+    broken = HK_REPORT_TEXT.replace("本公司權益持有人應佔盈利 224,842 194,073\n", "")
+    with pytest.raises(base.DataSourceError, match="必填科目缺失"):
+        report_parser.build_report_rows("HK00700", broken, report_period="2025-12-31")
+
+
+# ── 港股真实版式的三条硬骨头（2026-10-14 实测取证，D-24 闭环时补的用例）────
+GROUPED_TOTAL_TEXT = """綜合收益表
+人民幣百萬元
+收入
+－增值服務 369,281 319,168
+－其他 8,077 7,759
+6 751,766 660,257
+下列人士應佔：
+本公司權益持有人 224,842 194,073
+"""
+
+
+def test_group_heading_takes_the_unlabelled_total() -> None:
+    """**「组头 + 明细 + 无标签合计」**版式：`收入` 的值在明细之后的合计行。
+
+    腾讯年报利润表就是这个样子：`收入` 单独一行，下面是明细，合计行**没有标签**。
+    只做相邻拼接时 `收入` 永远取不到值（曾因此选错整张表）。
+    """
+    rows = report_parser.build_report_rows(
+        "HK00700", GROUPED_TOTAL_TEXT, report_period="2025-12-31"
+    )
+    # 751,766 百万元 → 7517.66 亿元；绝不能取成第一个明细 369,281
+    assert rows[0]["revenue"] == 7517.66
+    assert rows[1]["revenue"] == 6602.57
+
+
+def test_values_only_detection() -> None:
+    """「纯数值行」判定：合计行没有科目名，别把它当科目行、也别把它当标题。"""
+    assert report_parser._is_values_only("6 751,766 660,257")
+    assert report_parser._is_values_only("1,154,152 973,548")
+    assert not report_parser._is_values_only("收入")
+    assert not report_parser._is_values_only("增值服務 369,281 319,168")
+
+
+RUNNING_HEADER_TEXT = """綜合財務狀況表
+人民幣百萬元
+資產總額 2,000,000 1,900,000
+綜合財務狀況表
+本公司權益持有人應佔權益
+－股本 10 10
+－保留盈利 1,100 1,000
+1,150,000 973,548
+負債總額 900,000 900,000
+綜合現金流量表
+人民幣百萬元
+經營活動所得現金流量淨額 300,000 250,000
+"""
+
+
+def test_statement_span_runs_to_the_next_different_statement() -> None:
+    """**页眉陷阱**：港股报表每页都有页眉（同名标题逐页重复）。
+
+    若把"下一个同名标题"当切分终点，切出来的永远是页眉之间的缝隙（实测只有 743 字符），
+    必填科目必然缺失。终点必须是"下一张**别的**表"。
+    """
+    rows = report_parser.build_report_rows(
+        "HK00700", RUNNING_HEADER_TEXT, report_period="2025-12-31"
+    )
+    assert len(rows) == 2  # 本期 + 上期
+    assert rows[0]["total_assets"] == 20000.0
+    assert rows[0]["equity"] == 11500.0  # 无标签合计行 1,150,000
+    assert rows[0]["total_liabilities"] == 9000.0
+    assert rows[0]["op_cashflow"] == 3000.0
+
+
+@pytest.mark.parametrize(
+    "label",
+    ["經營活動所得現金流量淨額", "經營活動所得現金淨額", "经营活动产生的现金流量净额"],
+)
+def test_hk_and_a_share_cashflow_wording_variants(label: str) -> None:
+    """现金流科目在两地/不同发行人有多种写法（腾讯用带「流量」的那条）。"""
+    text = f"綜合現金流量表\n人民幣百萬元\n{label} 300,000 250,000\n"
+    values = report_parser.parse_statement(text, kind="cashflow")
+    assert values["op_cashflow"] == [300_000.0, 250_000.0]
+
+
+# ── 抽取器链路：pymupdf 优先、pypdf 兜底（D-24）────────────────────────────
+def test_extract_text_prefers_first_non_empty_extractor(monkeypatch, tmp_path) -> None:
+    calls: list[str] = []
+
+    def fake_pymupdf(_path: str) -> str:
+        calls.append("pymupdf")
+        return ""
+
+    def fake_pypdf(_path: str) -> str:
+        calls.append("pypdf")
+        return "正文"
+
+    monkeypatch.setattr(
+        report_parser, "_EXTRACTORS", {"pymupdf": fake_pymupdf, "pypdf": fake_pypdf}
+    )
+    monkeypatch.setattr(report_parser.config, "PDF_EXTRACTORS", ("pymupdf", "pypdf"))
+
+    assert report_parser.extract_text(tmp_path / "a.pdf") == "正文"
+    assert calls == ["pymupdf", "pypdf"]  # 前者抽空 → 继续试下一个
+
+
+def test_extract_text_skips_missing_library(monkeypatch, tmp_path) -> None:
+    def not_installed(_path: str) -> str:
+        raise ImportError("pymupdf 未安装")
+
+    monkeypatch.setattr(
+        report_parser, "_EXTRACTORS", {"pymupdf": not_installed, "pypdf": lambda _p: "OK"}
+    )
+    monkeypatch.setattr(report_parser.config, "PDF_EXTRACTORS", ("pymupdf", "pypdf"))
+
+    assert report_parser.extract_text(tmp_path / "a.pdf") == "OK"
+
+
+def test_extract_text_raises_when_every_extractor_fails(monkeypatch, tmp_path) -> None:
+    def boom(_path: str) -> str:
+        raise ValueError("坏 PDF")
+
+    monkeypatch.setattr(report_parser, "_EXTRACTORS", {"pymupdf": boom})
+    monkeypatch.setattr(report_parser.config, "PDF_EXTRACTORS", ("pymupdf",))
+
+    with pytest.raises(base.DataSourceError, match="PDF 抽取失败"):
+        report_parser.extract_text(tmp_path / "a.pdf")

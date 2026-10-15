@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import json
 from datetime import date
 
 import pytest
@@ -16,10 +15,12 @@ from src import config
 from src.datasource import base
 from src.datasource.official_src import (
     CNINFO_STATIC_BASE,
+    HKEX_PREFIX_URL,
     HKEX_SEARCH_URL,
     FallbackResult,
     OfficialSource,
     call_with_fallback,
+    hkex_report_period_of_title,
     pdf_name_of,
     report_period_of_title,
 )
@@ -29,9 +30,17 @@ FIXED_DAY = date(2026, 10, 14)
 
 # ── 测试替身 ──────────────────────────────────────────────────────────────
 class FakeResponse:
-    def __init__(self, *, payload: object = None, content: bytes = b"", status: int = 200) -> None:
+    def __init__(
+        self,
+        *,
+        payload: object = None,
+        content: bytes = b"",
+        status: int = 200,
+        text: str = "",
+    ) -> None:
         self._payload = payload
         self.content = content
+        self.text = text
         self.status_code = status
 
     def json(self) -> object:
@@ -102,11 +111,32 @@ def cninfo_handler(periods, *, org_id: str = "gssh0600900", session_box=None):
     return handler
 
 
-def hkex_handler(documents):
+def hkex_handler(years=(2024,), *, lang="zh", stock_id=12345):
+    """披露易：① stockId 查询返回 JSONP 文本；② 检索返回 **HTML 表格**；③ PDF 返回字节。
+
+    ``lang="both"`` 时同一年度同时给英文版与中文版（英文版排在前面，用于验证"优先中文"）。
+    """
+
+    def pdf_blocks() -> str:
+        if lang == "both":
+            suffixes = (".pdf", "_c.pdf")  # 英文在前，刻意考验"不是简单取第一条"
+        else:
+            suffixes = ("_c.pdf",) if lang == "zh" else (".pdf",)
+        return "".join(
+            f'<tr><td class="date">2025-04-28</td>'
+            f'<td><a href="/listedco/listconews/sehk/2025/0428/{year}{suffix}">PDF</a></td>'
+            f"<td>文件:{year} 年報</td></tr>"
+            for year in years
+            for suffix in suffixes
+        )
+
     def handler(method, url, kwargs):
-        if "titleSearchServlet" in url:
-            # 披露易把结果塞在 JSON 字符串里（防御式解析要覆盖这个分支）
-            return FakeResponse(payload={"result": json.dumps(documents)})
+        if "prefix.do" in url:
+            if not stock_id:
+                return FakeResponse(text='callback({"stockInfo":[]})')
+            return FakeResponse(text=f'callback({{"stockInfo":[{{"stockId":{stock_id}}}]}})')
+        if "titlesearch" in url:
+            return FakeResponse(text=f"<html><table>{pdf_blocks()}</table></html>")
         return FakeResponse(content=b"%PDF-1.4 hk annual report")
 
     return handler
@@ -145,6 +175,25 @@ def test_non_annual_markers_are_excluded() -> None:
 
     for marker in NOT_ANNUAL_MARKERS:
         assert report_period_of_title(f"某公司2024年{marker}报告") is None
+
+
+@pytest.mark.parametrize(
+    ("title", "expected"),
+    [
+        ("年報 2023", "2023-12-31"),
+        ("2024 年報", "2024-12-31"),
+        ("[年報] 2022", "2022-12-31"),
+        ("ANNUAL REPORT 2023", "2023-12-31"),
+        ("2023 Annual Report", "2023-12-31"),
+        # 披露易同一批返回里混着中期报告与 ESG 报告 —— 都不能当成年报
+        ("中期報告 2023", None),
+        ("Environmental, Social and Governance Report 2023", None),
+        ("", None),
+    ],
+)
+def test_hkex_report_period_of_title_only_accepts_annual(title: str, expected: str | None) -> None:
+    """港股标题用「年報」而非「年度报告」，故与 A 股的解析器分开实现（D-21）。"""
+    assert hkex_report_period_of_title(title) == expected
 
 
 def test_pdf_name_is_ascii() -> None:
@@ -228,22 +277,61 @@ def test_cninfo_without_orgid_raises_identifiable_error(tmp_path) -> None:
         source.annual_report_documents("SH600900")
 
 
-def test_hk_code_routes_to_hkex_and_parses_json_string(tmp_path) -> None:
-    documents = [{"TITLE": "2024年年報", "FILE_LINK": "/listedco/listconews/sehk/2025/0428/a.pdf"}]
-    session = FakeSession(hkex_handler(documents))
-    source = make_source(hkex_handler(documents), tmp_path, session=session)
+def test_hk_code_resolves_stockid_then_searches_html(tmp_path) -> None:
+    """**D-21 修正**：港股先 ``prefix.do`` 反查 stockId，再用 ``titlesearch.xhtml`` 检索。
+
+    M1-3 的写法三处都错：直接拿 ``00700`` 当 stockId、端点用 ``titleSearchServlet.do``、
+    按 JSON 解析（实际返回 HTML）—— 所以整条港股链路当时必然失败。
+    """
+    session = FakeSession(hkex_handler(years=(2024,)))
+    source = make_source(hkex_handler(years=(2024,)), tmp_path, session=session)
 
     located = source.annual_report_documents("HK00700")
+
     assert [doc["report_period"] for doc in located] == ["2024-12-31"]
-    assert (
-        located[0]["pdf_url"] == "https://www1.hkexnews.hk/listedco/listconews/sehk/2025/0428/a.pdf"
-    )
-    assert session.calls[0]["url"] == HKEX_SEARCH_URL
+    assert located[0]["pdf_url"].endswith("/2024_c.pdf")
+
+    # ① 反查 stockId：传股票代号与市场，不是把代号当 ID
+    prefix_call = session.calls[0]
+    assert prefix_call["url"] == HKEX_PREFIX_URL
+    assert prefix_call["kwargs"]["params"]["name"] == "00700"
+    assert prefix_call["kwargs"]["params"]["market"] == "SEHK"
+
+    # ② 检索：带**内部 stockId** 与年报分类码，语言走 query
+    assert session.calls[1]["url"] == HKEX_SEARCH_URL
+    search = session.calls[1]["kwargs"]
+    assert search["params"] == {"lang": "zh"}
+    assert search["data"]["stockId"] == "12345"
+    assert search["data"]["t1code"] == "40000"
+    assert search["data"]["t2code"] == "40100"
+    assert search["data"]["market"] == "SEHK"
+    assert search["data"]["from"].endswith("0101") and search["data"]["to"].endswith("1231")
 
 
-def test_broken_hkex_payload_yields_no_documents(tmp_path) -> None:
+def test_hk_prefers_chinese_pdf_for_same_year(tmp_path) -> None:
+    """中英文是两套文件：同一年度**优先中文版**（解析器认中文科目名），英文版只是兜底。"""
+    source = make_source(hkex_handler(years=(2024,), lang="both"), tmp_path)
+
+    located = source.annual_report_documents("HK00700")
+
+    assert len(located) == 1  # 同一年度只留一份
+    assert located[0]["pdf_url"].endswith("/2024_c.pdf")
+
+
+def test_hk_without_stockid_raises_identifiable_error(tmp_path) -> None:
+    """查不到 stockId 必须明确报错，而不是静默返回空集被当成"没有年报"。"""
+    source = make_source(hkex_handler(stock_id=0), tmp_path)
+    with pytest.raises(base.DataSourceError, match="未查到披露易 stockId"):
+        source.annual_report_documents("HK00700")
+
+
+def test_hk_empty_result_page_yields_no_documents(tmp_path) -> None:
+    """检索页里没有 PDF 链接（该期次确实没披露年报）→ 空列表，不报错。"""
+
     def handler(method, url, kwargs):
-        return FakeResponse(payload={"result": "{not json"})
+        if "prefix.do" in url:
+            return FakeResponse(text='callback({"stockInfo":[{"stockId":12345}]})')
+        return FakeResponse(text="<html><table></table></html>")
 
     assert make_source(handler, tmp_path).annual_report_documents("HK00700") == []
 

@@ -70,6 +70,36 @@ def test_normalize_code_still_raises_identifiable_error() -> None:
         common.normalize_code("ABC", "A")
 
 
+# ── 双引擎舍入口径（D-18）────────────────────────────────────────────────
+def test_round_half_up_matches_js_math_round() -> None:
+    """半进位朝 ``+∞``，与 JS 的 ``Math.round`` / ``toFixed`` 逐位一致。"""
+    assert common.round_half_up(3.125, 2) == 3.13  # JS: Math.round(312.5) / 100
+    assert common.round_half_up(2.5, 0) == 3.0  # JS: Math.round(2.5) === 3
+    assert common.round_half_up(0.87777, 4) == 0.8778
+    assert common.round_half_up(1.0, 2) == 1.0
+    assert common.round_half_up(83.33333333333333, 2) == 83.33
+
+
+def test_round_half_up_is_asymmetric_on_negative_half_like_js() -> None:
+    """**刻意保留的不对称**：JS 遇 ``.5`` 一律朝 ``+∞``，对负数是"向零"。
+
+    ``Math.round(-2.5) === -2``、``(-3.125).toFixed(2) === "-3.12"`` ——
+    "更漂亮"的对称舍入（-3）反而会让 M2-6 逐项比对失败。
+    """
+    assert common.round_half_up(-2.5, 0) == -2.0
+    assert common.round_half_up(-3.125, 2) == -3.12
+
+
+def test_round_half_up_differs_from_builtin_round_somewhere() -> None:
+    """至少存在一个边界值两者不同 —— 否则这个工具没有存在必要（内置 round 是银行家舍入）。"""
+    assert round(3.125, 2) == 3.12
+    assert round(0.125, 2) == 0.12
+    cases = [(3.125, 2), (2.5, 0), (-2.5, 0), (0.125, 2)]
+    assert any(
+        common.round_half_up(value, digits) != round(value, digits) for value, digits in cases
+    )
+
+
 def test_common_has_no_io_at_import_time(tmp_path) -> None:
     """纯函数模块：import 不产生文件 IO（用"导入时不访问网络/磁盘"的间接断言）。"""
     assert common.to_internal_billion(100_000_000) == 1.0

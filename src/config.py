@@ -50,7 +50,11 @@ ABS_ANCHORS: dict[str, list[tuple[float, float]]] = {
 # 行业分位映射：子分 = 跑赢同业比例 × PERCENTILE_SCALE
 PERCENTILE_SCALE = 100.0
 # 走行业分位的指标（其余走绝对值锚点）
-PERCENTILE_INDICATORS = ("net_profit_scale", "asset_turnover")
+# `eps` 一并走分位：§4.2 两种方式都没点它的名，但雷达六维需要它的子分，
+# 参考实现 engine.js 用的是分位（`pctScore(epv, ind.eps)`）→ 2026-10-14 定案（D-22）。
+PERCENTILE_INDICATORS = ("net_profit_scale", "asset_turnover", "eps")
+# 分位分子分取整位数：对齐 engine.js 的 `toFixed(2)`（D-18）
+PERCENTILE_DECIMALS = 2
 
 # ── 成长分 G（评分规格 §6）───────────────────────────────────────────────
 GROWTH_MAX = 100.0  # 单项上限（方向分上限）
@@ -94,6 +98,14 @@ MARKET_MISSING_RATE_MAX = 0.05  # 单市场缺失率 ≤ 5%，超阈值 → degr
 # ── 数据源与回退链（数据源规格 §1 / §7）──────────────────────────────────
 PRIMARY_SOURCE_NAME = "akshare"  # 主源名（回退链判定 degraded 的基准）
 FALLBACK_SOURCE_NAMES = ("official", "fixture")  # 官方源兜底 / fixtures 离线回退
+
+# ── PDF 文本抽取（M1-7 / D-24）────────────────────────────────────────────
+# 按序尝试：前者抽不出内容（空串）或未安装时自动回落后者。
+# `pymupdf` 对「无 ToUnicode 映射的 CID 中文字体」能正确解码（pypdf 只能输出错码位）——
+# 这是港股年报的普遍情况（D-24 实测：pypdf 抽出 0 个 CJK 字符，pymupdf 抽出 13 万个）。
+# **注意 `pymupdf` 是 AGPL 许可**：只用于本地跑批工具链，不进入发布产物；
+# 未安装时自动回落 `pypdf`（A 股年报用 pypdf 一直正常）。
+PDF_EXTRACTORS = ("pymupdf", "pypdf")
 
 # ── 数据源容错（数据源规格 §7 / §8）──────────────────────────────────────
 FETCH_RETRY_TIMES = 3  # 重试 3 次

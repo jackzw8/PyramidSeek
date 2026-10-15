@@ -36,14 +36,19 @@ def test_abs_anchors_match_spec() -> None:
 
 
 def test_percentile_indicators_are_the_industry_ranked_ones() -> None:
-    assert set(config.PERCENTILE_INDICATORS) == {"net_profit_scale", "asset_turnover"}
+    # eps 一并走分位（D-22 定案：§4.2 没点它的名，但雷达六维需要，engine.js 用的就是分位）
+    assert set(config.PERCENTILE_INDICATORS) == {"net_profit_scale", "asset_turnover", "eps"}
     # 走分位的指标不进绝对值锚点表
     assert set(config.PERCENTILE_INDICATORS) & set(config.ABS_ANCHORS) == set()
-    # 净利率只进雷达图、不进 Q（锚点表有它，权重表没有它）
+    # 两种方式合起来**恰好**覆盖 8 项指标（防漏算 / 多算）
     assert set(config.PERCENTILE_INDICATORS) | set(config.ABS_ANCHORS) == set(config.WEIGHTS) | {
-        "net_margin"
+        "net_margin",
+        "eps",
     }
+    # 净利率与 eps 只进雷达图、不进 Q（锚点表/分位表有它们，权重表没有）
     assert "net_margin" not in config.WEIGHTS
+    assert "eps" not in config.WEIGHTS
+    assert config.PERCENTILE_DECIMALS == 2  # 对齐 engine.js 的 toFixed(2)（D-18）
 
 
 def test_score_bounds_and_growth_params_match_spec() -> None:

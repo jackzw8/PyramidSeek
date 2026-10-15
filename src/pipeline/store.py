@@ -44,7 +44,7 @@ DDL: dict[str, str] = {
           revenue DECIMAL(18,4), gross_profit DECIMAL(18,4), net_profit DECIMAL(18,4),
           total_assets DECIMAL(18,4), total_liabilities DECIMAL(18,4), equity DECIMAL(18,4),
           cash DECIMAL(18,4), op_cashflow DECIMAL(18,4), icf DECIMAL(18,4), fcf DECIMAL(18,4),
-          effective_date DATE, source VARCHAR, fetched_at TIMESTAMP,
+          effective_date DATE, currency VARCHAR, source VARCHAR, fetched_at TIMESTAMP,
           PRIMARY KEY (code, report_period, report_type)
         )""",
     "price_daily": """
@@ -119,6 +119,7 @@ COLUMNS: dict[str, tuple[str, ...]] = {
         "icf",
         "fcf",
         "effective_date",
+        "currency",
         "source",
         "fetched_at",
     ),

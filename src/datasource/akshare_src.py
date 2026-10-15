@@ -417,6 +417,7 @@ def map_financial_reports(
                 "icf": to_internal_billion(_subject(cashflow, "icf")),
                 "fcf": to_internal_billion(_subject(cashflow, "fcf")),
                 "effective_date": effective_date_of(period),
+                "currency": "CNY",  # 新浪三表为人民币报表（D-24 加的字段）
                 "source": source,
                 "fetched_at": stamp,
             }

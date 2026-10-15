@@ -66,6 +66,8 @@ def test_financial_field_contract() -> None:
         "cash",
         "icf",
         "fcf",
+        # 报表币种（CNY / HKD / USD）：金额单位是"亿元"但币种不能混 —— 2026-10-14 加（D-24）
+        "currency",
     )
 
 
