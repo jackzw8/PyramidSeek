@@ -34,15 +34,24 @@ ROUNDED_FIELDS = ("quality", "growth", "growth_np", "growth_ocf", "score")
 
 
 def _node() -> str | None:
-    """定位 node：环境变量 → PATH → 本机便携版（2026-10-15 下载于 temp/）。"""
+    """定位 node：环境变量 → PATH → 已知固定位置（2026-10-15 起在 adev-tools）。
+
+    注意：注册表 PATH 变更后，**已启动的宿主进程**（IDE / 本工具的 shell 宿主）不会自动刷新，
+    其子进程里 `shutil.which` 可能仍找不到 → 显式候选路径兜底。
+    """
     env = os.environ.get("PYRAMIDSEEK_NODE")
     if env and Path(env).exists():
         return env
     which = shutil.which("node")
     if which:
         return which
-    for candidate in sorted((REPO.parent / "temp" / "node").glob("*/node.exe")):
-        return str(candidate)
+    bases = (
+        Path(r"D:\AIwork\adev-tools\node-v20.18.1-win-x64"),  # 用户固定位置（在用户 PATH）
+        REPO.parent / "temp" / "node",  # 旧便携版位置（兼容保留）
+    )
+    for base in bases:
+        for candidate in sorted(base.glob("node.exe")) or sorted(base.glob("*/node.exe")):
+            return str(candidate)
     return None
 
 
