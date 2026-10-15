@@ -16,12 +16,13 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from .. import config
 from ..common import is_missing, round_half_up
-from .indicators import RawIndicators, annual_rows
+from .indicators import INDICATOR_KEYS, RawIndicators, annual_rows, raw_indicators
+from .industry import PoolInfo, build_pools, pool_sub_scores
 
 # 走绝对值锚点的指标（= config.ABS_ANCHORS 的键，顺序一致；家法 R12 唯一来源）
 ABS_INDICATOR_KEYS: tuple[str, ...] = tuple(config.ABS_ANCHORS)
@@ -254,11 +255,255 @@ def growth_from_rows(
     )
 
 
+# ── 组装总分（M2-5，《评分算法规格》§7 / §11）──────────────────────────────
+# 雷达六维的顶点顺序（契约 §3.4：顶 ROE 顺时针），与 `score_snapshot` 的列顺序一致
+RADAR_KEYS: tuple[str, ...] = (
+    "roe",
+    "gross_margin",
+    "asset_turnover",
+    "eps",
+    "cash_ratio",
+    "net_margin",
+)
+# 这两维取**分位**子分，其余取绝对值子分（§4.2 + §11 口径清单）
+RADAR_PERCENTILE_KEYS = frozenset({"asset_turnover", "eps"})
+# §8：金融类的毛利率 / 周转率「不适用 → 单列」，不因此判「不入榜」
+FINANCIAL_INAPPLICABLE = ("gross_margin", "asset_turnover")
+# Q = Σ(sub×w) ÷ 100 —— 除数由 config 推导（子分满分 × 权重合计 ÷ Q 上限），不写死
+_QUALITY_DIVISOR = config.SUB_SCORE_MAX * sum(config.WEIGHTS.values()) / config.Q_MAX
+
+
+def quality_score(subs: dict[str, float] | SubScores) -> float:
+    """质量分 Q（§2 / §11）：**先 `round(Σ(sub×w), 2)` 再 ÷ 100**。
+
+    ⚠️ 顺序是硬要求：`round(Σ/100, 2)` 与本实现在 ``.xx5`` 边界会差 0.01，
+    M2-6 双引擎逐项比对必然失败（参考实现 `engine.js` 就是先 `toFixed` 再除）。
+    """
+    values = subs.values if isinstance(subs, SubScores) else subs
+    weighted = 0.0
+    for key, weight in config.WEIGHTS.items():
+        value = values.get(key)
+        if not is_missing(value):
+            weighted += float(value) * weight
+    return round_half_up(weighted, config.Q_DECIMALS) / _QUALITY_DIVISOR
+
+
+def total_score(quality: float, growth: float) -> float:
+    """金字塔分（§7 / §11）：``round(clamp(Q+G, 0, 1000), 2)`` —— **先 clamp 再 round**。"""
+    clamped = min(max(quality + growth, config.SCORE_MIN), config.SCORE_MAX)
+    return round_half_up(clamped, config.SCORE_DECIMALS)
+
+
+def radar_scores(absolute: dict[str, float], percentile: dict[str, float]) -> dict[str, float]:
+    """雷达六维（§4.2 / §11）：六项都取 0~100 的**子分**；`asset_turnover` / `eps` 用分位子分。"""
+    return {
+        key: float(percentile.get(key, 0.0))
+        if key in RADAR_PERCENTILE_KEYS
+        else float(absolute.get(key, 0.0))
+        for key in RADAR_KEYS
+    }
+
+
+@dataclass(frozen=True)
+class StockScore:
+    """单只股票的完整评分结果（字段名与《数据字典》§5 `score_snapshot` 对齐）。"""
+
+    code: str
+    quality: float
+    growth: float
+    growth_np: float
+    growth_ocf: float
+    score: float
+    subs: dict[str, float] = field(default_factory=dict)
+    radar: dict[str, float] = field(default_factory=dict)
+    compare_level: str = ""
+    compare_group: str = ""
+    rank_in_group: int = 0
+    is_top10pct: bool = False
+    eligible: bool = True
+    filled: tuple[str, ...] = ()  # 用行业均值填充过的指标（§8：置信度降低）
+    unfilled: tuple[str, ...] = ()  # 既无值、池内也无均值 → 保持 0 并标记
+    group_key: str = ""  # 内部用：分市场 + 组名（不落库）
+
+    def snapshot_row(self, snapshot_version: str) -> dict[str, Any]:
+        """→ `score_snapshot` 的一行（列名逐字对齐《数据字典》§5）。"""
+        row: dict[str, Any] = {
+            "code": self.code,
+            "snapshot_version": snapshot_version,
+            "quality": self.quality,
+            "growth": self.growth,
+            "growth_np": self.growth_np,
+            "growth_ocf": self.growth_ocf,
+            "score": self.score,
+            "compare_level": self.compare_level,
+            "compare_group": self.compare_group,
+            "rank_in_group": self.rank_in_group,
+            "is_top10pct": self.is_top10pct,
+        }
+        row.update({f"sub_{key}": value for key, value in self.subs.items()})
+        row.update({f"radar_{key}": value for key, value in self.radar.items()})
+        return row
+
+
+def _pool_means(
+    pools: dict[str, PoolInfo], raws: dict[str, RawIndicators]
+) -> dict[tuple[str, str], dict[str, float]]:
+    """每个对比池内各**可用**指标的均值（§8 填充用；池内该指标全缺 → 不出现在结果里）。"""
+    collected: dict[tuple[str, str], dict[str, list[float]]] = {}
+    for pool in pools.values():
+        bucket = collected.setdefault((pool.market, pool.group), {})
+        for member in pool.members:
+            raw = raws.get(member)
+            if raw is None:
+                continue
+            for indicator, value in raw.values.items():
+                if indicator in raw.unavailable or is_missing(value):
+                    continue
+                bucket.setdefault(indicator, []).append(float(value))
+    return {
+        key: {indicator: sum(values) / len(values) for indicator, values in bucket.items()}
+        for key, bucket in collected.items()
+    }
+
+
+def _rank_within_groups(rows: list[StockScore]) -> list[StockScore]:
+    """§7：组内按 `score` 降序 → `rank_in_group`；`is_top10pct = rank ≤ ceil(n × 10%)`。
+
+    同分按 `code` 升序，保证**确定性**（参考实现是 `sort` 后按 index 给 rank，
+    同分谁在前取决于输入顺序；M2-6 对账时以本文为准）。
+    """
+    grouped: dict[str, list[StockScore]] = {}
+    for row in rows:
+        grouped.setdefault(row.group_key, []).append(row)
+    ranked: list[StockScore] = []
+    for members in grouped.values():
+        ordered = sorted(members, key=lambda row: (-row.score, row.code))
+        cut = math.ceil(len(ordered) * config.TOP_PCT)
+        for index, row in enumerate(ordered, start=1):
+            ranked.append(replace(row, rank_in_group=index, is_top10pct=index <= cut))
+    return ranked
+
+
+def score_universe(
+    stocks: Sequence[dict[str, Any]],
+    financials: dict[str, Sequence[dict[str, Any]]],
+    *,
+    as_of: str | None = None,
+    years: int = config.YEARS,
+) -> list[StockScore]:
+    """整批组装：指标 → 绝对值子分 → 行业分位 → Q → 总分 → 组内排名（§1 的输出清单）。
+
+    §8「缺失值 → 用行业均值填充该项」在这里落地：填充用的是**同一对比池**内该指标的均值，
+    并把填充过的指标记进 :attr:`StockScore.filled`（置信度降低）；池里也没有 → 保持 0
+    并记进 :attr:`StockScore.unfilled`；若它属于**加权**指标且不是金融类「不适用」项，
+    则该股 :attr:`StockScore.eligible=False`（不入主榜）。
+    """
+    raws = {
+        str(stock["code"]): raw_indicators(
+            stock, list(financials.get(str(stock["code"])) or []), as_of=as_of, years=years
+        )
+        for stock in stocks
+    }
+    growths = {
+        str(stock["code"]): growth_from_rows(
+            list(financials.get(str(stock["code"])) or []), years=years, as_of=as_of
+        )
+        for stock in stocks
+    }
+    pools = build_pools(stocks)
+    means = _pool_means(pools, raws)
+
+    adjusted: dict[str, dict[str, float]] = {}
+    filled: dict[str, tuple[str, ...]] = {}
+    unfilled: dict[str, tuple[str, ...]] = {}
+    for stock in stocks:
+        code = str(stock["code"])
+        raw = raws[code]
+        pool = pools.get(code)
+        pool_mean = means.get((pool.market, pool.group), {}) if pool is not None else {}
+        values = dict(raw.values)
+        filled_list: list[str] = []
+        unfilled_list: list[str] = []
+        for indicator in INDICATOR_KEYS:
+            if indicator not in raw.unavailable:
+                continue
+            mean_value = pool_mean.get(indicator)
+            if mean_value is None:
+                unfilled_list.append(indicator)
+            else:
+                values[indicator] = mean_value
+                filled_list.append(indicator)
+        adjusted[code] = values
+        filled[code] = tuple(filled_list)
+        unfilled[code] = tuple(unfilled_list)
+
+    percentile_subs = {
+        # pool_sub_scores 要的是「每只股票该指标的**标量**」，不是整张指标表
+        indicator: pool_sub_scores(
+            indicator,
+            {code: values.get(indicator) for code, values in adjusted.items()},
+            pools,
+        )
+        for indicator in config.PERCENTILE_INDICATORS
+    }
+
+    rows: list[StockScore] = []
+    for stock in stocks:
+        code = str(stock["code"])
+        pool = pools.get(code)
+        absolute = absolute_sub_scores(adjusted[code], unavailable=unfilled[code])
+
+        percentile_values: dict[str, float] = {}
+        for indicator, table in percentile_subs.items():
+            value = table.get(code)
+            percentile_values[indicator] = 0.0 if is_missing(value) else float(value)
+
+        # `subs` **只放加权的那 6 项**（与参考实现一致，也正好是 `score_snapshot` 的 6 个
+        # `sub_` 列）：`net_margin` / `eps` 只进雷达，不进子分 —— 多写会多出 DDL 里没有的列。
+        subs: dict[str, float] = {}
+        for indicator in config.WEIGHTS:
+            if indicator in percentile_values:
+                subs[indicator] = percentile_values[indicator]
+            else:
+                subs[indicator] = float(absolute.values.get(indicator, 0.0))
+
+        growth = growths[code]
+        quality = quality_score(subs)
+        # §8：金融类「毛利率 / 周转率不适用 → 单列」—— 单列意味着**照算照列**，
+        # 不能因为这些指标天然缺失就判它「不入主榜」
+        eligible = bool(stock.get("is_financial")) or not [
+            key for key in config.WEIGHTS if key in unfilled[code]
+        ]
+        rows.append(
+            StockScore(
+                code=code,
+                quality=quality,
+                growth=growth.total,
+                growth_np=growth.items.get("growth_np", 0.0),
+                growth_ocf=growth.items.get("growth_ocf", 0.0),
+                score=total_score(quality, growth.total),
+                subs=subs,
+                radar=radar_scores(dict(absolute.values), percentile_values),
+                compare_level=pool.level if pool is not None else "",
+                compare_group=pool.group if pool is not None else "",
+                eligible=eligible,
+                filled=filled[code],
+                unfilled=unfilled[code],
+                group_key=f"{pool.market}:{pool.group}" if pool is not None else "",
+            )
+        )
+    return _rank_within_groups(rows)
+
+
 __all__ = [
     "ABS_INDICATOR_KEYS",
+    "FINANCIAL_INAPPLICABLE",
     "GROWTH_ITEM_KEYS",
     "MIN_GROWTH_POINTS",
+    "RADAR_KEYS",
+    "RADAR_PERCENTILE_KEYS",
     "GrowthScore",
+    "StockScore",
     "SubScores",
     "absolute_sub_score",
     "absolute_sub_scores",
@@ -267,5 +512,9 @@ __all__ = [
     "growth_item",
     "growth_score",
     "interp_anchor",
+    "quality_score",
+    "radar_scores",
+    "score_universe",
     "stability_k",
+    "total_score",
 ]

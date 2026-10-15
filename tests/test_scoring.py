@@ -21,7 +21,11 @@ from src.engine.scoring import (
     growth_item,
     growth_score,
     interp_anchor,
+    quality_score,
+    radar_scores,
+    score_universe,
     stability_k,
+    total_score,
 )
 
 # 《评分算法规格》§4.2 方式一表格（0 分 / 50 分 / 80 分 / 100 分；比率用小数）
