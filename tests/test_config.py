@@ -76,6 +76,6 @@ def test_data_and_pool_conventions_match_spec() -> None:
 
 def test_versions_and_assets_exist() -> None:
     assert config.FORMULA_VERSION == "v1.0"
-    assert config.CONTRACT_VERSION == "1.1"
+    assert config.CONTRACT_VERSION == "1.2"
     assert config.FIXTURES_FILE.exists(), "fixtures 示例数据必须就位（家法 R16：离线永远可跑）"
     assert config.DISCLAIMER  # 免责声明随行（家法 R20）

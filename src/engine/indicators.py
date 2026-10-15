@@ -112,7 +112,7 @@ def annual_rows(
     return picked[-max(years, 0) :] if years > 0 else []
 
 
-def _year_ratio(numerator: Any, denominator: Any, *, has_denominator: bool = True) -> float | None:
+def year_ratio(numerator: Any, denominator: Any, *, has_denominator: bool = True) -> float | None:
     """单年比值：缺失 → ``None``（该年跳过）；**除零 → 0.0**（§3）。
 
     ``has_denominator=False`` 表示该指标本来就没有分母（如 ``net_profit_scale``）。
@@ -172,7 +172,7 @@ def raw_indicators(
                 denominator = shares
             else:
                 denominator = row.get(denominator_field)
-            ratio = _year_ratio(
+            ratio = year_ratio(
                 row.get(numerator_field),
                 denominator,
                 has_denominator=denominator_field is not None,
@@ -203,4 +203,5 @@ __all__ = [
     "RawIndicators",
     "annual_rows",
     "raw_indicators",
+    "year_ratio",
 ]

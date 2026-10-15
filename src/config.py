@@ -15,7 +15,9 @@ from pathlib import Path
 
 # ── 版本（家法 R2 / R3 / R15）────────────────────────────────────────────
 FORMULA_VERSION = "v1.0"  # 评分公式版本（改评分参数必须升版本）
-CONTRACT_VERSION = "1.1"  # 产物契约版本（改契约结构必须升版本）
+# 产物契约版本（改契约结构必须升版本）：1.2 = M3 口径（rows 收窄为主榜 + excluded 单列 +
+# cash_ratio/debt_ratio 列 + §3.5 数值精度），见《产物契约》V1.4 变更记录。
+CONTRACT_VERSION = "1.2"
 
 # ── 市场与行业标准（技术说明书 §3.4）─────────────────────────────────────
 MARKETS = ("A", "HK")
@@ -82,6 +84,9 @@ EFFECTIVE_LAG_MONTHS = 4  # 财报「报告期 + 4 个月」生效（家法 R9�
 AMOUNT_UNIT = "亿元"
 AMOUNT_DECIMALS = 2
 RATIO_DECIMALS = 4  # 汇率/比率展示精度（内部统一存小数）
+# 产物展示精度（《产物契约》§3.5）：金额 2 位 / 比率 4 位（上面两项），以下为特例。
+EPS_DECIMALS = 2  # 每股收益（元/股，非「亿元」类）
+PRICE_DECIMALS = 4  # 月K 价格（前复权）
 
 ADJ_FACTOR_DECIMALS = 6  # 复权因子精度（《数据字典》§5 DDL：DECIMAL(18,6)）
 
@@ -121,6 +126,7 @@ FETCH_TIMEOUT_SLOW_SECONDS = 1800
 PS_ENV_LOCAL = "local"
 PS_ENV_CI = "ci"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+SCHEMA_DIR = PROJECT_ROOT / "schema"  # 产物 JSON Schema（《产物契约》§5，M3-5 校验用）
 FIXTURES_DIR = PROJECT_ROOT / "fixtures"
 PUBLIC_DIR = PROJECT_ROOT / "public"
 PUBLIC_DATA_DIR = PUBLIC_DIR / "data"
