@@ -121,6 +121,8 @@ def fetch_universe(
     db_path: Path | None = None,
     parquet_dir: Path | None = None,
     with_raw: bool = False,
+    with_financials: bool = True,
+    with_history: bool = True,
 ) -> FetchOutcome:
     """按回退链采集 → 清洗 → 落库。
 
@@ -163,22 +165,37 @@ def fetch_universe(
     outcome.sources["list_stocks"] = outcome.sources.get("list_stocks:A", "none")
 
     financials: dict[str, list[dict[str, Any]]] = {}
-    for row in stocks:
-        code = str(row["code"])
-        rows, source, reasons = _try_chain("financials", code, chain=chain)
-        outcome.sources[f"financials:{code}"] = source
-        if reasons:
-            outcome.fallbacks[f"financials:{code}"] = reasons
-        if rows:
-            financials[code] = rows
+    # 模式开关（D-32）：`daily` 模式不抓三表 —— 财报来自**标准层落库**（上一次
+    # `financials`/`cold` 模式的结果，按日缓存的标准行），本次只补快照；
+    # 读回失败（空库 / 未跑过三表）→ 财报为空，产物缺评分 —— daily 的前置条件
+    # 是先跑过一次带落库的三表。
+    if with_financials:
+        for row in stocks:
+            code = str(row["code"])
+            rows, source, reasons = _try_chain("financials", code, chain=chain)
+            outcome.sources[f"financials:{code}"] = source
+            if reasons:
+                outcome.fallbacks[f"financials:{code}"] = reasons
+            if rows:
+                financials[code] = rows
+    else:
+        try:
+            stored = store.read_table("financial_report", db_path=db_path)
+        except Exception:  # noqa: BLE001  空库 / 表不存在 → 财报为空
+            stored = []
+        for row in stored:
+            code = str(row.get("code") or "")
+            if code:
+                financials.setdefault(code, []).append(row)
 
     # 行情（D-32 决策 1/2）：**默认只取前复权**（1 次/只）—— `adjust="qfq"` 返回的 OHLC
     # 本身就是前复权价，`clean.merge_price_rows` 走 qfq-only 形态（B 级降级：无 `adj_factor`，
     # 产物 `kline` 照常出、`hfq` 省略）；`with_raw=True`（monthly/cold 模式）时额外取
     # 「不复权」并合并反算 `adj_factor`，以输出 `hfq`。两道都拿不到才当该股无行情。
+    # `with_history=False`（daily 模式）不抓历史序列 —— 行情截止日由快照提供。
     prices: dict[str, list[dict[str, Any]]] = {}
     price_issues: list[Any] = []
-    for row in stocks:
+    for row in stocks if with_history else []:
         code = str(row["code"])
         raw_rows: list[dict[str, Any]] = []
         if with_raw:

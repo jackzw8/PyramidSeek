@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import shutil
 import sys
@@ -90,11 +91,45 @@ def assemble_inputs(
         degraded=bool(outcome.degraded or universe.degraded),
         notes=tuple(outcome.notes),
         data_date_financial=_max_field(financials, "report_period"),
-        data_date_price=_max_field(prices, "trade_date"),
+        # daily 模式不抓历史行情 → 行情截止日回落到快照日期（D-32：FetchOutcome.snapshot_date）
+        data_date_price=_max_field(prices, "trade_date") or outcome.snapshot_date,
     )
 
 
 # ── 跑批 ─────────────────────────────────────────────────────────────────
+def _write_pending(outcome: Any, generated_at: str, path: Path) -> int:
+    """把本次跑批「标的级、全链路无数据」的失败写入待补清单（D-32）。
+
+    只收 ``financials:{code}`` / ``price_daily:{code}`` 两类 —— 全市场级接口
+    （list_stocks / industry_tree / market_snapshot）失败属于整批问题，不进清单。
+    """
+    items: list[dict[str, Any]] = []
+    for key, source in outcome.sources.items():
+        if source != "none":
+            continue
+        kind, _, code = key.partition(":")
+        if kind not in {"financials", "price_daily"} or not code:
+            continue
+        items.append({"kind": kind, "code": code, "reasons": outcome.fallbacks.get(key, [])})
+    payload = {"generated_at": generated_at, "pending": items}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return len(items)
+
+
+def _read_pending(path: Path) -> list[str]:
+    """读待补清单里的标的代码（去重排序）；文件缺失或损坏返回空。"""
+    if not path.exists():
+        return []
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return []
+    return sorted(
+        {str(item.get("code")) for item in payload.get("pending", []) if item.get("code")}
+    )
+
+
 def prepare_out_dir(out_dir: Path) -> None:
     """重置产物目录：删掉上一批的 ``ranking/`` 与 ``stock/``。
 
@@ -119,16 +154,45 @@ def run(args: argparse.Namespace) -> int:
         f"｜snapshotVersion={snapshot_version}｜generatedAt={generated_at}"
     )
 
+    # 模式 → 抓取开关（D-32）；离线回归不受模式影响（fixtures 全量，保证可复现）
+    if args.offline:
+        with_financials, with_history, with_raw = True, True, False
+    else:
+        with_financials, with_history, with_raw = {
+            "daily": (False, False, False),
+            "monthly": (False, True, True),
+            "financials": (True, False, False),
+            "cold": (True, True, True),
+            "retry": (True, True, False),
+        }[args.mode]
+
+    codes = list(args.codes or [])
+    if args.mode == "retry" and not args.offline:
+        pending_path = config.DATA_DIR / "_pending.json"
+        pending_codes = _read_pending(pending_path)
+        if pending_codes:
+            print(f"[batch] retry：待补 {len(pending_codes)} 只（{pending_path}）")
+            codes = sorted(set(codes) | set(pending_codes))
+        else:
+            print("[batch] retry：无待补项（_pending.json 为空或不存在）")
+
+    print(
+        f"[batch] mode={args.mode}｜with_financials={with_financials}｜with_history={with_history}"
+    )
+
     try:
         outcome = fetch.fetch_universe(
             markets=tuple(args.markets),
-            codes=args.codes,
+            codes=codes or None,
             limit=args.limit,
             chain=fetch.default_chain(offline=args.offline, fixtures_path=args.fixtures),
             today=date.fromisoformat(as_of),
             persist=not args.no_store,
             db_path=args.db,
             parquet_dir=args.parquet_dir,
+            with_raw=with_raw,
+            with_financials=with_financials,
+            with_history=with_history,
         )
     except DataSourceError as exc:
         print(f"[batch][ERROR] 采集失败：{exc}", file=sys.stderr)
@@ -177,6 +241,12 @@ def run(args: argparse.Namespace) -> int:
         written.append(build_stock(inputs, score.code, out_dir))
     print(f"[batch] 产物 {len(written)} 个 → {out_dir}")
 
+    if not args.offline:
+        pending_path = config.DATA_DIR / "_pending.json"
+        pending_count = _write_pending(outcome, generated_at, pending_path)
+        if pending_count:
+            print(f"[batch] 待补清单：{pending_count} 项 → {pending_path}（--mode retry 补抓）")
+
     if not args.no_validate:
         problems = validate_products(out_dir)
         if problems:
@@ -192,6 +262,16 @@ def run(args: argparse.Namespace) -> int:
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="PyramidSeek 跑批入口（M3-4）")
+    parser.add_argument(
+        "--mode",
+        choices=("daily", "monthly", "financials", "cold", "retry"),
+        default="daily",
+        help=(
+            "跑批模式（D-32）：daily=快照+重算（默认，分钟级）；monthly=+行情历史重抓"
+            "（含 raw 以补 hfq）；financials=+三表全量（披露季）；cold=三表+行情历史（冷启动）；"
+            "retry=补上次 _pending.json 清单。--offline 时不生效（fixtures 全量，回归可复现）"
+        ),
+    )
     parser.add_argument("--offline", action="store_true", help="只用 fixtures，不打网络")
     parser.add_argument("--markets", nargs="+", default=list(config.MARKETS), help="市场列表")
     parser.add_argument("--codes", nargs="+", default=None, help="只跑这些标的（小样本冒烟）")

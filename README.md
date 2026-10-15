@@ -79,8 +79,12 @@ python -m pip install -r requirements.txt -r requirements-dev.txt
 # 2) 离线跑通整链（仅用 fixtures/，不联网；跑完自动做产物校验）
 python -m src.batch --offline
 
-# 2b) 联网跑批（AkShare → 官方源 → fixtures 三级回退，失败自动降级）
-python -m src.batch
+# 2b) 联网跑批 —— 模式化（D-32，详见《数据源接入规格》§7.1）：
+python -m src.batch --mode daily        # 快照 + 全量重算（日常默认，分钟级）
+python -m src.batch --mode financials   # 三表全量重抓（披露季：1-4 月年报、4/8/10 月季报）
+python -m src.batch --mode monthly      # 行情历史重抓（qfq+raw，校正前复权序列与 hfq）
+python -m src.batch --mode cold         # 冷启动（三表 + 行情历史，本地分批跑）
+python -m src.batch --mode retry        # 补上次失败清单（data/_pending.json）
 
 # 3) 运行测试
 pytest

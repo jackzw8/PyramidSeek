@@ -406,6 +406,29 @@ def test_price_fetch_is_qfq_only_by_default() -> None:
     assert ("price_daily", "SH600900:qfq") in calls_raw
 
 
+def test_mode_switches_skip_fetch(tmp_path) -> None:
+    """D-32 模式开关：`with_financials=False` / `with_history=False` 时跳过对应接口
+    （daily 模式只快照 + 重算，财报从标准层读回 —— 这里用空库断言读回为空）。"""
+    empty_db = tmp_path / "empty.duckdb"
+    chain = stub_chain()
+    outcome = fetch.fetch_universe(
+        markets=("A",),
+        chain=[chain["primary"]],
+        persist=False,
+        with_financials=False,
+        db_path=empty_db,
+    )
+    assert not [call for call in chain["primary"].calls if call[0] == "financials"]
+    assert outcome.universe.financials == {}
+
+    chain2 = stub_chain()
+    outcome2 = fetch.fetch_universe(
+        markets=("A",), chain=[chain2["primary"]], persist=False, with_history=False
+    )
+    assert not [call for call in chain2["primary"].calls if call[0] == "price_daily"]
+    assert outcome2.universe.prices == {}
+
+
 def test_market_snapshot_flags_suspended() -> None:
     """D-32 快照接入：最新价缺失 → `status=suspended`（闭环 M1 遗留 TODO）；
     `snapshot_date` 供 daily 模式作行情截止日。"""

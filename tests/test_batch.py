@@ -26,6 +26,42 @@ def _run_offline(out_dir: Path, *extra: str) -> int:
     )
 
 
+# ── 模式化跑批（D-32）─────────────────────────────────────────────────────
+def test_offline_mode_daily_ignores_mode_and_runs_full(tmp_path: Path) -> None:
+    """`--offline` 下模式开关不生效（fixtures 全量，保证回归可复现）——
+    `--mode daily` 仍应产出与默认模式相同的全量产物。"""
+    out = tmp_path / "data"
+
+    assert _run_offline(out, "--no-store", "--mode", "daily") == 0
+    assert (out / "ranking" / "A.json").exists()
+    assert (out / "stock" / "SH600900.json").exists()
+
+
+def test_write_and_read_pending_roundtrip(tmp_path: Path) -> None:
+    """待补清单读写（D-32）：只收 financials/price_daily 的标的级失败；retry 读回去重代码。"""
+
+    class _Outcome:
+        sources = {
+            "financials:SH600900": "none",
+            "price_daily:SH600900": "none",
+            "financials:SZ000858": "akshare",
+            "list_stocks:A": "none",  # 全市场级 → 不进清单
+            "market_snapshot:A": "none",  # 增强接口 → 不进清单
+        }
+        fallbacks = {"financials:SH600900": ["akshare: 超时"], "price_daily:SH600900": []}
+
+    path = tmp_path / "_pending.json"
+    assert batch._write_pending(_Outcome(), "2026-10-15T00:00:00Z", path) == 2
+
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assert payload["pending"] == [
+        {"kind": "financials", "code": "SH600900", "reasons": ["akshare: 超时"]},
+        {"kind": "price_daily", "code": "SH600900", "reasons": []},
+    ]
+    assert batch._read_pending(path) == ["SH600900"]
+    assert batch._read_pending(tmp_path / "missing.json") == []
+
+
 def test_offline_batch_produces_full_products(tmp_path: Path) -> None:
     out = tmp_path / "data"
 
