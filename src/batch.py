@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import shutil
 import sys
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -94,6 +95,19 @@ def assemble_inputs(
 
 
 # ── 跑批 ─────────────────────────────────────────────────────────────────
+def prepare_out_dir(out_dir: Path) -> None:
+    """重置产物目录：删掉上一批的 ``ranking/`` 与 ``stock/``。
+
+    产物 = **本次跑批的快照**；样本变小时（如 ``--codes`` 小样本）残留的分片文件会变成
+    「stock/ 有而榜单未收录」的孤儿，让产物校验失败（实跑踩过）。``meta`` / ``industries`` /
+    ``search-index`` 是整文件覆盖，无需处理。
+    """
+    for name in ("ranking", "stock"):
+        target = Path(out_dir) / name
+        if target.exists():
+            shutil.rmtree(target)
+
+
 def run(args: argparse.Namespace) -> int:
     """执行完整跑批，返回进程退出码（0 成功 / 1 校验失败 / 2 采集失败）。"""
     generated_at = args.generated_at or datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -151,6 +165,7 @@ def run(args: argparse.Namespace) -> int:
         print(f"[batch] 分析层落库 {stats.path}（{stats.rows}）")
 
     out_dir = Path(args.out)
+    prepare_out_dir(out_dir)  # 清掉上一批的分片目录，避免孤儿文件（家法 R19 幂等）
     written = [
         build_meta(inputs, out_dir),
         build_industries(inputs, out_dir),

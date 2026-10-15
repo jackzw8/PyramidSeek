@@ -282,6 +282,42 @@ def test_kline_hfq_divides_by_first_factor(tmp_path: Path) -> None:
     assert kline["hfq"]["h"] == [5.5, 11.2]
 
 
+def test_kline_omits_hfq_when_first_factor_is_negative(tmp_path: Path) -> None:
+    """首日 ``adj_factor`` ≤ 0（长期高分红 → 前复权早期为负）→ 不输出 ``hfq``。
+
+    真实案例：长江电力 2003-11-18 前复权价 -8.33 元 → 比率无意义，照算会反号（D-8 实跑）。
+    """
+    prices = {
+        "SH600900": [
+            {
+                "trade_date": "2003-11-18",
+                "open": 6.0,
+                "high": 6.2,
+                "low": 5.9,
+                "close": 6.18,
+                "adj_factor": -1.348,
+                "close_qfq": -8.33,
+            },
+            {
+                "trade_date": "2024-01-02",
+                "open": 20.0,
+                "high": 20.5,
+                "low": 19.8,
+                "close": 20.2,
+                "adj_factor": 1.0,
+                "close_qfq": 20.2,
+            },
+        ]
+    }
+    stocks = [_stock("SH600900")]
+    payload = _load(
+        build_stock(_inputs(stocks, {"SH600900": _rows()}, prices), "SH600900", tmp_path)
+    )
+
+    assert "kline" in payload
+    assert "hfq" not in payload["kline"]  # 可选子对象缺省 → 前端禁用复权切换
+
+
 def test_write_is_deterministic(tmp_path: Path) -> None:
     stocks = [_stock("SH600900"), _stock("SH600011")]
     financials = {"SH600900": _rows(), "SH600011": _rows(net_profit=2.0)}

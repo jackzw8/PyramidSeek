@@ -127,6 +127,8 @@ table.mini thead th{background:#f4f8fb;color:#38495a}
 .tg button + button{border-left:1px solid var(--line)}
 .tg button.on{background:var(--navy);color:#fff}
 .tg button:not(.on):hover{background:#f4f8fb}
+.tg button[disabled]{opacity:.4;cursor:not-allowed}
+.tg button[disabled]:hover{background:#fff}
 
 /* chart tooltip */
 .chart-wrap{position:relative}

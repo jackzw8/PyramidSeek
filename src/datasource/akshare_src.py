@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
@@ -43,6 +44,8 @@ from ..common import (
 )
 from .base import DataSourceError
 
+logger = logging.getLogger(__name__)
+
 # ── AkShare 接口名（**以实际安装版本为准**，见《数据源接入规格》§3）────────
 # 未联网逐一验证（记为《计划完成情况》D-8）；改版本时只需动这里。
 ENDPOINTS: dict[str, str] = {
@@ -51,9 +54,22 @@ ENDPOINTS: dict[str, str] = {
     "price_a": "stock_zh_a_hist",  # A股 日线（支持 adjust）
     "price_hk": "stock_hk_hist",  # 港股 日线
     "financial_a": "stock_financial_report_sina",  # A股 三表（symbol=报表名）
-    "industry_a": "stock_board_industry_name_em",  # A股 东财行业板块（→ 申万映射表见 §6）
-    "industry_hk": "stock_hk_industry_name_em",  # 港股 东财行业（ADR-011 降级路径）
+    # A 股行业：**申万口径**（本项目 industry_std = 申万2021）——
+    # 2026-10-15 联网实测：东财板块接口（stock_board_industry_name_em / _cons_em /
+    # stock_individual_info_em）全部 RemoteDisconnected；申万系接口稳定且快
+    # （一级 1.9s / 二级 1.9s / 成分股 0.3s×131），故改走申万（见 D-8）。
+    "industry_sw_first": "sw_index_first_info",  # 申万一级行业列表（31 个）
+    "industry_sw": "sw_index_second_info",  # 申万二级行业列表（131 个，含「上级行业」）
+    "industry_sw_cons": "index_component_sw",  # 申万行业成分股（symbol=行业代码）
+    "industry_a": "stock_board_industry_name_em",  # 东财行业板块（保留备选，当前实测不可用）
+    # 港股东财行业（ADR-011 降级路径）；同为东财系，实测不可用
+    "industry_hk": "stock_hk_industry_name_em",
 }
+
+# 内部复权模式 → AkShare 的 adjust 参数值：``"raw"``（不复权）在 akshare 里是**空串**。
+# 不映射会被 akshare 当非法参数拒绝，"不复权 + 前复权"两次取数里的前者必然失败 →
+# 清洗阶段合并不出 ``adj_factor`` → 产物永远没有 kline（2026-10-15 实跑踩到，见 D-8）。
+_ADJUST_TO_AK: dict[str, str] = {"qfq": "qfq", "hfq": "hfq", "raw": ""}
 
 # 全量列表类接口单次调用耗时很长（**2026-10-14 实测**：``stock_info_a_code_name`` 取 A股
 # 5574 只约 13 分钟），不能用默认 15s 超时——15s 是《数据源接入规格》§7 对**单次请求**的
@@ -64,6 +80,10 @@ SLOW_ENDPOINTS: frozenset[str] = frozenset(
         "stock_hk_spot_em",
         "stock_board_industry_name_em",
         "stock_hk_industry_name_em",
+        # 单只股票的批量接口实测也远超 15s（2026-10-15 联网实测，见 D-8）：
+        "stock_financial_report_sina",  # 三表：单张约 44s（每只 3 张）
+        "stock_zh_a_hist",  # A股日线：单次约 22s（每只 2 次：raw + qfq）
+        "stock_hk_hist",  # 港股日线（同族，保守纳入）
     }
 )
 
@@ -129,14 +149,18 @@ class AkShareSource:
         return self._ak
 
     # ── 超时 ──────────────────────────────────────────────────────────────
-    def _invoke(self, fn: Callable[..., Any], **kwargs: Any) -> Any:
+    def _invoke(
+        self, fn: Callable[..., Any], *, timeout: float | None = None, **kwargs: Any
+    ) -> Any:
         """施加统一超时（akshare 各接口不一定接受 timeout 参数）。
 
         超时按**接口名**区分：``SLOW_ENDPOINTS``（全量列表类）用 ``self._slow_timeout``，
-        其余用 ``self._timeout``。
+        其余用 ``self._timeout``；``timeout`` 显式传入时覆盖两者（申万成分等"应快但偶发抖动"
+        的批量接口用中等超时，见 ``config.INDUSTRY_CONS_TIMEOUT_SECONDS``）。
         """
-        is_slow = getattr(fn, "__name__", "") in SLOW_ENDPOINTS
-        timeout = self._slow_timeout if is_slow else self._timeout
+        if timeout is None:
+            is_slow = getattr(fn, "__name__", "") in SLOW_ENDPOINTS
+            timeout = self._slow_timeout if is_slow else self._timeout
         pool = ThreadPoolExecutor(max_workers=1)
         try:
             return pool.submit(fn, **kwargs).result(timeout=timeout)
@@ -150,6 +174,7 @@ class AkShareSource:
         *,
         what: str,
         code: str | None = None,
+        timeout: float | None = None,
         **kwargs: Any,
     ) -> Any:
         """带重试 / 退避 / 超时的调用；最终失败抛 ``DataSourceError``。
@@ -159,7 +184,7 @@ class AkShareSource:
         last: Exception | None = None
         for attempt in range(1, self._retry_times + 1):
             try:
-                return self._invoke(fn, **kwargs)
+                return self._invoke(fn, timeout=timeout, **kwargs)
             except Exception as exc:  # akshare 抛出的异常类型跨版本不稳定，统一兜住
                 last = exc
                 if attempt < self._retry_times:
@@ -189,7 +214,9 @@ class AkShareSource:
         path = self._cache_path(key)
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("w", encoding="utf-8", newline="\n") as fh:
-            json.dump(rows, fh, ensure_ascii=False)
+            # default=str 兜底：万一归一漏了非 JSON 原生类型（如某些版的日期对象），
+            # 宁可写成字符串也不要让整批调用因写缓存而失败（D-8 实跑踩过）
+            json.dump(rows, fh, ensure_ascii=False, default=str)
 
     def _fetch(
         self,
@@ -198,13 +225,14 @@ class AkShareSource:
         *,
         what: str,
         code: str | None = None,
+        timeout: float | None = None,
         **kwargs: Any,
     ) -> list[dict[str, Any]]:
         """缓存优先：命中直接返回；未命中则抓取、归一、落盘。"""
         cached = self._load_cache(key)
         if cached is not None:
             return cached
-        rows = to_records(self._call(fn, what=what, code=code, **kwargs))
+        rows = to_records(self._call(fn, what=what, code=code, timeout=timeout, **kwargs))
         self._save_cache(key, rows)
         return rows
 
@@ -219,7 +247,30 @@ class AkShareSource:
             what=f"股票列表（{market}）",
         )
         now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
-        return [self._to_stock(row, market, now) for row in rows]
+        stocks = [self._to_stock(row, market, now) for row in rows]
+        if market == "A":
+            # 行业回填（申万一级/二级）；映射缺失的个股保持「未分类」，不参与行业分位。
+            # 行业映射**整体失败不阻断列表**（宁可用「未分类」也不要拉整条采集链回退）。
+            try:
+                _, mapping = self._sw_industry()
+            except DataSourceError as exc:
+                logger.warning("申万行业映射不可用，A 股行业按「未分类」处理：%s", exc)
+                mapping = {}
+            for stock in stocks:
+                info = mapping.get(str(stock.get("code")))
+                if info is None:
+                    continue
+                l1_code, l1_name, l2_code, l2_name = info
+                stock.update(
+                    {
+                        "l1_code": l1_code,
+                        "l1_name": l1_name,
+                        "l2_code": l2_code,
+                        "l2_name": l2_name,
+                        "is_financial": l1_name in config.FINANCIAL_SECTORS,
+                    }
+                )
+        return stocks
 
     @staticmethod
     def _to_stock(row: dict[str, Any], market: str, updated_at: str) -> dict[str, Any]:
@@ -275,7 +326,7 @@ class AkShareSource:
             code=code,
             symbol=code if market == "HK" else code[2:],
             period="daily",
-            adjust=adjust,
+            adjust=_ADJUST_TO_AK.get(adjust, adjust),
         )
         return [self._to_price(row, code, adjust) for row in rows]
 
@@ -302,14 +353,95 @@ class AkShareSource:
             "volume": pick(row, "成交量", "volume"),
         }
 
+    def _sw_industry(
+        self,
+    ) -> tuple[list[dict[str, Any]], dict[str, tuple[str, str, str, str]]]:
+        """A 股行业：申万一级/二级节点 + 「股票 → (l1_code, l1_name, l2_code, l2_name)」映射。
+
+        数据来源：``sw_index_first_info``（31 个一级）/ ``sw_index_second_info``（131 个二级，
+        自带「上级行业」）/ ``index_component_sw``（成分股，symbol=行业代码）。全部按日缓存
+        （首跑约 1 分钟；命中缓存后瞬时）。
+        """
+        std = config.INDUSTRY_STANDARD["A"]
+        firsts = self._fetch(
+            "sw_l1",
+            getattr(self.ak, ENDPOINTS["industry_sw_first"]),
+            what="申万一级行业列表（A）",
+        )
+        seconds = self._fetch(
+            "sw_l2",
+            getattr(self.ak, ENDPOINTS["industry_sw"]),
+            what="申万二级行业列表（A）",
+        )
+
+        nodes: list[dict[str, Any]] = []
+        l1_code_by_name: dict[str, str] = {}
+        for row in firsts:
+            code = str(pick(row, "行业代码", "code") or "").split(".")[0]
+            name = str(pick(row, "行业名称", "name") or "").strip()
+            if not name:
+                continue
+            l1_code_by_name[name] = code
+            nodes.append(
+                {
+                    "standard": std,
+                    "version": "v1",
+                    "level": 1,
+                    "node_code": code,
+                    "node_name": name,
+                    "parent_code": None,
+                    "member_count": pick(row, "成份个数", "member_count"),
+                }
+            )
+
+        mapping: dict[str, tuple[str, str, str, str]] = {}
+        for row in seconds:
+            l2_code = str(pick(row, "行业代码", "code") or "").split(".")[0]
+            l2_name = str(pick(row, "行业名称", "name") or "").strip()
+            l1_name = str(pick(row, "上级行业", "parent") or "").strip()
+            if not l2_name:
+                continue
+            l1_code = l1_code_by_name.get(l1_name, "")
+            nodes.append(
+                {
+                    "standard": std,
+                    "version": "v1",
+                    "level": 2,
+                    "node_code": l2_code,
+                    "node_name": l2_name,
+                    "parent_code": l1_code,
+                    "member_count": pick(row, "成份个数", "member_count"),
+                }
+            )
+            if not self._cache_path(f"sw_cons_{l2_code}").exists():
+                # 降流：连续 131 次请求会被目标站点限流（2026-10-15 实测，见 D-8）
+                self._sleep(config.INDUSTRY_CONS_INTERVAL_SECONDS)
+            try:
+                members = self._fetch(
+                    f"sw_cons_{l2_code}",
+                    getattr(self.ak, ENDPOINTS["industry_sw_cons"]),
+                    what=f"申万行业成分（{l2_name}）",
+                    timeout=config.INDUSTRY_CONS_TIMEOUT_SECONDS,
+                    symbol=l2_code,
+                )
+            except DataSourceError as exc:
+                logger.warning("申万行业成分获取失败，跳过该行业（%s）：%s", l2_name, exc)
+                continue
+            for member in members:
+                code = normalize_code(pick(member, "证券代码", "code"), "A")
+                if code:
+                    mapping[code] = (l1_code, l1_name, l2_code, l2_name)
+        return nodes, mapping
+
     def industry_tree(self, market: str) -> list[dict[str, Any]]:
         if market not in config.MARKETS:
             raise ValueError(f"不支持的市场：{market!r}（应为 {config.MARKETS} 之一）")
-        endpoint = ENDPOINTS["industry_a" if market == "A" else "industry_hk"]
-        std = config.INDUSTRY_STANDARD[market]
-        if market == "HK":
-            # ADR-011 降级路径：AkShare 不提供 GICS，暂用东财口径跑通全链路
-            std = config.INDUSTRY_STANDARD_HK_FALLBACK
+        if market == "A":
+            nodes, _ = self._sw_industry()  # A 股 = 申万一级 + 二级（见 ENDPOINTS 说明）
+            return nodes
+        # 港股：东财口径（ADR-011 降级路径）；东财接口不可用时由上层回退官方源 / fixtures
+        endpoint = ENDPOINTS["industry_hk"]
+        std = config.INDUSTRY_STANDARD_HK_FALLBACK
         rows = self._fetch(
             f"industry_{market}",
             getattr(self.ak, endpoint),

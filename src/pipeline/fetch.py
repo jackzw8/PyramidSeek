@@ -52,8 +52,20 @@ class FetchOutcome:
 
     @property
     def degraded(self) -> bool:
-        """是否发生降级：**任何**接口的数据不是主源提供即视为降级。"""
-        return any(source != config.PRIMARY_SOURCE_NAME for source in self.sources.values())
+        """是否发生降级：**有数据的**接口只要不是主源提供即视为降级。
+
+        例外：行情（``price_daily:*``）**全链路无数据不算降级** —— 产物契约里 ``kline``
+        是可选字段（§3.4），缺行情只影响月K 卡片，不代表数据源降级（2026-10-15 实跑：
+        fixtures 不含行情、部分港股无行情）。
+        """
+        for name, source in self.sources.items():
+            if source == "none":
+                if name.startswith("price_daily"):
+                    continue
+                return True
+            if source != config.PRIMARY_SOURCE_NAME:
+                return True
+        return False
 
     @property
     def failed_interfaces(self) -> list[str]:
@@ -155,6 +167,28 @@ def fetch_universe(
         if rows:
             financials[code] = rows
 
+    # 行情：每只取「不复权 + 前复权」两次，再按交易日合并并反算 adj_factor（家法 R8；
+    # 合并规则见 ``clean.merge_price_rows``）。两道都拿不到就当该股无行情（产物省略 ``kline``）。
+    prices: dict[str, list[dict[str, Any]]] = {}
+    price_issues: list[Any] = []
+    for row in stocks:
+        code = str(row["code"])
+        raw_rows, source_raw, reasons_raw = _try_chain(
+            "price_daily", code, chain=chain, adjust="raw"
+        )
+        qfq_rows, _source_qfq, reasons_qfq = _try_chain(
+            "price_daily", code, chain=chain, adjust=config.DEFAULT_ADJUST
+        )
+        outcome.sources[f"price_daily:{code}"] = source_raw
+        if reasons_raw:
+            outcome.fallbacks[f"price_daily:{code}"] = reasons_raw
+        if not (raw_rows and qfq_rows):
+            continue
+        merged, issues = clean.merge_price_rows(code, raw_rows, qfq_rows)
+        price_issues.extend(issues)
+        if merged:
+            prices[code] = merged
+
     industries: dict[str, list[dict[str, Any]]] = {}
     for market in markets:
         rows, source, reasons = _try_chain("industry_tree", market, chain=chain)
@@ -164,7 +198,8 @@ def fetch_universe(
         if rows:
             industries[market] = rows
 
-    outcome.universe = clean.clean_universe(stocks, financials, None, today=today)
+    outcome.universe = clean.clean_universe(stocks, financials, prices, today=today)
+    outcome.universe.issues.extend(price_issues)
 
     if codes:
         known = {str(row.get("code")) for row in outcome.universe.stocks}

@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import math
+from datetime import date
 from typing import Any
 
 from . import config
@@ -114,7 +115,21 @@ def round_half_up(value: float, decimals: int) -> float:
 
 # ── 表格归一 ──────────────────────────────────────────────────────────────
 def _normalize_row(row: dict[str, Any]) -> dict[str, Any]:
-    return {str(key): (None if is_missing(val) else val) for key, val in row.items()}
+    """一行归一：空值 → ``None``；**日期 / 时间 → ISO 字符串**（保证可 JSON 序列化）。
+
+    日期归一很关键：``akshare`` 不同接口的日期列有的给 ``str``、有的给 ``datetime.date`` /
+    ``pandas.Timestamp``（如 ``index_component_sw`` 的「计入日期」）—— 后者直接 ``json.dump``
+    会抛 ``TypeError``，让「写缓存」把整批调用带崩（2026-10-15 实跑踩过，见 D-8）。
+    """
+    out: dict[str, Any] = {}
+    for key, val in row.items():
+        if is_missing(val):
+            out[str(key)] = None
+        elif isinstance(val, date):  # datetime / pandas.Timestamp 均为 date 子类
+            out[str(key)] = val.isoformat()
+        else:
+            out[str(key)] = val
+    return out
 
 
 def to_records(table: Any) -> list[dict[str, Any]]:

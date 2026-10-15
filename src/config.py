@@ -26,6 +26,9 @@ INDUSTRY_STANDARD = {"A": "申万2021", "HK": "GICS"}
 # M1 先用东财口径跑通全链路，industry_std 标注为下面这个值；GICS 自建映射独立推进。
 INDUSTRY_STANDARD_HK_FALLBACK = "东财口径（待校准 GICS）"
 INDUSTRY_UNCLASSIFIED = "未分类"  # 缺失映射的股票归入此组，暂不参与行业分位
+# 金融类判定（《评分算法规格》§8「金融类：毛利率/周转率不适用 → 单列」）：
+# 按**申万一级**行业名判定（A 股行业口径 = 申万2021）。
+FINANCIAL_SECTORS = frozenset({"银行", "非银金融"})
 
 # ── 质量分 Q：6 项指标权重（合计 1000，评分规格 §4.1）────────────────────
 WEIGHTS: dict[str, int] = {
@@ -117,6 +120,10 @@ FETCH_RETRY_TIMES = 3  # 重试 3 次
 FETCH_RETRY_BACKOFF = (1, 3, 9)  # 退避上限序列（秒）：3 次重试实际等待 2 次（1s、3s）
 FETCH_TIMEOUT_SECONDS = 15  # 单次请求超时（数据源规格 §7）
 FETCH_MIN_INTERVAL_SECONDS = 1.0  # 官方源请求间隔下限（§8：遵守目标站点抓取规范）
+# 申万行业成分（约 131 个二级行业 / 全市场）：单次通常 ~0.5s，但连续请求会被限流 →
+# 需要请求间隔；抖动时给中等超时（默认 15s 会误杀，见 D-8）。逐个失败只跳过该行业。
+INDUSTRY_CONS_TIMEOUT_SECONDS = 120
+INDUSTRY_CONS_INTERVAL_SECONDS = 0.5
 HTTP_USER_AGENT = "PyramidSeek/0.1 (personal research; contact: local)"
 # 全量列表类接口（内部翻页）实测需十几分钟，见《计划完成情况》D-10；
 # 15s 是"单次请求"约束，套到批量接口上会让它必败，故单独给一个宽松上限。

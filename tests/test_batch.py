@@ -107,6 +107,21 @@ def test_assemble_inputs_carries_dates_degrade_and_scores() -> None:
     assert any("降级" in note for note in inputs.notes)
 
 
+def test_batch_removes_stale_products(tmp_path: Path) -> None:
+    """跑批前重置产物目录：上一批的分片文件不得残留（否则成孤儿，引用完整性失败）。"""
+    out = tmp_path / "data"
+    (out / "stock").mkdir(parents=True)
+    (out / "ranking").mkdir(parents=True)
+    (out / "stock" / "SZ999999.json").write_text("{}", encoding="utf-8")
+    (out / "ranking" / "US.json").write_text("{}", encoding="utf-8")
+
+    assert _run_offline(out, "--no-store") == 0
+
+    assert not (out / "stock" / "SZ999999.json").exists()
+    assert not (out / "ranking" / "US.json").exists()
+    assert (out / "ranking" / "A.json").exists()
+
+
 def test_unknown_market_is_rejected(tmp_path: Path) -> None:
     assert _run_offline(tmp_path / "data", "--no-store", "--markets", "US") == 2
 

@@ -384,7 +384,14 @@
     document.querySelectorAll('#tg-range button').forEach((b) => {
       b.onclick = () => { kRange = b.dataset.v; syncTg('tg-range', b); priceChart(document.getElementById('kline')); };
     });
+    // 后复权可用性：产物 `kline.hfq` 缺省时禁用（长期高分红标的的前复权序列早期为负，
+    // 无法换算后复权 —— 契约 §3.4 里 hfq 是可选子对象）
+    const hasHfq = Boolean(self.kline && self.kline.hfq);
     document.querySelectorAll('#tg-adj button').forEach((b) => {
+      if (b.dataset.v === 'hfq' && !hasHfq) {
+        b.disabled = true;
+        b.title = '该标的前复权序列早期为负值，无法换算后复权';
+      }
       b.onclick = () => { kAdj = b.dataset.v; syncTg('tg-adj', b); priceChart(document.getElementById('kline')); };
     });
   }

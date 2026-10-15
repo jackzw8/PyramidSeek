@@ -40,7 +40,17 @@ FIXED_DAY = date(2026, 10, 14)
 
 
 def make_source(ak: object, tmp_path, **kwargs) -> AkShareSource:
-    """构造注入了假 akshare 与固定日期、静默 sleep 的数据源。"""
+    """构造注入了假 akshare 与固定日期、静默 sleep 的数据源。
+
+    假 akshare 若缺**申万行业接口**（``list_stocks("A")`` 会调用它回填行业），自动补空桩；
+    需要验证行业回填的用例请显式传入这三个方法。
+    """
+    for name in ("sw_index_first_info", "sw_index_second_info", "index_component_sw"):
+        if not hasattr(ak, name):
+            try:
+                setattr(ak, name, lambda **_: [])
+            except AttributeError:  # pragma: no cover - 只读对象
+                pass
     kwargs.setdefault("sleep", lambda _seconds: None)
     kwargs.setdefault("today", lambda: FIXED_DAY)
     return AkShareSource(ak=ak, cache_dir=tmp_path, **kwargs)
@@ -72,6 +82,25 @@ def test_to_records_normalizes_nan_to_none() -> None:
     rows = to_records(frame)
     assert rows[0]["货币资金"] is None
     assert rows[0]["营业总收入"] == 1e8
+
+
+def test_to_records_converts_dates_to_iso_strings() -> None:
+    """日期列（date / Timestamp）归一为 ISO 字符串。
+
+    不归一的话，写缓存时 ``json.dump`` 会抛 ``TypeError``（D-8 实跑踩到）。
+    """
+    frame = pd.DataFrame(
+        [
+            {
+                "计入日期": date(2021, 12, 13),
+                "更新时间": pd.Timestamp("2024-01-02 03:04:05"),
+            }
+        ]
+    )
+    rows = to_records(frame)
+
+    assert rows[0]["计入日期"] == "2021-12-13"
+    assert rows[0]["更新时间"].startswith("2024-01-02T03:04:05")
 
 
 # ── 代码 / 交易所 / 状态归一 ──────────────────────────────────────────────
@@ -273,22 +302,15 @@ def test_price_daily_rejects_unknown_adjust(tmp_path) -> None:
 def test_industry_tree_marks_hk_downgrade(tmp_path) -> None:
     """ADR-011：港股不直接提供 GICS，先用东财口径并在 industry_std 标注。"""
     ak = SimpleNamespace(
-        stock_board_industry_name_em=lambda **kw: [
-            {"板块代码": "BK0475", "板块名称": "银行", "公司家数": 42}
-        ],
         stock_hk_industry_name_em=lambda **kw: [
             {"板块代码": "HKB01", "板块名称": "资讯科技", "公司家数": 12}
         ],
     )
     source = make_source(ak, tmp_path)
 
-    a_tree = source.industry_tree("A")
-    assert a_tree[0]["standard"] == "申万2021"
-    assert a_tree[0]["node_name"] == "银行"
-    assert a_tree[0]["level"] == 1
-
     hk_tree = source.industry_tree("HK")
     assert hk_tree[0]["standard"] == config.INDUSTRY_STANDARD_HK_FALLBACK
+    assert hk_tree[0]["node_name"] == "资讯科技"
 
 
 def test_unknown_market_rejected(tmp_path) -> None:
@@ -358,6 +380,60 @@ def test_map_financial_reports_builds_standard_rows() -> None:
     assert row["source"] == "akshare"
 
 
+# ── 行业映射：申万一级/二级 + 金融类标记（2026-10-15 实装，见 D-8）──────────
+def _sw_fake_ak() -> SimpleNamespace:
+    return SimpleNamespace(
+        stock_info_a_code_name=lambda **_: [
+            {"code": "600900", "name": "长江电力"},
+            {"code": "601398", "name": "工商银行"},
+        ],
+        sw_index_first_info=lambda **_: [
+            {"行业代码": "801160.SI", "行业名称": "公用事业", "成份个数": 100},
+            {"行业代码": "801780.SI", "行业名称": "银行", "成份个数": 42},
+        ],
+        sw_index_second_info=lambda **_: [
+            {"行业代码": "801161.SI", "行业名称": "电力", "上级行业": "公用事业", "成份个数": 80},
+            {
+                "行业代码": "801782.SI",
+                "行业名称": "国有大型银行",
+                "上级行业": "银行",
+                "成份个数": 6,
+            },
+        ],
+        index_component_sw=lambda symbol, **_: (
+            [{"证券代码": "600900"}] if str(symbol) == "801161" else [{"证券代码": "601398"}]
+        ),
+    )
+
+
+def test_list_stocks_fills_sw_industry_and_financial_flag(tmp_path) -> None:
+    """A 股行业按**申万**回填（l1/l2 两级）；一级为金融类 → ``is_financial=True``（§8）。"""
+    source = make_source(_sw_fake_ak(), tmp_path)
+    rows = {row["code"]: row for row in source.list_stocks("A")}
+
+    assert rows["SH600900"]["l1_name"] == "公用事业"
+    assert rows["SH600900"]["l2_name"] == "电力"
+    assert rows["SH600900"]["l1_code"] == "801160"
+    assert rows["SH600900"]["is_financial"] is False
+    assert rows["SH601398"]["l1_name"] == "银行"
+    assert rows["SH601398"]["l2_name"] == "国有大型银行"
+    assert rows["SH601398"]["is_financial"] is True
+
+
+def test_industry_tree_uses_sw_nodes_for_a(tmp_path) -> None:
+    """A 股行业树 = 申万一级 + 二级；二级 ``parent_code`` 指向一级；口径 = 申万2021。"""
+    source = make_source(_sw_fake_ak(), tmp_path)
+    nodes = source.industry_tree("A")
+
+    firsts = [node for node in nodes if node["level"] == 1]
+    seconds = [node for node in nodes if node["level"] == 2]
+    assert {node["node_name"] for node in firsts} == {"公用事业", "银行"}
+    assert {node["node_name"] for node in seconds} == {"电力", "国有大型银行"}
+    power = next(node for node in seconds if node["node_name"] == "电力")
+    assert power["parent_code"] == "801160"
+    assert all(node["standard"] == "申万2021" for node in nodes)
+
+
 def test_map_financial_reports_marks_interim_cumulative() -> None:
     tables = {
         REPORT_INCOME: [{"报告日": "2025-06-30", "营业总收入": 50e8, "营业总成本": 30e8}],
@@ -414,18 +490,46 @@ def test_slow_endpoint_uses_slow_timeout(tmp_path) -> None:
     assert source.list_stocks("A")[0]["code"] == "SH600900"
 
 
-def test_normal_endpoint_still_uses_default_timeout(tmp_path) -> None:
-    """普通接口不受慢接口宽限影响，仍按默认超时中止。"""
+def test_slow_endpoint_gets_wide_timeout(tmp_path) -> None:
+    """慢接口（三表 / 行情）用宽限超时：延迟 0.15s 不再被 0.02s 误杀（D-8 修复）。"""
 
     def stock_zh_a_hist(**kwargs):
         time.sleep(0.15)
-        return []
+        return [{"日期": "2024-01-02", "开盘": 1.0, "收盘": 1.1, "最高": 1.2, "最低": 0.9}]
 
     source = make_source(
         SimpleNamespace(stock_zh_a_hist=stock_zh_a_hist),
         tmp_path,
         timeout=0.02,
-        retry_times=1,
+        slow_timeout=5,
     )
-    with pytest.raises(base.DataSourceError):
-        source.price_daily("SH600900", "qfq")
+
+    rows = source.price_daily("SH600900", "qfq")
+    assert len(rows) == 1
+
+
+def test_price_daily_maps_raw_mode_to_empty_adjust(tmp_path) -> None:
+    """内部模式 ``raw`` → akshare 的 ``adjust=""``（不映射会被当非法参数，D-8 实跑踩到）。"""
+    seen: list[str] = []
+
+    def stock_zh_a_hist(**kwargs):
+        seen.append(kwargs.get("adjust"))
+        return [{"日期": "2024-01-02", "开盘": 1.0, "收盘": 1.1, "最高": 1.2, "最低": 0.9}]
+
+    source = make_source(SimpleNamespace(stock_zh_a_hist=stock_zh_a_hist), tmp_path)
+    source.price_daily("SH600900", "raw")
+    source.price_daily("SH600900", "qfq")
+
+    assert seen == ["", "qfq"]
+
+
+def test_default_timeout_still_applies_to_fast_endpoints(tmp_path) -> None:
+    """非慢接口仍按默认超时中止（避免无差别放宽）。"""
+
+    def ordinary_endpoint(**kwargs):  # 函数名不在 SLOW_ENDPOINTS
+        time.sleep(0.15)
+        return []
+
+    source = make_source(SimpleNamespace(), tmp_path, timeout=0.02, retry_times=1)
+    with pytest.raises(TimeoutError):
+        source._invoke(ordinary_endpoint)

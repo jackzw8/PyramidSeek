@@ -27,6 +27,7 @@ class StubSource:
         stocks: dict | None = None,
         financials: dict | None = None,
         industries: dict | None = None,
+        prices: dict | None = None,
         fail: tuple[str, ...] = (),
         empty: tuple[str, ...] = (),
     ) -> None:
@@ -34,6 +35,7 @@ class StubSource:
         self._stocks = stocks or {}
         self._financials = financials or {}
         self._industries = industries or {}
+        self._prices = prices or {}
         self._fail = set(fail)
         self._empty = set(empty)
         self.calls: list[tuple[str, str]] = []
@@ -54,7 +56,7 @@ class StubSource:
         return self._respond("industry_tree", market, self._industries.get(market, []))
 
     def price_daily(self, code: str, adjust: str = config.DEFAULT_ADJUST) -> list:
-        return []
+        return self._respond("price_daily", f"{code}:{adjust}", self._prices.get(code, []))
 
 
 def stock_row(code: str = "SH600900", market: str = "A", **over) -> dict:
@@ -101,13 +103,33 @@ def fin_row(code: str = "SH600900", period: str = "2024-12-31", **over) -> dict:
     return row
 
 
+def price_row(
+    code: str = "SH600900",
+    trade_date: str = "2024-01-02",
+    close: float = 10.0,
+    qfq: float = 9.5,
+) -> dict:
+    """一行「双口径」日行情（raw 与 qfq 同时有，供 ``merge_price_rows`` 合并）。"""
+    return {
+        "code": code,
+        "trade_date": trade_date,
+        "open": close,
+        "high": round(close * 1.02, 2),
+        "low": round(close * 0.98, 2),
+        "close": close,
+        "close_qfq": qfq,
+        "volume": 1000,
+    }
+
+
 def stub_chain(**kwargs) -> dict[str, StubSource]:
-    """三级链，默认每级都能提供 A/HK 的股票与财报。"""
+    """三级链，默认每级都能提供 A/HK 的股票、财报与行情。"""
     defaults = {
         "primary": dict(
             stocks={"A": [stock_row()], "HK": [stock_row("HK00700", "HK")]},
             financials={"SH600900": [fin_row()], "HK00700": [fin_row("HK00700")]},
             industries={"A": [{"standard": "申万2021", "version": "v1", "level": 1}]},
+            prices={"SH600900": [price_row()], "HK00700": [price_row("HK00700")]},
         ),
         "official": dict(
             stocks={"A": [stock_row("SZ000858")]},
@@ -319,7 +341,28 @@ def test_end_to_end_with_real_fixtures() -> None:
     assert outcome.universe.pending == []
     # 全部由 fixtures 提供 → 相对主源即为降级（诚实标记，不假装是主源数据）
     assert outcome.degraded is True
-    assert set(outcome.sources.values()) == {"fixture"}
+    assert all(
+        source == "fixture"
+        for name, source in outcome.sources.items()
+        if not name.startswith("price_daily")
+    )
+    # fixtures 不含行情（price_daily 抛错）→ 该接口全链路无数据，产物省略 kline
+    assert all(
+        source == "none"
+        for name, source in outcome.sources.items()
+        if name.startswith("price_daily")
+    )
+    assert outcome.universe.prices == {}
+
+
+def test_missing_price_data_alone_is_not_degraded() -> None:
+    """**无行情不算降级**：kline 是契约里的可选字段（§3.4），主源提供其余数据即不降级。"""
+    chain = stub_chain()
+    chain["primary"]._prices.clear()  # 主源不给行情（如某股停牌 / 无历史）
+    outcome = fetch.fetch_universe(markets=("A",), chain=[chain["primary"]], persist=False)
+
+    assert outcome.sources["price_daily:SH600900"] == "none"
+    assert outcome.degraded is False
 
 
 def test_cli_offline_smoke(capsys) -> None:

@@ -214,6 +214,10 @@ def monthly_kline(price_rows: Iterable[Mapping[str, Any]]) -> dict[str, Any] | N
     for key, series in raw_series.items():
         result[key] = [round_value(value, config.PRICE_DECIMALS) for value in series]
 
+    # 后复权 = 前复权 ÷ 序列首日 ``adj_factor``；**仅当首日因子为正**才成立 ——
+    # 长期高分红的标的，其前复权价在早期可能为**负**（新浪口径：长江电力 2003 年 -8.33 元），
+    # 此时比率无意义、照算会反号 → 不输出 ``hfq``（契约 §3.4 里 hfq 是可选子对象，
+    # 前端据「有无 hfq」禁用复权切换）。
     base = base_factor if base_factor else 1.0
     if base > 0:
         result["hfq"] = {
