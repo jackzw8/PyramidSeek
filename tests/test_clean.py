@@ -91,6 +91,24 @@ def test_malformed_code_is_rejected() -> None:
     assert any(issue.field == "code" and issue.level == clean.LEVEL_ERROR for issue in issues)
 
 
+# ── 名称清洗（D-31④）────────────────────────────────────────────────────
+def test_stock_name_spaces_are_stripped() -> None:
+    """数据源会返回带空格的名称（实测「五 粮 液」）→ 去半角/全角空格并留痕。"""
+    cleaned, issues = clean.normalize_stock(stock_row(name="五 粮 液"), today=TODAY)
+    assert cleaned["name"] == "五粮液"
+    assert any(issue.field == "name" and issue.level == clean.LEVEL_WARN for issue in issues)
+
+    full_width, _ = clean.normalize_stock(stock_row(name="贵州\u3000茅台"), today=TODAY)
+    assert full_width["name"] == "贵州茅台"
+
+
+def test_stock_name_without_spaces_is_untouched() -> None:
+    """无空格的名称不产生噪音 issue（避免大面积假告警）。"""
+    cleaned, issues = clean.normalize_stock(stock_row(name="贵州茅台"), today=TODAY)
+    assert cleaned["name"] == "贵州茅台"
+    assert not any(issue.field == "name" for issue in issues)
+
+
 # ── 勾稽与环比 ────────────────────────────────────────────────────────────
 def test_balance_check_passes_within_tolerance() -> None:
     assert clean.check_balance(financial_row()) is None

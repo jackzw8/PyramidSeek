@@ -153,6 +153,16 @@ def normalize_stock(row: dict[str, Any], *, today: date | None = None) -> tuple[
         issues.append(Issue(LEVEL_ERROR, "status", f"status 取值非法：{status}", code))
 
     cleaned = dict(row)
+    # 名称清洗：数据源会返回带空格的名称（实测「五 粮 液」，D-31④）→ 去掉半角/全角空格，
+    # 否则产物、搜索索引、拼音首字母全都带着断字。
+    name = cleaned.get("name")
+    if isinstance(name, str):
+        compact = name.replace(" ", "").replace("\u3000", "")
+        if compact != name:
+            issues.append(
+                Issue(LEVEL_WARN, "name", f"名称含空格，已清洗：{name!r} → {compact!r}", code)
+            )
+            cleaned["name"] = compact
     if is_missing(cleaned.get("l1_name")):
         cleaned["l1_name"] = config.INDUSTRY_UNCLASSIFIED
     if is_missing(cleaned.get("l2_name")):

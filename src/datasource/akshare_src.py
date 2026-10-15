@@ -489,7 +489,25 @@ _SUBJECTS: dict[str, tuple[str, ...]] = {
 # `src/common.py`，本模块 re-export。
 
 
+# 关键词组（**优先于**上面的精确候选）：组内关键词**全部出现**即命中，按行内列序扫描。
+# 只用在「高优先语义唯一」的科目上（前缀「归属于母公司」），否则会误命中子项
+# （如「流动负债合计」之于负债合计）。跨行业列名变体见《计划完成情况》D-31① ——
+# 实测三种写法一个都不在精确候选里：
+#   工商银行「归属于母公司股东的权益」（**无「合计」**）/ 中国平安「归属于母公司的股东权益合计」/
+#   贵州茅台「归属于母公司股东权益合计」；此前 equity 因此在金融股上为 None、
+#   在普通股上回落到**含少数股东权益的合并口径**（口径与《数据字典》§3.2 的「归母」不符）。
+_SUBJECT_KEYWORDS: dict[str, tuple[tuple[str, ...], ...]] = {
+    "net_profit": (("归属于母公司", "净利润"), ("归属母公司", "净利润")),
+    "equity": (("归属于母公司", "权益"), ("归属母公司", "权益")),
+}
+
+
 def _subject(row: dict[str, Any], key: str) -> Any:
+    """按科目取原始值：**关键词组优先**（抗跨源 / 跨行业列名变体），精确候选兜底（D-31①）。"""
+    for group in _SUBJECT_KEYWORDS.get(key, ()):
+        for column, cell in row.items():
+            if not is_missing(cell) and all(word in str(column) for word in group):
+                return cell
     return pick(row, *_SUBJECTS[key])
 
 

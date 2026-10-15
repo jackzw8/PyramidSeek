@@ -33,6 +33,7 @@ from src.datasource.akshare_src import (
     REPORT_CASHFLOW,
     REPORT_INCOME,
     AkShareSource,
+    _subject,
     map_financial_reports,
 )
 
@@ -434,7 +435,68 @@ def test_industry_tree_uses_sw_nodes_for_a(tmp_path) -> None:
     assert all(node["standard"] == "申万2021" for node in nodes)
 
 
+# ── 跨行业列名变体（D-31①：金融股 equity 取不到 / 普通股回落到合并口径）──────────
+def test_subject_matches_equity_across_industry_column_variants() -> None:
+    """工行 / 平安 / 茅台三种写法都要取到**归母**值（一个都不在精确候选里）。
+
+    实测列名（2026-10-15，`data/raw/akshare/.../financial_*_balance.json`）：
+    工商银行「归属于母公司股东的权益」（无「合计」）、中国平安「归属于母公司的股东权益合计」、
+    贵州茅台「归属于母公司股东权益合计」。
+    """
+    cases = {
+        "工商银行": (
+            {
+                "归属于母公司股东的权益": 4_326_994.0,
+                "少数股东权益": 28_850.0,
+                "负债及股东权益总计": 57_070_593.0,
+            },
+            4_326_994.0,
+        ),
+        "中国平安": (
+            {
+                "归属于母公司的股东权益合计": 1_028_084.0,
+                "少数股东权益": 425_996.0,
+                "所有者权益合计": 1_454_080.0,
+            },
+            1_028_084.0,
+        ),
+        "贵州茅台": (
+            {
+                "归属于母公司股东权益合计": 251_253.6,
+                "少数股东权益": 10_842.8,
+                "所有者权益(或股东权益)合计": 262_096.4,
+            },
+            251_253.6,
+        ),
+    }
+    for label, (row, expected) in cases.items():
+        assert _subject(row, "equity") == expected, f"{label} 未取到归母权益"
+
+
+def test_subject_skips_empty_placeholder_columns() -> None:
+    """行内存在占位空列（实测 ``所有者权益: None``）时不得命中，要继续往后找。"""
+    row = {"所有者权益": None, "归属于母公司股东权益合计": 100.0}
+    assert _subject(row, "equity") == 100.0
+
+
+def test_subject_falls_back_to_merged_equity_when_parent_absent() -> None:
+    """只有合并口径（无归母列）时仍取合并值 —— 宁可口径略宽，也不要整个指标缺失。"""
+    assert _subject({"所有者权益(或股东权益)合计": 200.0}, "equity") == 200.0
+
+
+def test_subject_matches_parent_net_profit_variants() -> None:
+    """归母净利润的三种写法都要优先于裸「净利润」（后者含少数股东损益）。"""
+    for column in (
+        "归属于母公司所有者的净利润",
+        "归属于母公司的净利润",
+        "归属于母公司股东的净利润",
+    ):
+        row = {column: 5.0, "净利润": 6.0}
+        assert _subject(row, "net_profit") == 5.0, column
+
+
 def test_map_financial_reports_marks_interim_cumulative() -> None:
+    """累计口径标记：非年报 → is_cumulative=True（不进主评分）。"""
     tables = {
         REPORT_INCOME: [{"报告日": "2025-06-30", "营业总收入": 50e8, "营业总成本": 30e8}],
     }
