@@ -51,6 +51,9 @@ logger = logging.getLogger(__name__)
 ENDPOINTS: dict[str, str] = {
     "stock_list_a": "stock_info_a_code_name",  # A股 代码/名称
     "stock_list_hk": "stock_hk_spot_em",  # 港股 实时列表（含代码/名称）
+    # 全市场当日快照（新浪系，D-32）：1 次调用覆盖全市场 —— 实测 A 股 18s/5575 行、港股 37s/2815 行
+    "spot_a": "stock_zh_a_spot",
+    "spot_hk": "stock_hk_spot",
     "price_a": "stock_zh_a_hist",  # A股 日线（支持 adjust）
     "price_hk": "stock_hk_hist",  # 港股 日线
     "financial_a": "stock_financial_report_sina",  # A股 三表（symbol=报表名）
@@ -331,6 +334,48 @@ class AkShareSource:
         )
         return [self._to_price(row, code, adjust) for row in rows]
 
+    def market_snapshot(self, market: str) -> list[dict[str, Any]]:
+        """拉取**全市场当日快照**（新浪系，1 次调用覆盖全市场；D-32）。
+
+        数据是**原始价**（未复权）且只有当前值 → 用途严格限定（05 规格 §7.1）：
+        行情截止日、**停牌判定**（最新价缺失）与「最新价」，不得替代前复权历史。
+
+        :param market: ``"A"``（``stock_zh_a_spot``）/ ``"HK"``（``stock_hk_spot``）。
+        :returns: 每条记录 ``{code, name, latest_price, open, high, low, prev_close, volume}``，
+            ``code`` 已归一化为带市场前缀的标准形式（``SH600519`` / ``HK00700``）；
+            停牌标的 ``latest_price`` 为 ``None``。
+        :raises ValueError: ``market`` 不在 ``config.MARKETS`` 内。
+        :raises DataSourceError: 拉取或解析失败。
+        """
+        if market not in config.MARKETS:
+            raise ValueError(f"不支持的市场：{market!r}（应为 {config.MARKETS} 之一）")
+        endpoint = ENDPOINTS["spot_a" if market == "A" else "spot_hk"]
+        rows = self._fetch(
+            f"spot_{market}",
+            getattr(self.ak, endpoint),
+            what=f"全市场快照（{market}）",
+            timeout=config.FETCH_TIMEOUT_MEDIUM_SECONDS,  # 实测 18-37s，见 D-32
+        )
+        name_key = "名称" if market == "A" else "中文名称"
+        snapshot: list[dict[str, Any]] = []
+        for row in rows:
+            code = _snapshot_code(row.get("代码"), market)
+            if not code:
+                continue
+            snapshot.append(
+                {
+                    "code": code,
+                    "name": str(pick(row, name_key) or "").replace(" ", ""),
+                    "latest_price": _to_float(pick(row, "最新价")),
+                    "open": _to_float(pick(row, "今开")),
+                    "high": _to_float(pick(row, "最高")),
+                    "low": _to_float(pick(row, "最低")),
+                    "prev_close": _to_float(pick(row, "昨收")),
+                    "volume": _to_float(pick(row, "成交量")),
+                }
+            )
+        return snapshot
+
     @staticmethod
     def _to_price(row: dict[str, Any], code: str, adjust: str) -> dict[str, Any]:
         """归一单日行情。
@@ -468,6 +513,35 @@ class AkShareSource:
         except Exception:
             return False
         return True
+
+
+# ── 全市场快照（D-32）：列名/代码归一 ────────────────────────────────────
+def _to_float(value: Any) -> float | None:
+    """快照列 → float（字符串 / 千分位 / NaN / ``--`` 一律 ``None``）。"""
+    if value is None:
+        return None
+    try:
+        text = str(value).replace(",", "").strip()
+        return float(text) if text and text.lower() not in {"nan", "--"} else None
+    except ValueError:
+        return None
+
+
+def _snapshot_code(raw: Any, market: str) -> str | None:
+    """新浪快照的代码 → 标准层格式（``SH600519`` / ``BJ920000`` / ``HK00700``）。
+
+    A 股形如 ``sh600519``（小写带前缀）；港股形如 ``00001``（5 位数字）。
+    无法识别返回 ``None``（调用方跳过该行）。
+    """
+    text = str(raw or "").strip().lower()
+    if market == "HK":
+        digits = "".join(ch for ch in text if ch.isdigit())
+        return f"HK{int(digits):05d}" if digits else None
+    prefix = text[:2] if text[:2] in {"sh", "sz", "bj"} else ""
+    digits = text[2:] if prefix else text
+    if prefix and digits.isdigit() and len(digits) == 6:
+        return f"{prefix.upper()}{digits}"
+    return None
 
 
 # ── 三表合并 → 标准层 financial_report（《数据字典》§3.2）──────────────────

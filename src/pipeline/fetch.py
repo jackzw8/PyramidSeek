@@ -49,6 +49,8 @@ class FetchOutcome:
     sources: dict[str, str] = field(default_factory=dict)  # 接口 → 实际提供数据的源
     fallbacks: dict[str, list[str]] = field(default_factory=dict)  # 接口 → 前序失败原因
     notes: list[str] = field(default_factory=list)
+    # 全市场快照成功时的跑批日（ISO）：daily 模式不抓历史行情 → 行情截止日由快照提供（D-32）
+    snapshot_date: str | None = None
 
     @property
     def degraded(self) -> bool:
@@ -60,7 +62,9 @@ class FetchOutcome:
         """
         for name, source in self.sources.items():
             if source == "none":
-                if name.startswith("price_daily"):
+                # 行情与全市场快照都是「增强」接口：缺了不影响主榜与评分的正确性
+                # （快照缺失只是少一个停牌判定维度，且会留 note 提示），不算降级。
+                if name.startswith("price_daily") or name.startswith("market_snapshot"):
                     continue
                 return True
             if source != config.PRIMARY_SOURCE_NAME:
@@ -196,6 +200,46 @@ def fetch_universe(
         price_issues.extend(issues)
         if merged:
             prices[code] = merged
+
+    # 全市场快照（D-32）：1 次调用覆盖全市场 —— 行情截止日 + 停牌判定 + 最新价。
+    # 失败不阻塞（降级：无停牌判定；行情截止日回落到历史行情的最大交易日）。
+    snapshots: dict[str, dict[str, dict[str, Any]]] = {}
+    snapshot_date: str | None = None
+    for market in markets:
+        snap_rows, snap_source, snap_reasons = _try_chain("market_snapshot", market, chain=chain)
+        outcome.sources[f"market_snapshot:{market}"] = snap_source
+        if snap_reasons:
+            outcome.fallbacks[f"market_snapshot:{market}"] = snap_reasons
+        if not snap_rows:
+            outcome.notes.append(
+                f"market_snapshot:{market} 全链路失败（无停牌判定，停牌股不会被单列）"
+            )
+            continue
+        snapshots[market] = {row["code"]: row for row in snap_rows}
+        if snapshot_date is None:
+            snapshot_date = today.isoformat() if today else date.today().isoformat()
+
+    # 停牌判定（闭环 M1 遗留 TODO）：快照里「最新价」缺失 → suspended。
+    # 只对 status=normal 的标的打标 —— ST / 退市 / 次新等既成事实不覆盖。
+    if snapshots:
+        suspended = {
+            code
+            for snap in snapshots.values()
+            for code, snap_row in snap.items()
+            if snap_row.get("latest_price") is None
+        }
+        flagged = 0
+        for stock in stocks:
+            code = str(stock.get("code") or "")
+            if code in suspended and stock.get("status") == "normal":
+                stock["status"] = "suspended"
+                flagged += 1
+        if flagged:
+            outcome.notes.append(
+                f"快照停牌判定：{flagged} 只标的最新价缺失 → 标记 suspended（单列）"
+            )
+
+    outcome.snapshot_date = snapshot_date
 
     industries: dict[str, list[dict[str, Any]]] = {}
     for market in markets:

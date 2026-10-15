@@ -180,6 +180,21 @@ class DataSource(Protocol):
         """
         ...
 
+    def market_snapshot(self, market: str) -> list[dict[str, Any]]:
+        """拉取**全市场当日快照**（新浪系，1 次调用覆盖全市场；D-32）。
+
+        数据是**原始价**（未复权）且只有当前值 → 用途严格限定（05 规格 §7.1）：
+        行情截止日、**停牌判定**（最新价缺失）与「最新价」，不得替代前复权历史。
+
+        :param market: ``"A"``（``stock_zh_a_spot``）/ ``"HK"``（``stock_hk_spot``）。
+        :returns: 每条记录 ``{code, name, latest_price, open, high, low, prev_close, volume}``，
+            ``code`` 已归一化为带市场前缀的标准形式（``SH600519`` / ``HK00700``）；
+            停牌标的 ``latest_price`` 为 ``None``。
+        :raises ValueError: ``market`` 不在 ``config.MARKETS`` 内。
+        :raises DataSourceError: 拉取或解析失败。
+        """
+        ...
+
     def health_check(self) -> bool:
         """连通性自检：能否访问该数据源（不抛异常，返回布尔）。"""
         ...

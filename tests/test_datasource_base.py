@@ -135,6 +135,9 @@ class _CompleteStub:
     def industry_tree(self, market: str) -> list[dict[str, Any]]:
         return []
 
+    def market_snapshot(self, market: str) -> list[dict[str, Any]]:
+        return []
+
     def health_check(self) -> bool:
         return True
 

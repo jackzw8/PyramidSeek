@@ -90,6 +90,12 @@ class FixturesSource:
             code=code,
         )
 
+    def market_snapshot(self, market: str) -> list[dict[str, Any]]:
+        """fixtures 不含当日快照 → 返回空（离线跑批无停牌判定，不算失败）。"""
+        if market not in config.MARKETS:
+            raise ValueError(f"不支持的市场：{market!r}（应为 {config.MARKETS} 之一）")
+        return []
+
     def industry_tree(self, market: str) -> list[dict[str, Any]]:
         """由股票主数据的行业字段反推行业树（fixtures 无独立行业文件）。"""
         stocks = self.list_stocks(market)

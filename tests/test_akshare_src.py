@@ -33,6 +33,7 @@ from src.datasource.akshare_src import (
     REPORT_CASHFLOW,
     REPORT_INCOME,
     AkShareSource,
+    _snapshot_code,
     _subject,
     map_financial_reports,
 )
@@ -568,6 +569,57 @@ def test_single_stock_endpoints_use_medium_timeout(tmp_path) -> None:
 
     rows = source.price_daily("SH600900", "qfq")
     assert len(rows) == 1
+
+
+# ── 全市场快照（D-32）────────────────────────────────────────────────────
+def test_snapshot_code_normalization() -> None:
+    """新浪快照代码 → 标准层格式：A 股小写前缀 → 大写；港股 5 位数字补 HK 前缀。"""
+    assert _snapshot_code("sh600519", "A") == "SH600519"
+    assert _snapshot_code("sz000001", "A") == "SZ000001"
+    assert _snapshot_code("bj920000", "A") == "BJ920000"
+    assert _snapshot_code("00001", "HK") == "HK00001"
+    assert _snapshot_code("", "A") is None
+    assert _snapshot_code(None, "A") is None
+
+
+def test_market_snapshot_maps_rows_and_skips_bad_codes(tmp_path) -> None:
+    """快照行映射：代码归一、名称去空格、字符串数值转 float；停牌（最新价 `--`）保留 None。"""
+
+    def stock_zh_a_spot():
+        return [
+            {
+                "代码": "sh600519",
+                "名称": "贵州 茅台",
+                "最新价": "1412.0",
+                "今开": "1400.0",
+                "最高": "1420.0",
+                "最低": "1395.0",
+                "昨收": "1405.0",
+                "成交量": "30000",
+            },
+            {"代码": "sz000858", "名称": "五 粮 液", "最新价": "--", "成交量": "--"},
+            {"代码": "not-a-code", "名称": "坏行"},
+        ]
+
+    source = make_source(SimpleNamespace(stock_zh_a_spot=stock_zh_a_spot), tmp_path)
+    rows = source.market_snapshot("A")
+
+    assert [row["code"] for row in rows] == ["SH600519", "SZ000858"]
+    assert rows[0]["name"] == "贵州茅台"
+    assert rows[0]["latest_price"] == 1412.0
+    assert rows[0]["open"] == 1400.0
+    assert rows[0]["prev_close"] == 1405.0
+    assert rows[1]["latest_price"] is None  # 停牌（--）→ None
+    assert rows[1]["name"] == "五粮液"
+
+
+def test_market_snapshot_rejects_unknown_market(tmp_path) -> None:
+    source = make_source(SimpleNamespace(stock_zh_a_spot=lambda: []), tmp_path)
+    try:
+        source.market_snapshot("US")
+        raise AssertionError("应拒绝未知市场")
+    except ValueError as exc:
+        assert "不支持的市场" in str(exc)
 
 
 def test_price_daily_maps_raw_mode_to_empty_adjust(tmp_path) -> None:

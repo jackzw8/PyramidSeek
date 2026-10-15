@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -28,6 +29,7 @@ class StubSource:
         financials: dict | None = None,
         industries: dict | None = None,
         prices: dict | None = None,
+        snapshots: dict | None = None,
         fail: tuple[str, ...] = (),
         empty: tuple[str, ...] = (),
     ) -> None:
@@ -36,6 +38,7 @@ class StubSource:
         self._financials = financials or {}
         self._industries = industries or {}
         self._prices = prices or {}
+        self._snapshots = snapshots or {}
         self._fail = set(fail)
         self._empty = set(empty)
         self.calls: list[tuple[str, str]] = []
@@ -57,6 +60,9 @@ class StubSource:
 
     def price_daily(self, code: str, adjust: str = config.DEFAULT_ADJUST) -> list:
         return self._respond("price_daily", f"{code}:{adjust}", self._prices.get(code, []))
+
+    def market_snapshot(self, market: str) -> list:
+        return self._respond("market_snapshot", market, self._snapshots.get(market, []))
 
 
 def stock_row(code: str = "SH600900", market: str = "A", **over) -> dict:
@@ -140,7 +146,15 @@ def stub_chain(**kwargs) -> dict[str, StubSource]:
             financials={"SH600900": [fin_row()]},
         ),
     }
-    defaults.update(kwargs)
+    # 同键覆盖、其余保留：`stub_chain(primary=dict(snapshots={...}))` 只补快照，
+    # 不会把 stocks/financials 等默认配置挤掉（整体替换会让主源变空 → 误报"取不到股票"）。
+    for name, override in kwargs.items():
+        if name in defaults and isinstance(defaults[name], dict) and isinstance(override, dict):
+            merged = dict(defaults[name])
+            merged.update(override)
+            defaults[name] = merged
+        else:
+            defaults[name] = override
     return {
         name: StubSource("akshare" if name == "primary" else name, **cfg)
         for name, cfg in defaults.items()
@@ -175,9 +189,15 @@ def test_primary_success_is_not_degraded() -> None:
     )
 
     assert outcome.universe.stocks and outcome.universe.stocks[0]["code"] == "SH600900"
-    assert set(outcome.sources.values()) == {"akshare"}
+    # 快照是增强接口：stub 不提供 → market_snapshot:* 为 none（不降级、留 note），不计入主断言
+    assert all(
+        source == "akshare"
+        for name, source in outcome.sources.items()
+        if not name.startswith("market_snapshot")
+    )
     assert outcome.degraded is False
-    assert outcome.fallbacks == {}
+    # 快照是增强接口：stub 不提供 → 只有 market_snapshot:* 有 fallbacks，主接口必须全干净
+    assert all(name.startswith("market_snapshot") for name in outcome.fallbacks)
     assert not any("降级" in note for note in outcome.notes)
 
 
@@ -344,13 +364,13 @@ def test_end_to_end_with_real_fixtures() -> None:
     assert all(
         source == "fixture"
         for name, source in outcome.sources.items()
-        if not name.startswith("price_daily")
+        if not name.startswith(("price_daily", "market_snapshot"))
     )
-    # fixtures 不含行情（price_daily 抛错）→ 该接口全链路无数据，产物省略 kline
+    # fixtures 不含行情与快照（price_daily 抛错 / market_snapshot 返回空）→ 全链路无数据
     assert all(
         source == "none"
         for name, source in outcome.sources.items()
-        if name.startswith("price_daily")
+        if name.startswith(("price_daily", "market_snapshot"))
     )
     assert outcome.universe.prices == {}
 
@@ -384,6 +404,45 @@ def test_price_fetch_is_qfq_only_by_default() -> None:
     calls_raw = [call for call in chain_with_raw["primary"].calls if call[0] == "price_daily"]
     assert ("price_daily", "SH600900:raw") in calls_raw
     assert ("price_daily", "SH600900:qfq") in calls_raw
+
+
+def test_market_snapshot_flags_suspended() -> None:
+    """D-32 快照接入：最新价缺失 → `status=suspended`（闭环 M1 遗留 TODO）；
+    `snapshot_date` 供 daily 模式作行情截止日。"""
+    chain = stub_chain(
+        primary=dict(
+            snapshots={
+                "A": [
+                    {
+                        "code": "SH600900",
+                        "latest_price": None,
+                        "open": None,
+                        "high": None,
+                        "low": None,
+                        "prev_close": 20.0,
+                        "volume": None,
+                    }
+                ]
+            }
+        )
+    )
+    outcome = fetch.fetch_universe(markets=("A",), chain=[chain["primary"]], persist=False)
+
+    assert outcome.universe.stocks[0]["status"] == "suspended"
+    assert outcome.snapshot_date == date.today().isoformat()
+    assert outcome.sources["market_snapshot:A"] == "akshare"
+    assert any("suspended" in note for note in outcome.notes)
+
+
+def test_market_snapshot_missing_is_not_degraded_but_noted() -> None:
+    """快照全链路失败 → 不算降级（增强接口），但必须留 note（停牌判定缺失要可见）。"""
+    chain = stub_chain()
+    outcome = fetch.fetch_universe(markets=("A",), chain=[chain["primary"]], persist=False)
+
+    assert outcome.sources["market_snapshot:A"] == "none"
+    assert outcome.degraded is False
+    assert outcome.snapshot_date is None
+    assert any("market_snapshot:A 全链路失败" in note for note in outcome.notes)
 
 
 def test_cli_offline_smoke(capsys) -> None:
