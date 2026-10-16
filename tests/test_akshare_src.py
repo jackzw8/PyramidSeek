@@ -57,6 +57,7 @@ def make_source(ak: object, tmp_path, **kwargs) -> AkShareSource:
             except AttributeError:  # pragma: no cover - 只读对象
                 pass
     kwargs.setdefault("sleep", lambda _seconds: None)
+    kwargs.setdefault("interval_sleep", lambda _seconds: None)  # D-42 请求节流：测试静默
     kwargs.setdefault("today", lambda: FIXED_DAY)
     return AkShareSource(ak=ak, cache_dir=tmp_path, **kwargs)
 
@@ -142,6 +143,67 @@ def test_market_exchange_and_status() -> None:
     assert status_of("ST 康美") == "ST"
     assert status_of("*ST新亿") == "ST"
     assert status_of("退市海润") == "delisted"
+
+
+# ── 请求节流（D-42）───────────────────────────────────────────────────────
+def test_throttle_sleeps_before_real_request(tmp_path) -> None:
+    """真发请求（缓存未命中）前必须节流，间隔落在配置区间内。"""
+    intervals: list[float] = []
+
+    source = make_source(
+        SimpleNamespace(stock_info_a_code_name=lambda **_: [{"code": "600900"}]),
+        tmp_path,
+        interval_sleep=intervals.append,
+    )
+    source.list_stocks("A")
+
+    # list_stocks("A") = 列表 + 申万回填共 3 次取数 → 3 次节流
+    assert len(intervals) == 3
+    low, high = config.FETCH_INTERVAL_JITTER_SECONDS
+    assert all(low <= s <= high for s in intervals)
+
+
+def test_throttle_skipped_when_cache_hits(tmp_path) -> None:
+    """缓存命中不再节流（否则 5000 只续跑会被 sleep 拖死）。"""
+    intervals: list[float] = []
+
+    source = make_source(
+        SimpleNamespace(stock_info_a_code_name=lambda **_: [{"code": "600900", "name": "长电"}]),
+        tmp_path,
+        interval_sleep=intervals.append,
+    )
+    source.list_stocks("A")  # 首次：抓 + 写缓存
+    assert intervals  # 首次确实节流了
+    intervals.clear()
+    source.list_stocks("A")  # 二次：应全部命中缓存
+
+    assert intervals == []  # 命中不节流
+
+
+def test_throttle_and_backoff_are_independent(tmp_path) -> None:
+    """节流 sleep 与重试退避 sleep 分开记录、互不串味。"""
+    backoff_delays: list[float] = []
+    intervals: list[float] = []
+    calls = {"n": 0}
+
+    def flaky(**kwargs):
+        calls["n"] += 1
+        if calls["n"] < 2:
+            raise RuntimeError("boom")
+        return [{"code": "600900"}]
+
+    source = make_source(
+        SimpleNamespace(stock_info_a_code_name=flaky),
+        tmp_path,
+        sleep=backoff_delays.append,
+        interval_sleep=intervals.append,
+    )
+    source.list_stocks("A")
+
+    assert intervals  # 节流发生了
+    assert backoff_delays == [1]  # 退避仍是原口径（未被节流污染）
+    low, high = config.FETCH_INTERVAL_JITTER_SECONDS
+    assert all(low <= s <= high for s in intervals)
 
 
 # ── 重试 / 退避 / 超时（数据源规格 §7）───────────────────────────────────
@@ -318,9 +380,7 @@ def test_history_cache_stale_triggers_refetch_and_overwrites(tmp_path) -> None:
 def test_cold_baseline_never_expires(tmp_path) -> None:
     """cold 基线（stale_after=None）：再旧的缓存也命中（扩池/续传语义）。"""
     calls = {"n": 0}
-    source = make_source(
-        _fake_price_ak(calls), tmp_path, stale_after=None, partition="cold"
-    )
+    source = make_source(_fake_price_ak(calls), tmp_path, stale_after=None, partition="cold")
     source.price_daily("SH600900", "qfq")
     _touch(tmp_path / "cold" / "price_SH600900_qfq.json", age_days=365)
 

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import logging
+import random
 import re
 import time
 from collections.abc import Callable
@@ -138,6 +139,7 @@ class AkShareSource:
         partition: str | None = None,
         stale_after: timedelta | None = None,
         sleep: Callable[[float], None] | None = None,
+        interval_sleep: Callable[[float], None] | None = None,
         ak: Any | None = None,
         today: Callable[[], date] | None = None,
         retry_times: int | None = None,
@@ -149,6 +151,8 @@ class AkShareSource:
         self._partition = partition
         self._stale_after = stale_after
         self._sleep = sleep or time.sleep
+        # 请求节流（D-42）：与退避 sleep 分开注入，互不干扰测试与语义
+        self._interval_sleep = interval_sleep or time.sleep
         self._ak = ak
         self._today = today or (lambda: datetime.now(UTC).date())
         self._retry_times = retry_times if retry_times is not None else config.FETCH_RETRY_TIMES
@@ -285,9 +289,21 @@ class AkShareSource:
         cached = self._load_cache(key)
         if cached is not None:
             return cached
+        self._throttle()
         rows = to_records(self._call(fn, what=what, code=code, timeout=timeout, **kwargs))
         self._save_cache(key, rows)
         return rows
+
+    def _throttle(self) -> None:
+        """请求节流（D-42）：真发请求前随机 sleep，避开上游站点按 IP 的速率限制。
+
+        依据：AkShare 不内置限流；上游阈值（社区实测）新浪单 IP 45~65 次/60 秒、
+        东财约 3 次/秒、同花顺 ``hexin-v`` 每值 5~10 次，超阈值触发 5~15 分钟阶梯式
+        封禁（表现为每请求被压到 43~44s / 149s 的等间隔惩罚）。2~3 秒抖动 → 20~30
+        请求/60 秒，稳在阈值内。**只对真发请求生效**（缓存命中在调用方已提前返回）。
+        """
+        low, high = config.FETCH_INTERVAL_JITTER_SECONDS
+        self._interval_sleep(random.uniform(low, high))
 
     # ── DataSource 接口实现（对应《数据源接入规格》§2）────────────────────
     def list_stocks(self, market: str) -> list[dict[str, Any]]:

@@ -211,8 +211,14 @@ def run(args: argparse.Namespace) -> int:
             chain=fetch.default_chain(
                 offline=args.offline,
                 fixtures_path=args.fixtures,
-                # 冷启动基线：固定分区 + 永不过期（D-34/D-37）
-                cache_partition="cold" if args.mode == "cold" and not args.offline else None,
+                # 列表 / 申万映射属「时点数据」，受本参数影响；若按日分区则每天首次跑批
+                # 都会重建 131 个行业成分（≈15~30 分钟）。建仓类模式一律复用 cold/ 固定
+                # 分区，避免切模式白等一輪（D-41）。只有 daily 走按日分区，取最新列表/快照。
+                cache_partition=(
+                    None
+                    if args.mode == "daily" or args.offline
+                    else "cold"
+                ),
                 # 全历史数据新鲜度 TTL（D-37）：超龄才重抓，长跑批跨天/跨周仍可续传
                 stale_after=_stale_after_for(args.mode, args.offline),
             ),
