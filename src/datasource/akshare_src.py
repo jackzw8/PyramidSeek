@@ -4,7 +4,7 @@
 - **重试 3 次 + 指数退避 1s / 3s / 9s + 超时 15s**（参数取自 ``config``，禁止硬编码）；
 - **本地文件缓存**：原始返回按日期落盘，可追溯、可复现、断网可用；
 - **失败抛 ``DataSourceError``**（带 ``source`` / ``code``），由上层决定回退
-  （回退链：新浪主源 → 同花顺 THS → 官方源 → ``fixtures/``，家法 R16）。
+  （回退链：新浪主源 → 同花顺 THS → ``fixtures/``，家法 R16）。
 
 设计取舍：
 - ``akshare`` **延迟导入**（``self.ak``），保证未装该库时本模块仍可 import、测试可离线跑；
@@ -373,12 +373,11 @@ class AkShareSource:
         解析与映射见 :func:`map_sina_financials`（列名跨行业变体按「关键词组」处理，D-31①）。
         缓存键 ``financial_sina_{code}_{slug}``（D-44 含源名）、落 ``cold/`` 固定分区（D-37）。
 
-        港股不在本接口覆盖内 → 明确抛错（回退链切官方源 / 披露易，行为不变）。
+        港股不在本接口覆盖内 → 明确抛错（链上暂无港股财报联网源，D-45 修正后官方源已移出链）。
         """
         if market_of(code) != "A":
             raise DataSourceError(
-                f"港股财报接口尚未接入（{code}）："
-                "AkShare 财报（新浪/THS）均只覆盖 A 股，港股走官方源兜底",
+                f"港股财报接口尚未接入（{code}）：" "AkShare 财报（新浪/THS）均只覆盖 A 股",
                 source=self.name,
                 code=code,
             )
@@ -564,7 +563,7 @@ class AkShareSource:
         if market == "A":
             nodes, _ = self._sw_industry()  # A 股 = 申万一级 + 二级（见 ENDPOINTS 说明）
             return nodes
-        # 港股：东财口径（ADR-011 降级路径）；东财接口不可用时由上层回退官方源 / fixtures
+        # 港股：东财口径（ADR-011 降级路径）；东财接口不可用时由上层回退 fixtures
         endpoint = ENDPOINTS["industry_hk"]
         std = config.INDUSTRY_STANDARD_HK_FALLBACK
         rows = self._fetch(
@@ -598,7 +597,7 @@ class AkShareThsSource(AkShareSource):
     """同花顺 THS 财报**第 2 级源**（D-45）：只实现 ``financials``（A 股），其余接口一律抛错。
 
     链序（``fetch.default_chain``）：AkShareSource（新浪，主源）→ **本对象（THS）** →
-    OfficialSource → FixturesSource。仅当新浪失败（限速 / 无数据）时兜底；
+    FixturesSource。仅当新浪失败（限速 / 无数据）时兜底；
     缓存键 ``financial_ths_{code}_{slug}``（D-44 含源名，与新浪缓存 `financial_sina_*` 共存）。
     """
 
@@ -611,11 +610,11 @@ class AkShareThsSource(AkShareSource):
         ``indicator="按年度"``；解析与映射见 :func:`map_ths_financials`。
         缓存键 ``financial_ths_{code}_{slug}``、落 ``cold/`` 固定分区（D-37）。
 
-        港股不在 THS 覆盖内 → 明确抛错（让链继续到官方源）。
+        港股不在 THS 覆盖内 → 明确抛错（让链继续）。
         """
         if market_of(code) != "A":
             raise DataSourceError(
-                f"THS 仅覆盖 A 股（{code}）：港股财报走官方源兜底",
+                f"THS 仅覆盖 A 股（{code}）",
                 source=self.name,
                 code=code,
             )

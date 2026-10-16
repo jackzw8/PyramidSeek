@@ -11,7 +11,7 @@
 - 未指定 ``--generated-at`` 时用当前 UTC 时刻，``snapshotVersion`` 取其日期。
 
 用法：
-    python -m src.batch                              # 联网跑批（AkShare → 官方源 → fixtures）
+    python -m src.batch                              # 联网跑批（新浪 → THS → fixtures）
     python -m src.batch --offline                    # 只用 fixtures（CI / 本地回归）
     python -m src.batch --offline --no-store         # 不落库，只出产物
 """

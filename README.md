@@ -3,7 +3,7 @@
 把《HOLDLE 投资交易课》的选股方法论产品化：
 
 ```
-AkShare/官方源  →  离线批处理算分  →  静态 JSON 产物  →  GitHub Pages 静态站点
+AkShare（新浪 + 同花顺）  →  离线批处理算分  →  静态 JSON 产物  →  GitHub Pages 静态站点
 ```
 
 - **定位**：自用 / 小范围；全功能免费；无账号体系（收藏用匿名 `visitorId`）。
@@ -46,7 +46,7 @@ PyramidSeekApp/
 ├── .github/workflows/ci.yml        # CI：lint + pytest
 ├── src/
 │   ├── config.py                   # 权重/锚点/阈值/分类标准（常量唯一来源）
-│   ├── datasource/                 # 数据源抽象 + AkShare + 官方源兜底
+│   ├── datasource/                 # 数据源抽象 + AkShare（新浪 / THS）+ 官方源（对账）
 │   ├── pipeline/                   # 采集 / 清洗 / 落库（标准层 + 分析层）
 │   ├── engine/                     # 指标 / 评分 / 行业分位
 │   ├── build/                      # 产物生成（ranking/stock/meta/derived）+ 校验
@@ -101,7 +101,7 @@ python -m http.server 8000
 需要完全可复现的产物时固定时间戳：`python -m src.batch --offline --generated-at 2026-10-15T00:00:00Z`。
 
 > **数据源与耗时（2026-10-16 定案，见《计划完成情况》D-38 / D-42 / D-44 / D-45）**：
-> 财报链序：**新浪三表（主）→ 同花顺 THS（第 2 级）→ 官方源 → fixtures**；16:53 复测
+> 财报链序：**新浪三表（主）→ 同花顺 THS（第 2 级）→ fixtures**（三级；官方源移出链、仅对账）；16:53 复测
 > 新浪三表 ≈**5.8s/只**、THS ≈7.9s/只（正常档）；含请求节流（D-42，2~3s 抖动）规划口径
 > **≈13s/只** → 全市场 5000 只 **≈18h（分天）**。**月K 行情停止跑批**，`monthly` 模式停用
 > （akshare 内行情接口均挂新浪/东财且都会限速），产物 `kline` 恒缺省。财报缓存键含源名

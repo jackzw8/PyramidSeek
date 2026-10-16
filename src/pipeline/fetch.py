@@ -3,7 +3,8 @@
 把 M1 各步串成一条链（《数据源接入规格》§1、《计划完成情况》D-11）：
 
     list_stocks / financials / price_daily / industry_tree
-        ↓ 回退链：新浪主源 → 同花顺 THS（财报第 2 级）→ 官方源（巨潮/披露易）→ fixtures（R16）
+        ↓ 回退链：新浪主源 → 同花顺 THS（财报第 2 级）→ fixtures（R16）
+          （官方源已移出链、仅对账，D-45）
     pipeline.clean.clean_universe   （校验 / 补齐 / 去重 / 窗口裁剪）
         ↓
     pipeline.store.write_standard   （DuckDB 标准层 + Parquet 冷存，幂等）
@@ -34,7 +35,6 @@ from .. import config
 from ..datasource.akshare_src import AkShareSource, AkShareThsSource
 from ..datasource.base import DataSourceError
 from ..datasource.fixtures_src import FixturesSource
-from ..datasource.official_src import OfficialSource
 from . import clean, store
 
 logger = logging.getLogger(__name__)
@@ -158,7 +158,7 @@ def fetch_universe(
 
     if not stocks:
         raise DataSourceError(
-            "回退链未能取得任何股票（主源 / 官方源 / fixtures 全部失败）："
+            "回退链未能取得任何股票（新浪主源 / 同花顺 THS / fixtures 全部失败）："
             + "；".join(f"{key} → {value}" for key, value in outcome.fallbacks.items()),
             source="fetch",
         )
@@ -333,7 +333,8 @@ def default_chain(
 ) -> list[Any]:
     """默认回退链；``offline=True`` 时**只用 fixtures**（不打网络）。
 
-    联网链序（D-45）：**新浪主源 → 同花顺 THS（仅财报第 2 级）→ 官方源 → fixtures**。
+    联网链序（D-45）：**新浪主源 → 同花顺 THS（仅财报第 2 级）→ fixtures**
+    （官方源已移出回退链、仅对账，见 05 §8）。
 
     :param cache_partition: 透传给各数据源的缓存分区（D-34）：``"cold"`` 用于
         冷启动跑批；``None`` = 日常（全历史数据已固定落 ``cold/``，D-37）。
@@ -347,7 +348,6 @@ def default_chain(
         AkShareSource(partition=cache_partition, stale_after=stale_after),
         # 财报第 2 级（D-45）：仅当新浪失败时兜底；其余接口一律抛错让链继续
         AkShareThsSource(partition=cache_partition, stale_after=stale_after),
-        OfficialSource(partition=cache_partition, stale_after=stale_after),
         fixtures,
     ]
 

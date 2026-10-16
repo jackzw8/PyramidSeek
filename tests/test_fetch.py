@@ -175,7 +175,6 @@ def test_offline_chain_never_touches_network(monkeypatch) -> None:
 
     monkeypatch.setattr(fetch, "AkShareSource", boom)
     monkeypatch.setattr(fetch, "AkShareThsSource", boom)
-    monkeypatch.setattr(fetch, "OfficialSource", boom)
 
     chain = fetch.default_chain(offline=True)
     assert len(chain) == 1
@@ -183,9 +182,9 @@ def test_offline_chain_never_touches_network(monkeypatch) -> None:
 
 
 def test_default_chain_orders_sources_for_online() -> None:
-    """联网链序（D-45）：新浪主源 → 同花顺 THS → 官方源 → fixtures。"""
+    """联网链序（D-45）：新浪主源 → 同花顺 THS → fixtures（官方源已移出链）。"""
     chain = fetch.default_chain()
-    assert [source.name for source in chain] == ["akshare", "ths", "official", "fixture"]
+    assert [source.name for source in chain] == ["akshare", "ths", "fixture"]
 
 
 # ── 回退顺序与降级留痕 ────────────────────────────────────────────────────
