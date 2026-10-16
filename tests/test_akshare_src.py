@@ -36,7 +36,10 @@ from src.datasource.akshare_src import (
     REPORT_CASHFLOW,
     REPORT_INCOME,
     AkShareSource,
+    AkShareThsSource,
     _snapshot_code,
+    _subject,
+    map_sina_financials,
     map_ths_financials,
     parse_ths_amount,
 )
@@ -512,6 +515,119 @@ def test_effective_date_is_report_period_plus_four_months() -> None:
     assert effective_date_of("2024-09-30") == "2025-01-30"  # 跨年
 
 
+# ── 新浪三表合并（**主源**，D-45）：行 = 报告期、列 = 科目（数值，元）──────────
+def test_financial_a_endpoint_is_sina() -> None:
+    """主源三表接口 = 新浪 `stock_financial_report_sina`（D-45 回调）。"""
+    assert ENDPOINTS["financial_a"] == "stock_financial_report_sina"
+
+
+def test_map_sina_financials_builds_standard_rows() -> None:
+    """三表合并 → 标准层行：元 → 亿元、gross 反算、NaN → None、source=akshare。"""
+    tables = {
+        REPORT_INCOME: [
+            {
+                "报告日": "2024-12-31",
+                "营业总收入": 100e8,
+                "营业总成本": 60e8,
+                "归属于母公司所有者的净利润": 30e8,
+            }
+        ],
+        REPORT_BALANCE: [
+            {
+                "报告日": "2024-12-31",
+                "资产总计": 500e8,
+                "负债合计": 200e8,
+                "归属于母公司所有者权益合计": 300e8,
+                "货币资金": float("nan"),
+            }
+        ],
+        REPORT_CASHFLOW: [{"报告日": "2024-12-31", "经营活动产生的现金流量净额": 40e8}],
+    }
+    rows = map_sina_financials("SH600900", tables, fetched_at="2026-10-14T00:00:00Z")
+
+    assert len(rows) == 1
+    row = rows[0]
+    assert set(base.FINANCIAL_REQUIRED_FIELDS) <= set(row)
+    assert row["report_type"] == "annual"
+    assert row["is_cumulative"] is False
+    assert row["revenue"] == 100.0
+    assert row["gross_profit"] == 40.0  # revenue − cost 反算
+    assert row["net_profit"] == 30.0
+    assert row["cash"] is None  # NaN → None，不是 0
+    assert row["effective_date"] == "2025-04-30"
+    assert row["source"] == "akshare"  # = 新浪三表（04 §3.2 来源标识）
+
+
+def test_map_sina_financials_marks_interim_cumulative() -> None:
+    """累计口径标记：非年报 → is_cumulative=True（不进主评分）。"""
+    tables = {
+        REPORT_INCOME: [{"报告日": "2025-06-30", "营业总收入": 50e8, "营业总成本": 30e8}],
+    }
+    row = map_sina_financials("SH600900", tables, fetched_at="x")[0]
+    assert row["report_type"] == "h1"
+    assert row["is_cumulative"] is True  # 累计口径不可比，不进主评分（家法 R7）
+
+
+# ── 跨行业列名变体（D-31①：金融股 equity 取不到 / 普通股回落到合并口径）──────────
+def test_subject_matches_equity_across_industry_column_variants() -> None:
+    """工行 / 平安 / 茅台三种写法都要取到**归母**值（一个都不在精确候选里）。
+
+    实测列名（2026-10-15，`data/raw/akshare/.../financial_*_balance.json`）：
+    工商银行「归属于母公司股东的权益」（无「合计」）、中国平安「归属于母公司的股东权益合计」、
+    贵州茅台「归属于母公司股东权益合计」。
+    """
+    cases = {
+        "工商银行": (
+            {
+                "归属于母公司股东的权益": 4_326_994.0,
+                "少数股东权益": 28_850.0,
+                "负债及股东权益总计": 57_070_593.0,
+            },
+            4_326_994.0,
+        ),
+        "中国平安": (
+            {
+                "归属于母公司的股东权益合计": 1_028_084.0,
+                "少数股东权益": 425_996.0,
+                "所有者权益合计": 1_454_080.0,
+            },
+            1_028_084.0,
+        ),
+        "贵州茅台": (
+            {
+                "归属于母公司股东权益合计": 251_253.6,
+                "少数股东权益": 10_842.8,
+                "所有者权益(或股东权益)合计": 262_096.4,
+            },
+            251_253.6,
+        ),
+    }
+    for label, (row, expected) in cases.items():
+        assert _subject(row, "equity") == expected, f"{label} 未取到归母权益"
+
+
+def test_subject_skips_empty_placeholder_columns() -> None:
+    """行内存在占位空列（实测 ``所有者权益: None``）时不得命中，要继续往后找。"""
+    row = {"所有者权益": None, "归属于母公司股东权益合计": 100.0}
+    assert _subject(row, "equity") == 100.0
+
+
+def test_subject_falls_back_to_merged_equity_when_parent_absent() -> None:
+    """只有合并口径（无归母列）时仍取合并值 —— 宁可口径略宽，也不要整个指标缺失。"""
+    assert _subject({"所有者权益(或股东权益)合计": 200.0}, "equity") == 200.0
+
+
+def test_subject_matches_parent_net_profit_variants() -> None:
+    """归母净利润的三种写法都要优先于裸「净利润」（后者含少数股东损益）。"""
+    for column in (
+        "归属于母公司所有者的净利润",
+        "归属于母公司的净利润",
+        "归属于母公司股东的净利润",
+    ):
+        row = {column: 5.0, "净利润": 6.0}
+        assert _subject(row, "net_profit") == 5.0, column
+
+
 # ── THS 三表解析（D-39：金额为带单位字符串 → 亿元；False = 缺失）──────────────
 def test_ths_endpoints_map_to_three_tables() -> None:
     """ENDPOINTS 三个 THS 键与 akshare 函数名逐一对齐（键名 `financial_{slug}_ths`）。"""
@@ -765,7 +881,37 @@ def test_industry_tree_uses_sw_nodes_for_a(tmp_path) -> None:
     assert all(node["standard"] == "申万2021" for node in nodes)
 
 
-# ── financials()：THS 三接口调用与缓存（D-39）────────────────────────────
+# ── financials()：主源新浪 / 第 2 级 THS（D-44 / D-45）────────────────────
+def _sina_fake_ak(calls: list[tuple[str, dict]] | None = None) -> SimpleNamespace:
+    """新浪三表接口的假模块（`symbol`=报表名，各返回一张 2024 年报；可选记录调用参数）。"""
+
+    def report(**kwargs):
+        if calls is not None:
+            calls.append((kwargs["symbol"], kwargs))
+        if kwargs["symbol"] == REPORT_INCOME:
+            return [
+                {
+                    "报告日": "20241231",
+                    "营业总收入": 100e8,
+                    "营业总成本": 60e8,
+                    "归属于母公司所有者的净利润": 30e8,
+                }
+            ]
+        if kwargs["symbol"] == REPORT_BALANCE:
+            return [
+                {
+                    "报告日": "20241231",
+                    "资产总计": 500e8,
+                    "负债合计": 200e8,
+                    "归属于母公司所有者权益合计": 300e8,
+                    "货币资金": 1e8,
+                }
+            ]
+        return [{"报告日": "20241231", "经营活动产生的现金流量净额": 40e8}]
+
+    return SimpleNamespace(stock_financial_report_sina=report)
+
+
 def _ths_fake_ak(calls: list[tuple[str, dict]] | None = None) -> SimpleNamespace:
     """三个 THS 接口的假模块（各返回一张 2025 年报；可选记录调用参数）。"""
 
@@ -807,37 +953,79 @@ def _ths_fake_ak(calls: list[tuple[str, dict]] | None = None) -> SimpleNamespace
     )
 
 
-def test_financials_calls_ths_endpoints_with_plain_code(tmp_path) -> None:
-    """financials() 走 THS 三接口：symbol=**纯 6 位代码**、indicator=按年度（§3.2.1 传参）。"""
+def _make_ths_source(ak: object, tmp_path) -> AkShareThsSource:
+    """构造注入了假 akshare 的 THS 二级源（静默 sleep / 节流）。"""
+    return AkShareThsSource(
+        ak=ak, cache_dir=tmp_path, sleep=lambda _s: None, interval_sleep=lambda _s: None
+    )
+
+
+def test_financials_primary_is_sina(tmp_path) -> None:
+    """主源 financials() 走新浪三接口：stock=带前缀小写、symbol=报表名、source=akshare。"""
     calls: list[tuple[str, dict]] = []
-    rows = make_source(_ths_fake_ak(calls), tmp_path).financials("SH600188")
+    rows = make_source(_sina_fake_ak(calls), tmp_path).financials("SH600188")
 
     assert len(rows) == 1
     assert rows[0]["code"] == "SH600188"
     assert rows[0]["revenue"] == 100.0
     assert rows[0]["gross_profit"] == 40.0  # 100 − 60
     assert rows[0]["cash"] == 1.0
+    assert rows[0]["source"] == "akshare"  # = 新浪三表（04 §3.2）
+    assert sorted(name for name, _ in calls) == sorted(
+        [REPORT_INCOME, REPORT_BALANCE, REPORT_CASHFLOW]
+    )
+    for _, kwargs in calls:
+        assert kwargs["stock"] == "sh600188"  # 新浪传参：带前缀小写
+        assert kwargs["symbol"] in (REPORT_INCOME, REPORT_BALANCE, REPORT_CASHFLOW)
+
+
+def test_financials_cache_keys_include_source(tmp_path) -> None:
+    """缓存键含源名（D-44）：新浪与 THS 各自键位、同目录共存互不覆盖。"""
+    make_source(_sina_fake_ak(), tmp_path).financials("SH600188")
+    _make_ths_source(_ths_fake_ak(), tmp_path).financials("SH600188")
+
+    cold = tmp_path / "cold"
+    for slug in ("income", "balance", "cashflow"):
+        assert (cold / f"financial_sina_SH600188_{slug}.json").exists()
+        assert (cold / f"financial_ths_SH600188_{slug}.json").exists()
+
+
+def test_financials_uses_cache_on_second_run(tmp_path) -> None:
+    calls: list[tuple[str, dict]] = []
+    make_source(_sina_fake_ak(calls), tmp_path).financials("SH600188")
+    make_source(_sina_fake_ak(calls), tmp_path).financials("SH600188")
+    assert len(calls) == 3  # 三张表各取一次；第二次全部命中缓存
+
+
+def test_ths_source_calls_three_endpoints_with_plain_code(tmp_path) -> None:
+    """THS 二级源走三接口：symbol=**纯 6 位代码**、indicator=按年度（§3.2.1 传参）。"""
+    calls: list[tuple[str, dict]] = []
+    rows = _make_ths_source(_ths_fake_ak(calls), tmp_path).financials("SH600188")
+
+    assert len(rows) == 1
+    assert rows[0]["revenue"] == 100.0
+    assert rows[0]["gross_profit"] == 40.0  # 100 − 60
+    assert rows[0]["cash"] == 1.0
+    assert rows[0]["source"] == "ths"
     assert sorted(name for name, _ in calls) == ["balance", "cashflow", "income"]
     for _, kwargs in calls:
         assert kwargs["symbol"] == "600188"  # 不带 SH 前缀
         assert kwargs["indicator"] == "按年度"
 
 
-def test_financials_cache_lands_in_cold_with_existing_key_convention(tmp_path) -> None:
-    """缓存键沿用既有约定 ``financial_{code}_{slug}``、落 ``cold/`` 固定分区（D-37）。"""
-    make_source(_ths_fake_ak(), tmp_path).financials("SH600188")
-
-    cold = tmp_path / "cold"
-    assert (cold / "financial_SH600188_income.json").exists()
-    assert (cold / "financial_SH600188_balance.json").exists()
-    assert (cold / "financial_SH600188_cashflow.json").exists()
-
-
-def test_financials_uses_cache_on_second_run(tmp_path) -> None:
-    calls: list[tuple[str, dict]] = []
-    make_source(_ths_fake_ak(calls), tmp_path).financials("SH600188")
-    make_source(_ths_fake_ak(calls), tmp_path).financials("SH600188")
-    assert len(calls) == 3  # 三张表各取一次；第二次全部命中缓存
+def test_ths_source_only_serves_financials(tmp_path) -> None:
+    """THS 二级源只承担财报回退：其余接口一律抛错让链继续（D-45）。"""
+    source = _make_ths_source(SimpleNamespace(), tmp_path)
+    with pytest.raises(base.DataSourceError, match="THS 二级源"):
+        source.list_stocks("A")
+    with pytest.raises(base.DataSourceError, match="THS 二级源"):
+        source.price_daily("SH600188")
+    with pytest.raises(base.DataSourceError, match="THS 二级源"):
+        source.industry_tree("A")
+    with pytest.raises(base.DataSourceError, match="THS 二级源"):
+        source.market_snapshot("A")
+    with pytest.raises(base.DataSourceError, match="A 股"):
+        source.financials("HK00700")
 
 
 # ── 慢接口单独超时（D-10：实测全量列表接口约 13 分钟）────────────────────

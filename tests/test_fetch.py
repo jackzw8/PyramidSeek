@@ -174,11 +174,18 @@ def test_offline_chain_never_touches_network(monkeypatch) -> None:
         raise AssertionError("offline 模式不应构造网络数据源")
 
     monkeypatch.setattr(fetch, "AkShareSource", boom)
+    monkeypatch.setattr(fetch, "AkShareThsSource", boom)
     monkeypatch.setattr(fetch, "OfficialSource", boom)
 
     chain = fetch.default_chain(offline=True)
     assert len(chain) == 1
     assert isinstance(chain[0], FixturesSource)
+
+
+def test_default_chain_orders_sources_for_online() -> None:
+    """联网链序（D-45）：新浪主源 → 同花顺 THS → 官方源 → fixtures。"""
+    chain = fetch.default_chain()
+    assert [source.name for source in chain] == ["akshare", "ths", "official", "fixture"]
 
 
 # ── 回退顺序与降级留痕 ────────────────────────────────────────────────────

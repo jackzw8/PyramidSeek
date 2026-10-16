@@ -1,9 +1,9 @@
-"""采集编排（任务 M1-6）：三级回退 → 清洗 → 落库。
+"""采集编排（任务 M1-6）：回退链 → 清洗 → 落库。
 
 把 M1 各步串成一条链（《数据源接入规格》§1、《计划完成情况》D-11）：
 
     list_stocks / financials / price_daily / industry_tree
-        ↓ 三级回退：主源 AkShare → 官方源（巨潮/披露易）→ fixtures（家法 R16）
+        ↓ 回退链：新浪主源 → 同花顺 THS（财报第 2 级）→ 官方源（巨潮/披露易）→ fixtures（R16）
     pipeline.clean.clean_universe   （校验 / 补齐 / 去重 / 窗口裁剪）
         ↓
     pipeline.store.write_standard   （DuckDB 标准层 + Parquet 冷存，幂等）
@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Any
 
 from .. import config
-from ..datasource.akshare_src import AkShareSource
+from ..datasource.akshare_src import AkShareSource, AkShareThsSource
 from ..datasource.base import DataSourceError
 from ..datasource.fixtures_src import FixturesSource
 from ..datasource.official_src import OfficialSource
@@ -83,7 +83,8 @@ def build_chain(
     official: Any | None = None,
     fixtures: Any | None = None,
 ) -> list[Any]:
-    """构造回退链：主源 → 官方源 → fixtures（``None`` 的级会被跳过）。"""
+    """构造回退链（``None`` 的级会被跳过）；完整四级链见 :func:`default_chain`
+    （含 THS 第 2 级）。"""
     return [source for source in (primary, official, fixtures) if source is not None]
 
 
@@ -181,7 +182,12 @@ def fetch_universe(
                 financials[code] = rows
             logger.info(
                 "财报 [%d/%d] %s %s：%d 行（%s）",
-                idx, total, code, row.get("name") or "", len(rows), source,
+                idx,
+                total,
+                code,
+                row.get("name") or "",
+                len(rows),
+                source,
             )
     else:
         try:
@@ -219,8 +225,13 @@ def fetch_universe(
             outcome.fallbacks[f"price_daily:{code}"] = reasons_qfq
         logger.info(
             "行情 [%d/%d] %s %s：qfq %d 行%s（%s）",
-            idx, price_total, code, row.get("name") or "",
-            len(qfq_rows), f" + raw {len(raw_rows)} 行" if with_raw else "", source_qfq,
+            idx,
+            price_total,
+            code,
+            row.get("name") or "",
+            len(qfq_rows),
+            f" + raw {len(raw_rows)} 行" if with_raw else "",
+            source_qfq,
         )
         if not qfq_rows:
             continue
@@ -322,6 +333,8 @@ def default_chain(
 ) -> list[Any]:
     """默认回退链；``offline=True`` 时**只用 fixtures**（不打网络）。
 
+    联网链序（D-45）：**新浪主源 → 同花顺 THS（仅财报第 2 级）→ 官方源 → fixtures**。
+
     :param cache_partition: 透传给各数据源的缓存分区（D-34）：``"cold"`` 用于
         冷启动跑批；``None`` = 日常（全历史数据已固定落 ``cold/``，D-37）。
     :param stale_after: 全历史数据新鲜度 TTL（D-37），透传给各数据源：
@@ -332,6 +345,8 @@ def default_chain(
         return [fixtures]
     return [
         AkShareSource(partition=cache_partition, stale_after=stale_after),
+        # 财报第 2 级（D-45）：仅当新浪失败时兜底；其余接口一律抛错让链继续
+        AkShareThsSource(partition=cache_partition, stale_after=stale_after),
         OfficialSource(partition=cache_partition, stale_after=stale_after),
         fixtures,
     ]
@@ -353,7 +368,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
         datefmt="%H:%M:%S",
     )
     args = parse_args(argv)

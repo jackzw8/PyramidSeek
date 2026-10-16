@@ -4,7 +4,7 @@
 - **重试 3 次 + 指数退避 1s / 3s / 9s + 超时 15s**（参数取自 ``config``，禁止硬编码）；
 - **本地文件缓存**：原始返回按日期落盘，可追溯、可复现、断网可用；
 - **失败抛 ``DataSourceError``**（带 ``source`` / ``code``），由上层决定回退
-  （主源 → 官方源 → ``fixtures/``，家法 R16）。
+  （回退链：新浪主源 → 同花顺 THS → 官方源 → ``fixtures/``，家法 R16）。
 
 设计取舍：
 - ``akshare`` **延迟导入**（``self.ak``），保证未装该库时本模块仍可 import、测试可离线跑；
@@ -58,11 +58,13 @@ ENDPOINTS: dict[str, str] = {
     "spot_hk": "stock_hk_spot",
     "price_a": "stock_zh_a_hist",  # A股 日线（支持 adjust）
     "price_hk": "stock_hk_hist",  # 港股 日线
-    # A股 财报三表 —— **同花顺 THS 新主源**（D-39，2026-10-16 用户拍板）：
+    # A股 财报三表 —— **主源 = 新浪三表**（D-45 于「THS 主源」之后回调；16:53 复测三表 ≈5.8s/只，
+    # 限速态 43~44s/张 见 D-38，由 D-42 请求节流护栏）。传参 stock=带前缀小写、symbol=报表名；
+    # 列名跨行业变体按「关键词组」处理（D-31①，见 04 §6）。
+    "financial_a": "stock_financial_report_sina",
+    # A股 财报三表 —— **第 2 级源 = 同花顺 THS**（D-45；仅新浪失败时兜底，见 `AkShareThsSource`）：
     # 键名 `financial_{slug}_ths` 与 `_REPORT_SLUG` 对齐；传参 symbol=纯 6 位代码、
-    # indicator="按年度"。实测（2026-10-16）无限速、单只三表 ≈9.9s（新浪限速态 132s/只），
-    # 归母权益 / 归母净利润**直给**（绕开 D-31① 金融股列名变体）。
-    # 新浪 `stock_financial_report_sina` 因服务端限速（D-38）已弃用，不再作为候选。
+    # indicator="按年度"。归母权益 / 归母净利润**直给**（绕开 D-31① 金融股列名变体）。
     "financial_income_ths": "stock_financial_benefit_ths",  # 利润表
     "financial_balance_ths": "stock_financial_debt_ths",  # 资产负债表
     "financial_cashflow_ths": "stock_financial_cash_ths",  # 现金流量表
@@ -95,16 +97,16 @@ SLOW_ENDPOINTS: frozenset[str] = frozenset(
     }
 )
 # 「单股批量接口」（三表 / 行情）**不在上面的名单里**：它们实测远超默认 15s（2026-10-15
-# 新浪三表 ~20-45s，见 D-8；2026-10-16 THS 三表单只 ≈10s，见 D-39），但也不该套用 1800s
-# 的「全量翻页」上限 —— 目标站点挂起时会白等半小时。
+# 新浪三表 ~20-45s，见 D-8；2026-10-16 正常档 新浪 ≈2s/张、THS ≈2.5s/张，限速态 43~44s/张，
+# 见 D-38 / D-45），但也不该套用 1800s 的「全量翻页」上限 —— 目标站点挂起时会白等半小时。
 # 改用 `config.FETCH_TIMEOUT_MEDIUM_SECONDS`（300s）在 `financials` / `price_daily` 里显式传参。
 
-# 三表名称：THS 三接口的表标识（合并 dict 与缓存 slug 的键；见 `_REPORT_SLUG`）
+# 三表名称：财报三表在合并 dict 与缓存 slug 中的键（THS 接口键名亦按 slug 拼接）
 REPORT_INCOME = "利润表"
 REPORT_BALANCE = "资产负债表"
 REPORT_CASHFLOW = "现金流量表"
-# 缓存文件名用 ASCII 短名，避免中文文件名跨平台出问题；同时与 THS 接口键名对齐
-# （`financial_{slug}_ths`，键名沿用既有约定 `financial_{code}_{slug}` 不变）
+# 缓存文件名用 ASCII 短名，避免中文文件名跨平台出问题；
+# 财报缓存键 **含源名**（D-44）：`financial_{源}_{code}_{slug}`（源 = sina / ths，两源共存）
 _REPORT_SLUG = {REPORT_INCOME: "income", REPORT_BALANCE: "balance", REPORT_CASHFLOW: "cashflow"}
 
 # ── 通用工具（单位 / 空值 / 代码语义 / 表格归一）──────────────────────────
@@ -223,6 +225,7 @@ class AkShareSource:
         ) from last
 
     # ── 本地缓存（D-37：全历史数据固定分区 + mtime TTL；时点数据按日分区）──
+    # 财报键含源名（D-44：financial_sina_* / financial_ths_*，两源缓存共存）；前缀不变
     _HISTORY_PREFIXES = ("financial_", "price_")  # 全历史数据键前缀
     HISTORY_DIR_NAME = "cold"  # 固定分区名（与 cold 模式分区同名：同一份基线）
 
@@ -364,33 +367,34 @@ class AkShareSource:
         }
 
     def financials(self, code: str) -> list[dict[str, Any]]:
-        """A 股财报三表 → 标准层行（**同花顺 THS 新主源**，D-39）。
+        """A 股财报三表 → 标准层行（**新浪三表·主源**，D-45；同花顺 THS 为链上第 2 级源）。
 
-        传参（《数据源接入规格》§3.2.1）：``symbol`` 为**纯 6 位代码**（不带 SH/SZ 前缀）、
-        ``indicator="按年度"``；解析与映射见 :func:`map_ths_financials`。
-        缓存键沿用既有约定 ``financial_{code}_{slug}``、落 ``cold/`` 固定分区（D-37）。
+        传参：``stock`` = 带市场前缀的小写代码（``sh600188``）、``symbol`` = 报表名；
+        解析与映射见 :func:`map_sina_financials`（列名跨行业变体按「关键词组」处理，D-31①）。
+        缓存键 ``financial_sina_{code}_{slug}``（D-44 含源名）、落 ``cold/`` 固定分区（D-37）。
 
-        港股不在 THS 覆盖内 → 明确抛错（回退链切官方源 / 披露易，行为不变）。
+        港股不在本接口覆盖内 → 明确抛错（回退链切官方源 / 披露易，行为不变）。
         """
         if market_of(code) != "A":
             raise DataSourceError(
-                f"港股财报接口尚未接入（{code}）：THS 仅覆盖 A 股，港股走官方源兜底",
+                f"港股财报接口尚未接入（{code}）："
+                "AkShare 财报（新浪/THS）均只覆盖 A 股，港股走官方源兜底",
                 source=self.name,
                 code=code,
             )
         tables = {
             report: self._fetch(
-                f"financial_{code}_{_REPORT_SLUG[report]}",
-                getattr(self.ak, ENDPOINTS[f"financial_{_REPORT_SLUG[report]}_ths"]),
+                f"financial_sina_{code}_{_REPORT_SLUG[report]}",
+                getattr(self.ak, ENDPOINTS["financial_a"]),
                 what=f"财报（{code} / {report}）",
                 code=code,
-                timeout=config.FETCH_TIMEOUT_MEDIUM_SECONDS,  # 单只三表 ≈10s（D-39）
-                symbol=code[2:],  # THS 要纯 6 位代码（不带市场前缀）
-                indicator="按年度",
+                timeout=config.FETCH_TIMEOUT_MEDIUM_SECONDS,  # 单张 ≈2s（限速态 44s），见 D-38
+                stock=code.lower(),
+                symbol=report,
             )
             for report in (REPORT_INCOME, REPORT_BALANCE, REPORT_CASHFLOW)
         }
-        return map_ths_financials(code, tables)
+        return map_sina_financials(code, tables)
 
     def price_daily(self, code: str, adjust: str = config.DEFAULT_ADJUST) -> list[dict[str, Any]]:
         if adjust not in config.ADJUST_MODES:
@@ -590,6 +594,62 @@ class AkShareSource:
         return True
 
 
+class AkShareThsSource(AkShareSource):
+    """同花顺 THS 财报**第 2 级源**（D-45）：只实现 ``financials``（A 股），其余接口一律抛错。
+
+    链序（``fetch.default_chain``）：AkShareSource（新浪，主源）→ **本对象（THS）** →
+    OfficialSource → FixturesSource。仅当新浪失败（限速 / 无数据）时兜底；
+    缓存键 ``financial_ths_{code}_{slug}``（D-44 含源名，与新浪缓存 `financial_sina_*` 共存）。
+    """
+
+    name = "ths"
+
+    def financials(self, code: str) -> list[dict[str, Any]]:
+        """A 股财报三表 → 标准层行（同花顺 THS；第 2 级回退，D-45）。
+
+        传参（《数据源接入规格》§3.2.1）：``symbol`` 为**纯 6 位代码**（不带 SH/SZ 前缀）、
+        ``indicator="按年度"``；解析与映射见 :func:`map_ths_financials`。
+        缓存键 ``financial_ths_{code}_{slug}``、落 ``cold/`` 固定分区（D-37）。
+
+        港股不在 THS 覆盖内 → 明确抛错（让链继续到官方源）。
+        """
+        if market_of(code) != "A":
+            raise DataSourceError(
+                f"THS 仅覆盖 A 股（{code}）：港股财报走官方源兜底",
+                source=self.name,
+                code=code,
+            )
+        tables = {
+            report: self._fetch(
+                f"financial_ths_{code}_{_REPORT_SLUG[report]}",
+                getattr(self.ak, ENDPOINTS[f"financial_{_REPORT_SLUG[report]}_ths"]),
+                what=f"财报（{code} / {report}）",
+                code=code,
+                timeout=config.FETCH_TIMEOUT_MEDIUM_SECONDS,  # 单只三表 ≈8s（D-39 / D-45 复测）
+                symbol=code[2:],  # THS 要纯 6 位代码（不带市场前缀）
+                indicator="按年度",
+            )
+            for report in (REPORT_INCOME, REPORT_BALANCE, REPORT_CASHFLOW)
+        }
+        return map_ths_financials(code, tables)
+
+    # ── 其余接口：本对象只承担 THS 财报二级回退，一律抛错让链继续 ──────────
+    def list_stocks(self, market: str) -> list[dict[str, Any]]:
+        raise DataSourceError(
+            f"THS 二级源不提供股票列表（market={market}）：只在新浪失败时兜底财报",
+            source=self.name,
+        )
+
+    def price_daily(self, code: str, adjust: str = config.DEFAULT_ADJUST) -> list[dict[str, Any]]:
+        raise DataSourceError(f"THS 二级源不提供日行情（{code}）", source=self.name, code=code)
+
+    def industry_tree(self, market: str) -> list[dict[str, Any]]:
+        raise DataSourceError(f"THS 二级源不提供行业分类树（market={market}）", source=self.name)
+
+    def market_snapshot(self, market: str) -> list[dict[str, Any]]:
+        raise DataSourceError(f"THS 二级源不提供全市场快照（market={market}）", source=self.name)
+
+
 # ── 全市场快照（D-32）：列名/代码归一 ────────────────────────────────────
 def _to_float(value: Any) -> float | None:
     """快照列 → float（字符串 / 千分位 / NaN / ``--`` 一律 ``None``）。"""
@@ -619,7 +679,115 @@ def _snapshot_code(raw: Any, market: str) -> str | None:
     return None
 
 
-# ── THS 三表解析 → 标准层 financial_report（《数据源接入规格》§3.2.1；D-39）──
+# ── 新浪三表合并 → 标准层 financial_report（**主源**，D-45 恢复；《数据字典》§3.2）──
+# 科目列名按语义给候选：新浪源跨版本列名会变，逐个试（改映射只动这里）。
+_SUBJECTS: dict[str, tuple[str, ...]] = {
+    "revenue": ("营业总收入", "营业收入"),
+    "gross_profit": ("营业毛利", "毛利"),
+    "cost": ("营业总成本", "营业成本"),
+    "net_profit": ("归属于母公司所有者的净利润", "归属母公司股东的净利润", "净利润"),
+    "total_assets": ("资产总计", "资产合计"),
+    "total_liabilities": ("负债合计",),
+    "equity": ("归属于母公司所有者权益合计", "所有者权益(或股东权益)合计", "股东权益合计"),
+    "cash": ("货币资金",),
+    "op_cashflow": ("经营活动产生的现金流量净额",),
+    "icf": ("投资活动产生的现金流量净额",),
+    "fcf": ("筹资活动产生的现金流量净额",),
+}
+# 报告期语义（report_period_of / report_type_of / effective_date_of）同样在
+# `src/common.py`，本模块 re-export。
+
+
+# 关键词组（**优先于**上面的精确候选）：组内关键词**全部出现**即命中，按行内列序扫描。
+# 只用在「高优先语义唯一」的科目上（前缀「归属于母公司」），否则会误命中子项
+# （如「流动负债合计」之于负债合计）。跨行业列名变体见《计划完成情况》D-31① ——
+# 实测三种写法一个都不在精确候选里：
+#   工商银行「归属于母公司股东的权益」（**无「合计」**）/ 中国平安「归属于母公司的股东权益合计」/
+#   贵州茅台「归属于母公司股东权益合计」；此前 equity 因此在金融股上为 None、
+#   在普通股上回落到**含少数股东权益的合并口径**（口径与《数据字典》§3.2 的「归母」不符）。
+_SUBJECT_KEYWORDS: dict[str, tuple[tuple[str, ...], ...]] = {
+    "net_profit": (("归属于母公司", "净利润"), ("归属母公司", "净利润")),
+    "equity": (("归属于母公司", "权益"), ("归属母公司", "权益")),
+}
+
+
+def _subject(row: dict[str, Any], key: str) -> Any:
+    """按科目取原始值：**关键词组优先**（抗跨源 / 跨行业列名变体），精确候选兜底（D-31①）。"""
+    for group in _SUBJECT_KEYWORDS.get(key, ()):
+        for column, cell in row.items():
+            if not is_missing(cell) and all(word in str(column) for word in group):
+                return cell
+    return pick(row, *_SUBJECTS[key])
+
+
+def map_sina_financials(
+    code: str,
+    tables: dict[str, list[dict[str, Any]]],
+    *,
+    source: str = "akshare",
+    fetched_at: str | None = None,
+) -> list[dict[str, Any]]:
+    """新浪三表（行 = 报告期，列 = 科目）→ 标准层 ``financial_report`` 行（**主源**，D-45）。
+
+    :param tables: ``{报表名: 行列表}``，报表名为 ``REPORT_INCOME`` / ``REPORT_BALANCE`` /
+        ``REPORT_CASHFLOW``；同一报告期的三表会按报告期合并为一行。
+    :returns: 按报告期升序的标准层行（字段见 ``base.FINANCIAL_REQUIRED_FIELDS``）。
+
+    口径（家法 R7 / R9 / R10 / R11）：
+    - 单位：元 → 亿元、保留 2 位小数；空值 ``None``，**不用 0 顶替**；
+    - ``gross_profit`` 缺列时用 ``revenue − cost`` 反算（《数据字典》§3.2 注）；
+    - ``effective_date`` = 报告期 + 4 个月；非年报标 ``is_cumulative=True``
+      （累计口径不可比，不进主评分）；
+    - 行内 ``source`` 默认 ``'akshare'``（= 新浪三表，经 AkShare；04 §3.2 来源标识沿用）；
+      第 2 级源 THS 的映射见 :func:`map_ths_financials`。
+    """
+    by_period: dict[str, dict[str, dict[str, Any]]] = {}
+    for report, rows in tables.items():
+        for row in rows:
+            period = report_period_of(row)
+            if period is not None:
+                by_period.setdefault(period, {})[report] = row
+
+    stamp = fetched_at or datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    out: list[dict[str, Any]] = []
+    for period in sorted(by_period):
+        income = by_period[period].get(REPORT_INCOME, {})
+        balance = by_period[period].get(REPORT_BALANCE, {})
+        cashflow = by_period[period].get(REPORT_CASHFLOW, {})
+
+        revenue = to_internal_billion(_subject(income, "revenue"))
+        gross = to_internal_billion(_subject(income, "gross_profit"))
+        cost = to_internal_billion(_subject(income, "cost"))
+        if gross is None and revenue is not None and cost is not None:
+            gross = round(revenue - cost, config.AMOUNT_DECIMALS)
+
+        report_type = report_type_of(period)
+        out.append(
+            {
+                "code": code,
+                "report_period": period,
+                "report_type": report_type,
+                "is_cumulative": report_type != "annual",
+                "revenue": revenue,
+                "gross_profit": gross,
+                "net_profit": to_internal_billion(_subject(income, "net_profit")),
+                "total_assets": to_internal_billion(_subject(balance, "total_assets")),
+                "total_liabilities": to_internal_billion(_subject(balance, "total_liabilities")),
+                "equity": to_internal_billion(_subject(balance, "equity")),
+                "cash": to_internal_billion(_subject(balance, "cash")),
+                "op_cashflow": to_internal_billion(_subject(cashflow, "op_cashflow")),
+                "icf": to_internal_billion(_subject(cashflow, "icf")),
+                "fcf": to_internal_billion(_subject(cashflow, "fcf")),
+                "effective_date": effective_date_of(period),
+                "currency": "CNY",  # 新浪三表为人民币报表（D-24 加的字段）
+                "source": source,
+                "fetched_at": stamp,
+            }
+        )
+    return out
+
+
+# ── THS 三表解析 → 标准层 financial_report（规格 §3.2.1；D-39 实测，D-45 起为第 2 级源）──
 # 实测（2026-10-16，9 只样本 × 全部历史年份）：本路径取用的金额列，取值恒为**带单位
 # 字符串**（'4529.44亿' / '53.48万亿' / '7262.80万'），缺失恒为 ``False``；金融股
 # 部分列**整列不存在**（工行无 `总现金`/`货币资金`/`其中：营业成本`，平安、中信无
@@ -769,9 +937,11 @@ __all__ = [
     "REPORT_CASHFLOW",
     "REPORT_INCOME",
     "AkShareSource",
+    "AkShareThsSource",
     "effective_date_of",
     "exchange_of",
     "is_missing",
+    "map_sina_financials",
     "map_ths_financials",
     "market_of",
     "normalize_code",

@@ -2,7 +2,7 @@
 
 链路（家法 R16「离线永远可跑」）：
 
-    采集（三级回退 → 清洗）→ 评分（engine）→ 落库（score_snapshot / meta_snapshot）
+    采集（回退链 → 清洗）→ 评分（engine）→ 落库（score_snapshot / meta_snapshot）
     → 产物（meta / industries / ranking / stock）→ 校验（schema + 引用完整性）
 
 - 产物结构与口径依据《产物契约》§3（contractVersion 1.2）；校验失败**非零退出**；
@@ -213,12 +213,8 @@ def run(args: argparse.Namespace) -> int:
                 fixtures_path=args.fixtures,
                 # 列表 / 申万映射属「时点数据」，受本参数影响；若按日分区则每天首次跑批
                 # 都会重建 131 个行业成分（≈15~30 分钟）。建仓类模式一律复用 cold/ 固定
-                # 分区，避免切模式白等一輪（D-41）。只有 daily 走按日分区，取最新列表/快照。
-                cache_partition=(
-                    None
-                    if args.mode == "daily" or args.offline
-                    else "cold"
-                ),
+                # 分区，避免切模式白等一輪（D-43）。只有 daily 走按日分区，取最新列表/快照。
+                cache_partition=(None if args.mode == "daily" or args.offline else "cold"),
                 # 全历史数据新鲜度 TTL（D-37）：超龄才重抓，长跑批跨天/跨周仍可续传
                 stale_after=_stale_after_for(args.mode, args.offline),
             ),
@@ -337,7 +333,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
         datefmt="%H:%M:%S",
     )
     args = parse_args(argv)

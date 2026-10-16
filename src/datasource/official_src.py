@@ -7,7 +7,7 @@ M1-3 交付「解析骨架」，边界写清楚：
   PDF 下载与缓存、`health_check`、主源失败时自动切换的 :func:`call_with_fallback`；
 - ⛔ 未实现：PDF → 三表结构化解析（:meth:`OfficialSource.parse_annual_report`）。
   M1-3 阶段它**明确抛错并列出已定位到的年报**，绝不返回假数据 —— 上层据此再回退
-  `fixtures/`（三级回退链：AkShare → 官方源 → fixtures）。
+  `fixtures/`（回退链：新浪 → 同花顺 THS → 官方源 → fixtures，D-45）。
 
 职责边界：官方披露源**只提供财报**，不提供股票列表 / 行业树 / 日行情，对应方法一律
 抛 ``DataSourceError`` 并说明原因（让回退链知道"这一类数据它本来就没有"）。
