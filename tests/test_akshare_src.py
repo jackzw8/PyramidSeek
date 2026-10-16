@@ -7,8 +7,10 @@ sleep 注入为记录器（不真等待），缓存目录用 ``tmp_path``。
 
 from __future__ import annotations
 
+import os
 import time
-from datetime import date
+from datetime import date, timedelta
+from pathlib import Path
 from types import SimpleNamespace
 
 import pandas as pd
@@ -260,6 +262,83 @@ def test_partition_cache_lands_in_fixed_directory(tmp_path) -> None:
     )
     src_next_day.list_stocks("A")
     assert calls["n"] == 1
+
+
+# ── D-37：全历史数据固定分区 + mtime TTL ─────────────────────────────────
+def _fake_price_ak(calls: dict | None = None) -> SimpleNamespace:
+    def hist(**kwargs):
+        if calls is not None:
+            calls["n"] += 1
+        return [{"日期": "2024-01-02", "开盘": 1.0, "收盘": 1.1, "最高": 1.2, "最低": 0.9}]
+
+    return SimpleNamespace(stock_zh_a_hist=hist)
+
+
+def _touch(path: Path, age_days: float) -> None:
+    """把文件 mtime 拨到 ``age_days`` 天前（模拟旧缓存）。"""
+    stamp = time.time() - age_days * 86400
+    os.utime(path, (stamp, stamp))
+
+
+def test_history_key_lands_in_fixed_cold_dir(tmp_path) -> None:
+    """D-37：财报/行情键无论什么模式都落 cold/ 固定分区（不走日期目录）。"""
+    source = make_source(_fake_price_ak(), tmp_path, stale_after=timedelta(days=20))
+    source.price_daily("SH600900", "qfq")
+
+    assert (tmp_path / "cold" / "price_SH600900_qfq.json").exists()
+    assert not (tmp_path / "2026-10-14").exists()
+
+
+def test_history_cache_fresh_within_ttl(tmp_path) -> None:
+    """TTL 内（含当天）重复跑 → 命中缓存不重抓。"""
+    calls = {"n": 0}
+    source = make_source(_fake_price_ak(calls), tmp_path, stale_after=timedelta(days=20))
+
+    source.price_daily("SH600900", "qfq")
+    source.price_daily("SH600900", "qfq")
+
+    assert calls["n"] == 1
+
+
+def test_history_cache_stale_triggers_refetch_and_overwrites(tmp_path) -> None:
+    """mtime 超 TTL → 视为未命中重抓，覆盖写回并刷新 mtime（续期）。"""
+    calls = {"n": 0}
+    source = make_source(_fake_price_ak(calls), tmp_path, stale_after=timedelta(days=20))
+    source.price_daily("SH600900", "qfq")
+    cache_file = tmp_path / "cold" / "price_SH600900_qfq.json"
+    _touch(cache_file, age_days=30)
+
+    source.price_daily("SH600900", "qfq")
+
+    assert calls["n"] == 2
+    assert time.time() - cache_file.stat().st_mtime < 60  # 已续期
+
+
+def test_cold_baseline_never_expires(tmp_path) -> None:
+    """cold 基线（stale_after=None）：再旧的缓存也命中（扩池/续传语义）。"""
+    calls = {"n": 0}
+    source = make_source(
+        _fake_price_ak(calls), tmp_path, stale_after=None, partition="cold"
+    )
+    source.price_daily("SH600900", "qfq")
+    _touch(tmp_path / "cold" / "price_SH600900_qfq.json", age_days=365)
+
+    source.price_daily("SH600900", "qfq")
+
+    assert calls["n"] == 1
+
+
+def test_spot_always_uses_date_partition_even_in_cold(tmp_path) -> None:
+    """快照是时点数据：cold 模式也不落固定分区（防旧快照污染行情截止日）。"""
+    ak = SimpleNamespace(
+        stock_zh_a_spot=lambda **kw: [{"代码": "sh600519", "名称": "贵州茅台", "最新价": "1500"}]
+    )
+    source = make_source(ak, tmp_path, partition="cold")
+
+    source.market_snapshot("A")
+
+    assert (tmp_path / "2026-10-14" / "spot_A.json").exists()
+    assert not (tmp_path / "cold" / "spot_A.json").exists()
 
 
 def test_corrupted_cache_falls_back_to_source(tmp_path) -> None:

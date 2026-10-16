@@ -23,7 +23,7 @@ import json
 import re
 import time
 from collections.abc import Callable
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any, NamedTuple
 
@@ -157,6 +157,7 @@ class OfficialSource:
         clock: Callable[[], float] | None = None,
         cache_dir: Path | None = None,
         partition: str | None = None,
+        stale_after: timedelta | None = None,
         retry_times: int | None = None,
         backoff: tuple[int, ...] | None = None,
         timeout: float | None = None,
@@ -171,6 +172,7 @@ class OfficialSource:
         self._clock = clock or time.monotonic
         self._cache_dir = Path(cache_dir) if cache_dir else config.DATA_DIR / "raw" / "official"
         self._partition = partition
+        self._stale_after = stale_after
         self._retry_times = retry_times if retry_times is not None else config.FETCH_RETRY_TIMES
         self._backoff = backoff if backoff is not None else config.FETCH_RETRY_BACKOFF
         self._timeout = timeout if timeout is not None else config.FETCH_TIMEOUT_SECONDS
@@ -225,15 +227,26 @@ class OfficialSource:
             code=code,
         ) from last
 
-    # ── 缓存（日常按日分区；cold 模式固定分区做跨天续传，D-34）────────────
+    # ── 缓存（D-37：官方源数据全是财报类全历史 → monthly/financials 落固定分区 + mtime TTL）──
     def _cache_dir_today(self) -> Path:
         if self._partition:
             return self._cache_dir / self._partition
+        if self._stale_after is not None:
+            return self._cache_dir / "cold"
         return self._cache_dir / self._today().isoformat()
+
+    def _is_fresh(self, path: Path) -> bool:
+        """全历史数据新鲜度（D-37）：mtime 距今 ≤ ``stale_after`` 新鲜；``None`` 永不过期。"""
+        if self._stale_after is None:
+            return True
+        fetched_at = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
+        return datetime.now(UTC) - fetched_at <= self._stale_after
 
     def _read_json_cache(self, key: str) -> Any | None:
         path = self._cache_dir_today() / f"{key}.json"
         if not path.exists():
+            return None
+        if self._stale_after is not None and not self._is_fresh(path):
             return None
         try:
             with path.open(encoding="utf-8") as fh:
@@ -248,9 +261,9 @@ class OfficialSource:
             json.dump(payload, fh, ensure_ascii=False)
 
     def _download_pdf(self, url: str, *, code: str, report_period: str) -> Path:
-        """下载年报 PDF 到当日缓存目录；已存在且非空则直接复用。"""
+        """下载年报 PDF 到缓存目录；已存在、非空且新鲜（D-37）则直接复用。"""
         path = self._cache_dir_today() / pdf_name_of(code, report_period)
-        if path.exists() and path.stat().st_size > 0:
+        if path.exists() and path.stat().st_size > 0 and self._is_fresh(path):
             return path
         response = self._request(
             "GET", url, what=f"年报 PDF 下载（{code} {report_period}）", code=code

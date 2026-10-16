@@ -132,6 +132,13 @@ HTTP_USER_AGENT = "PyramidSeek/0.1 (personal research; contact: local)"
 # 15s 是"单次请求"约束，套到批量接口上会让它必败，故单独给一个宽松上限。
 FETCH_TIMEOUT_SLOW_SECONDS = 1800
 
+# ── 历史数据缓存新鲜度（D-37：固定分区 cold/ + 文件 mtime TTL）────────────
+# financials / monthly 重跑时，cold/ 里全历史数据的 mtime 在此期限内 → 直接命中不重抓；
+# 超龄才重抓并覆盖写回（mtime 刷新）。全市场跑批 67~202h 必然跨天，判新鲜必须与
+# 「同一天」解耦（D-34 的按日分区口径已废弃）。cold 模式 TTL = ∞（基线永远命中）。
+MONTHLY_FRESH_DAYS = 20  # 月度节奏下下次跑 ≈30 天 > 20 天 → 正常重抓；中断 3 周内可续传
+FINANCIALS_FRESH_DAYS = 10  # 披露季每周重抓仍会过期；中断 10 天内可续传
+
 # ── 运行环境（家法 R17：本地 / CI 双跑，不写死绝对路径）──────────────────
 PS_ENV_LOCAL = "local"
 PS_ENV_CI = "ci"

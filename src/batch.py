@@ -23,7 +23,7 @@ import json
 import logging
 import shutil
 import sys
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -130,6 +130,22 @@ def _read_pending(path: Path) -> list[str]:
     )
 
 
+def _stale_after_for(mode: str, offline: bool) -> timedelta | None:
+    """模式 → 全历史数据新鲜度 TTL（D-37）；``None`` = 永不过期。
+
+    ``cold`` 基线永不过期；``monthly`` / ``financials``（含 ``retry`` 补抓）按
+    ``config.MONTHLY_FRESH_DAYS`` / ``FINANCIALS_FRESH_DAYS`` 判断 cold/ 缓存是否超龄。
+    ``daily`` 不抓历史键，返回值无影响；``offline`` 不走数据源缓存。
+    """
+    if offline:
+        return None
+    if mode == "monthly":
+        return timedelta(days=config.MONTHLY_FRESH_DAYS)
+    if mode in {"financials", "retry"}:
+        return timedelta(days=config.FINANCIALS_FRESH_DAYS)
+    return None
+
+
 def prepare_out_dir(out_dir: Path) -> None:
     """重置产物目录：删掉上一批的 ``ranking/`` 与 ``stock/``。
 
@@ -195,8 +211,10 @@ def run(args: argparse.Namespace) -> int:
             chain=fetch.default_chain(
                 offline=args.offline,
                 fixtures_path=args.fixtures,
-                # 冷启动用固定缓存分区（D-34）：中断隔天重跑仍命中已抓缓存
+                # 冷启动基线：固定分区 + 永不过期（D-34/D-37）
                 cache_partition="cold" if args.mode == "cold" and not args.offline else None,
+                # 全历史数据新鲜度 TTL（D-37）：超龄才重抓，长跑批跨天/跨周仍可续传
+                stale_after=_stale_after_for(args.mode, args.offline),
             ),
             today=date.fromisoformat(as_of),
             persist=not args.no_store,

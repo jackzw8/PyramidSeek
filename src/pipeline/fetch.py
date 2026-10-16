@@ -306,18 +306,21 @@ def default_chain(
     offline: bool = False,
     fixtures_path: Path | None = None,
     cache_partition: str | None = None,
+    stale_after: Any | None = None,
 ) -> list[Any]:
     """默认回退链；``offline=True`` 时**只用 fixtures**（不打网络）。
 
     :param cache_partition: 透传给各数据源的缓存分区（D-34）：``"cold"`` 用于
-        冷启动跑批的固定缓存目录（跨天续传）；``None`` = 按日分区（日常）。
+        冷启动跑批；``None`` = 日常（全历史数据已固定落 ``cold/``，D-37）。
+    :param stale_after: 全历史数据新鲜度 TTL（D-37），透传给各数据源：
+        ``None`` = 永不过期（cold 基线）；monthly/financials 按模式传 ``timedelta``。
     """
     fixtures = FixturesSource(fixtures_path)
     if offline:
         return [fixtures]
     return [
-        AkShareSource(partition=cache_partition),
-        OfficialSource(partition=cache_partition),
+        AkShareSource(partition=cache_partition, stale_after=stale_after),
+        OfficialSource(partition=cache_partition, stale_after=stale_after),
         fixtures,
     ]
 

@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 
@@ -249,6 +249,41 @@ def test_pdf_and_announcement_are_cached(tmp_path) -> None:
         "SH600900"
     )
     assert len(session.calls) == calls_after_first  # 公告与 PDF 均命中缓存，零新请求
+
+
+# ── D-37：stale_after 路由固定分区 + mtime TTL ───────────────────────────
+def test_stale_after_routes_cache_to_cold_dir(tmp_path) -> None:
+    """官方源数据全是财报类全历史：stale_after 模式下缓存落固定分区 cold/。"""
+    stale = OfficialSource(cache_dir=tmp_path, stale_after=timedelta(days=10), today=lambda: FIXED_DAY)
+    assert stale._cache_dir_today() == tmp_path / "cold"
+
+    daily = OfficialSource(cache_dir=tmp_path, today=lambda: FIXED_DAY)
+    assert daily._cache_dir_today() == tmp_path / FIXED_DAY.isoformat()
+
+    cold = OfficialSource(cache_dir=tmp_path, partition="cold", today=lambda: FIXED_DAY)
+    assert cold._cache_dir_today() == tmp_path / "cold"
+
+
+def test_stale_announcement_cache_is_refetched(tmp_path) -> None:
+    """mtime 超 TTL 的公告缓存视为未命中（重抓后覆盖写回）。"""
+    import os
+    import time as time_mod
+
+    session = FakeSession(cninfo_handler([2024]))
+    source = make_source(cninfo_handler([2024]), tmp_path, session=session, stale_after=timedelta(days=10))
+    source.annual_report_documents("SH600900")
+    calls_after_first = len(session.calls)
+    assert calls_after_first > 0
+
+    # 把公告缓存 mtime 拨到 30 天前（超 10 天 TTL）
+    cache_file = tmp_path / "cold" / "announcements_SH600900.json"
+    stamp = time_mod.time() - 30 * 86400
+    os.utime(cache_file, (stamp, stamp))
+
+    make_source(cninfo_handler([2024]), tmp_path, session=session, stale_after=timedelta(days=10)).annual_report_documents(
+        "SH600900"
+    )
+    assert len(session.calls) > calls_after_first  # 超龄 → 重新检索
 
 
 def test_cninfo_query_sends_code_and_orgid(tmp_path) -> None:

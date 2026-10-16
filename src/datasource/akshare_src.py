@@ -20,7 +20,7 @@ import logging
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -104,9 +104,13 @@ class AkShareSource:
     """AkShare 主源（M1-2）。
 
     :param cache_dir: 原始返回缓存根目录；默认 ``data/raw/akshare/``。
-    :param partition: 缓存分区（D-34）：``None`` = 按日分区 ``<日期>/``（日常抓取，
-        天然按新鲜度淘汰）；指定名字（如 ``"cold"``）= 固定子目录 ``cold/``，
-        **冷启动跨天续传**用 —— 中断后隔天重跑仍命中昨日已抓缓存。
+    :param partition: 缓存分区：``None`` = 按日分区 ``<日期>/``（时点数据：spot /
+        股票列表 / 申万映射）；指定名字（如 ``"cold"``）= 固定子目录。注意：
+        **全历史数据（财报三表 / 行情）一律落固定子目录 ``cold/``**（D-37），不受本参数影响。
+    :param stale_after: 全历史数据的新鲜度 TTL（D-37）：``None`` = 永不过期（cold 基线）；
+        设为时长（如 ``timedelta(days=20)``）时，缓存文件 mtime 超龄 → 视为未命中、
+        重抓并覆盖写回（mtime 刷新）。动机：全市场跑批 67~202h 必然跨天，
+        「同日缓存」判新鲜会误杀续传 —— TTL 与跑批时长解耦。
     :param sleep: 退避用的睡眠函数（离线测试注入，避免真等待）。
     :param ak: akshare 模块（离线测试注入假模块；``None`` 时延迟导入真库）。
     :param today: 返回当前日期的函数（测试注入，控制缓存分区）。
@@ -122,6 +126,7 @@ class AkShareSource:
         *,
         cache_dir: Path | None = None,
         partition: str | None = None,
+        stale_after: timedelta | None = None,
         sleep: Callable[[float], None] | None = None,
         ak: Any | None = None,
         today: Callable[[], date] | None = None,
@@ -132,6 +137,7 @@ class AkShareSource:
     ) -> None:
         self._cache_dir = Path(cache_dir) if cache_dir else config.DATA_DIR / "raw" / "akshare"
         self._partition = partition
+        self._stale_after = stale_after
         self._sleep = sleep or time.sleep
         self._ak = ak
         self._today = today or (lambda: datetime.now(UTC).date())
@@ -202,15 +208,43 @@ class AkShareSource:
             code=code,
         ) from last
 
-    # ── 本地缓存（日常按日分区；cold 模式固定分区做跨天续传，D-34）─────────
+    # ── 本地缓存（D-37：全历史数据固定分区 + mtime TTL；时点数据按日分区）──
+    _HISTORY_PREFIXES = ("financial_", "price_")  # 全历史数据键前缀
+    HISTORY_DIR_NAME = "cold"  # 固定分区名（与 cold 模式分区同名：同一份基线）
+
+    def _is_history_key(self, key: str) -> bool:
+        return key.startswith(self._HISTORY_PREFIXES)
+
+    def _history_dir(self) -> Path:
+        return self._cache_dir / self.HISTORY_DIR_NAME
+
     def _cache_path(self, key: str) -> Path:
+        if self._is_history_key(key):
+            return self._history_dir() / f"{key}.json"
+        if key.startswith("spot_"):
+            # 快照是时点数据：任何模式都取当日（否则扩池重跑会命中旧快照、污染行情截止日）
+            return self._cache_dir / self._today().isoformat() / f"{key}.json"
         if self._partition:
             return self._cache_dir / self._partition / f"{key}.json"
         return self._cache_dir / self._today().isoformat() / f"{key}.json"
 
+    def _is_fresh(self, path: Path) -> bool:
+        """全历史数据新鲜度（D-37）：文件 mtime 距今 ≤ ``stale_after`` 视为新鲜。
+
+        mtime 即最近一次抓取时间（写缓存自然刷新，覆盖写回即续期）；``stale_after=None``
+        （cold 基线）永不过期。mtime 只做差值比较，与 UTC 时区无关。
+        """
+        if self._stale_after is None:
+            return True
+        fetched_at = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
+        return datetime.now(UTC) - fetched_at <= self._stale_after
+
     def _load_cache(self, key: str) -> list[dict[str, Any]] | None:
         path = self._cache_path(key)
         if not path.exists():
+            return None
+        if self._is_history_key(key) and not self._is_fresh(path):
+            logger.info("缓存超龄（>%s），视为未命中：%s", self._stale_after, path.name)
             return None
         try:
             with path.open(encoding="utf-8") as fh:
