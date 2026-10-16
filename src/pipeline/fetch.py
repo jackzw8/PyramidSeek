@@ -170,7 +170,8 @@ def fetch_universe(
     # 读回失败（空库 / 未跑过三表）→ 财报为空，产物缺评分 —— daily 的前置条件
     # 是先跑过一次带落库的三表。
     if with_financials:
-        for row in stocks:
+        total = len(stocks)
+        for idx, row in enumerate(stocks, start=1):
             code = str(row["code"])
             rows, source, reasons = _try_chain("financials", code, chain=chain)
             outcome.sources[f"financials:{code}"] = source
@@ -178,6 +179,10 @@ def fetch_universe(
                 outcome.fallbacks[f"financials:{code}"] = reasons
             if rows:
                 financials[code] = rows
+            logger.info(
+                "财报 [%d/%d] %s %s：%d 行（%s）",
+                idx, total, code, row.get("name") or "", len(rows), source,
+            )
     else:
         try:
             stored = store.read_table("financial_report", db_path=db_path)
@@ -195,7 +200,8 @@ def fetch_universe(
     # `with_history=False`（daily 模式）不抓历史序列 —— 行情截止日由快照提供。
     prices: dict[str, list[dict[str, Any]]] = {}
     price_issues: list[Any] = []
-    for row in stocks if with_history else []:
+    price_total = len(stocks) if with_history else 0
+    for idx, row in enumerate(stocks if with_history else [], start=1):
         code = str(row["code"])
         raw_rows: list[dict[str, Any]] = []
         if with_raw:
@@ -211,6 +217,11 @@ def fetch_universe(
         outcome.sources[f"price_daily:{code}"] = source_qfq
         if reasons_qfq:
             outcome.fallbacks[f"price_daily:{code}"] = reasons_qfq
+        logger.info(
+            "行情 [%d/%d] %s %s：qfq %d 行%s（%s）",
+            idx, price_total, code, row.get("name") or "",
+            len(qfq_rows), f" + raw {len(raw_rows)} 行" if with_raw else "", source_qfq,
+        )
         if not qfq_rows:
             continue
         merged, issues = clean.merge_price_rows(code, raw_rows, qfq_rows)
@@ -232,6 +243,7 @@ def fetch_universe(
                 f"market_snapshot:{market} 全链路失败（无停牌判定，停牌股不会被单列）"
             )
             continue
+        logger.info("快照 %s：%d 行（%s）", market, len(snap_rows), snap_source)
         snapshots[market] = {row["code"]: row for row in snap_rows}
         if snapshot_date is None:
             snapshot_date = today.isoformat() if today else date.today().isoformat()
