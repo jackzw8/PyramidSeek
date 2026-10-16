@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
@@ -56,7 +57,14 @@ ENDPOINTS: dict[str, str] = {
     "spot_hk": "stock_hk_spot",
     "price_a": "stock_zh_a_hist",  # A股 日线（支持 adjust）
     "price_hk": "stock_hk_hist",  # 港股 日线
-    "financial_a": "stock_financial_report_sina",  # A股 三表（symbol=报表名）
+    # A股 财报三表 —— **同花顺 THS 新主源**（D-39，2026-10-16 用户拍板）：
+    # 键名 `financial_{slug}_ths` 与 `_REPORT_SLUG` 对齐；传参 symbol=纯 6 位代码、
+    # indicator="按年度"。实测（2026-10-16）无限速、单只三表 ≈9.9s（新浪限速态 132s/只），
+    # 归母权益 / 归母净利润**直给**（绕开 D-31① 金融股列名变体）。
+    # 新浪 `stock_financial_report_sina` 因服务端限速（D-38）已弃用，不再作为候选。
+    "financial_income_ths": "stock_financial_benefit_ths",  # 利润表
+    "financial_balance_ths": "stock_financial_debt_ths",  # 资产负债表
+    "financial_cashflow_ths": "stock_financial_cash_ths",  # 现金流量表
     # A 股行业：**申万口径**（本项目 industry_std = 申万2021）——
     # 2026-10-15 联网实测：东财板块接口（stock_board_industry_name_em / _cons_em /
     # stock_individual_info_em）全部 RemoteDisconnected；申万系接口稳定且快
@@ -85,15 +93,17 @@ SLOW_ENDPOINTS: frozenset[str] = frozenset(
         "stock_hk_industry_name_em",
     }
 )
-# 「单股批量接口」（三表 / 行情）**不在上面的名单里**：它们实测 ~20-45s（远超默认 15s，
-# 2026-10-15 见 D-8），但也不该套用 1800s 的「全量翻页」上限 —— 目标站点挂起时会白等半小时。
+# 「单股批量接口」（三表 / 行情）**不在上面的名单里**：它们实测远超默认 15s（2026-10-15
+# 新浪三表 ~20-45s，见 D-8；2026-10-16 THS 三表单只 ≈10s，见 D-39），但也不该套用 1800s
+# 的「全量翻页」上限 —— 目标站点挂起时会白等半小时。
 # 改用 `config.FETCH_TIMEOUT_MEDIUM_SECONDS`（300s）在 `financials` / `price_daily` 里显式传参。
 
-# 三表名称（akshare financial_a 的 symbol 参数）
+# 三表名称：THS 三接口的表标识（合并 dict 与缓存 slug 的键；见 `_REPORT_SLUG`）
 REPORT_INCOME = "利润表"
 REPORT_BALANCE = "资产负债表"
 REPORT_CASHFLOW = "现金流量表"
-# 缓存文件名用 ASCII 短名，避免中文文件名跨平台出问题
+# 缓存文件名用 ASCII 短名，避免中文文件名跨平台出问题；同时与 THS 接口键名对齐
+# （`financial_{slug}_ths`，键名沿用既有约定 `financial_{code}_{slug}` 不变）
 _REPORT_SLUG = {REPORT_INCOME: "income", REPORT_BALANCE: "balance", REPORT_CASHFLOW: "cashflow"}
 
 # ── 通用工具（单位 / 空值 / 代码语义 / 表格归一）──────────────────────────
@@ -338,25 +348,33 @@ class AkShareSource:
         }
 
     def financials(self, code: str) -> list[dict[str, Any]]:
+        """A 股财报三表 → 标准层行（**同花顺 THS 新主源**，D-39）。
+
+        传参（《数据源接入规格》§3.2.1）：``symbol`` 为**纯 6 位代码**（不带 SH/SZ 前缀）、
+        ``indicator="按年度"``；解析与映射见 :func:`map_ths_financials`。
+        缓存键沿用既有约定 ``financial_{code}_{slug}``、落 ``cold/`` 固定分区（D-37）。
+
+        港股不在 THS 覆盖内 → 明确抛错（回退链切官方源 / 披露易，行为不变）。
+        """
         if market_of(code) != "A":
             raise DataSourceError(
-                f"港股财报接口尚未接入（{code}）：M1-2 先覆盖 A股，港股走官方源兜底",
+                f"港股财报接口尚未接入（{code}）：THS 仅覆盖 A 股，港股走官方源兜底",
                 source=self.name,
                 code=code,
             )
         tables = {
             report: self._fetch(
                 f"financial_{code}_{_REPORT_SLUG[report]}",
-                getattr(self.ak, ENDPOINTS["financial_a"]),
+                getattr(self.ak, ENDPOINTS[f"financial_{_REPORT_SLUG[report]}_ths"]),
                 what=f"财报（{code} / {report}）",
                 code=code,
-                timeout=config.FETCH_TIMEOUT_MEDIUM_SECONDS,  # 单张实测 ~44s，见 D-8
-                stock=code.lower(),
-                symbol=report,
+                timeout=config.FETCH_TIMEOUT_MEDIUM_SECONDS,  # 单只三表 ≈10s（D-39）
+                symbol=code[2:],  # THS 要纯 6 位代码（不带市场前缀）
+                indicator="按年度",
             )
             for report in (REPORT_INCOME, REPORT_BALANCE, REPORT_CASHFLOW)
         }
-        return map_financial_reports(code, tables)
+        return map_ths_financials(code, tables)
 
     def price_daily(self, code: str, adjust: str = config.DEFAULT_ADJUST) -> list[dict[str, Any]]:
         if adjust not in config.ADJUST_MODES:
@@ -585,65 +603,93 @@ def _snapshot_code(raw: Any, market: str) -> str | None:
     return None
 
 
-# ── 三表合并 → 标准层 financial_report（《数据字典》§3.2）──────────────────
-# 科目列名按语义给候选：AkShare / 新浪源跨版本列名会变，逐个试（改映射只动这里）。
-_SUBJECTS: dict[str, tuple[str, ...]] = {
-    "revenue": ("营业总收入", "营业收入"),
-    "gross_profit": ("营业毛利", "毛利"),
-    "cost": ("营业总成本", "营业成本"),
-    "net_profit": ("归属于母公司所有者的净利润", "归属母公司股东的净利润", "净利润"),
-    "total_assets": ("资产总计", "资产合计"),
-    "total_liabilities": ("负债合计",),
-    "equity": ("归属于母公司所有者权益合计", "所有者权益(或股东权益)合计", "股东权益合计"),
-    "cash": ("货币资金",),
-    "op_cashflow": ("经营活动产生的现金流量净额",),
-    "icf": ("投资活动产生的现金流量净额",),
-    "fcf": ("筹资活动产生的现金流量净额",),
+# ── THS 三表解析 → 标准层 financial_report（《数据源接入规格》§3.2.1；D-39）──
+# 实测（2026-10-16，9 只样本 × 全部历史年份）：本路径取用的金额列，取值恒为**带单位
+# 字符串**（'4529.44亿' / '53.48万亿' / '7262.80万'），缺失恒为 ``False``；金融股
+# 部分列**整列不存在**（工行无 `总现金`/`货币资金`/`其中：营业成本`，平安、中信无
+# `其中：营业成本`）→ 按家法「缺失一律 null」处理，不另找列顶替。
+# 列名**逐字**取自 §3.2.1（带 `*` 前缀与全角冒号），改映射只动这里。
+_THS_COLUMNS: dict[str, tuple[str, ...]] = {
+    "revenue": ("其中：营业收入", "*营业总收入"),  # 缺失回退 *营业总收入
+    "cost": ("其中：营业成本",),  # 金融股无此列 → 毛利率随之缺失
+    "net_profit": ("*归属于母公司所有者的净利润",),  # 归母口径直给
+    "total_assets": ("*资产合计",),
+    "total_liabilities": ("*负债合计",),
+    "equity": ("*归属于母公司所有者权益合计",),  # 归母口径直给（绕开 D-31①）
+    "op_cashflow": ("*经营活动产生的现金流量净额",),
+    "icf": ("*投资活动产生的现金流量净额",),
+    "fcf": ("*筹资活动产生的现金流量净额",),
 }
 # 报告期语义（report_period_of / report_type_of / effective_date_of）同样在
 # `src/common.py`，本模块 re-export。
 
-
-# 关键词组（**优先于**上面的精确候选）：组内关键词**全部出现**即命中，按行内列序扫描。
-# 只用在「高优先语义唯一」的科目上（前缀「归属于母公司」），否则会误命中子项
-# （如「流动负债合计」之于负债合计）。跨行业列名变体见《计划完成情况》D-31① ——
-# 实测三种写法一个都不在精确候选里：
-#   工商银行「归属于母公司股东的权益」（**无「合计」**）/ 中国平安「归属于母公司的股东权益合计」/
-#   贵州茅台「归属于母公司股东权益合计」；此前 equity 因此在金融股上为 None、
-#   在普通股上回落到**含少数股东权益的合并口径**（口径与《数据字典》§3.2 的「归母」不符）。
-_SUBJECT_KEYWORDS: dict[str, tuple[tuple[str, ...], ...]] = {
-    "net_profit": (("归属于母公司", "净利润"), ("归属母公司", "净利润")),
-    "equity": (("归属于母公司", "权益"), ("归属母公司", "权益")),
-}
+# 单位档（§3.2.1：「单位含 万亿/亿/万/元 多档」；万亿 须先于 万/亿 匹配 —— 正则交替有序）
+_THS_UNIT_SCALE: dict[str, float] = {"万亿": 1e4, "亿": 1.0, "万": 1e-4, "元": 1e-8}
+_THS_AMOUNT_RE = re.compile(r"^([+-]?\d+(?:\.\d+)?)(万亿|亿|万|元)$")
+# 视同缺失的字符串形态（缓存 JSON 往返可能把 False 落成字符串、'--' 等防御式兜底）
+_THS_MISSING_STRINGS = frozenset({"", "false", "none", "null", "nan", "--", "-"})
 
 
-def _subject(row: dict[str, Any], key: str) -> Any:
-    """按科目取原始值：**关键词组优先**（抗跨源 / 跨行业列名变体），精确候选兜底（D-31①）。"""
-    for group in _SUBJECT_KEYWORDS.get(key, ()):
-        for column, cell in row.items():
-            if not is_missing(cell) and all(word in str(column) for word in group):
-                return cell
-    return pick(row, *_SUBJECTS[key])
+def _ths_missing_cell(value: Any) -> bool:
+    """THS 单元格是否缺失：``False``（实测的缺失标记）/ ``None`` / NaN / 空串形态。"""
+    if value is None or value is False:
+        return True
+    if isinstance(value, str) and value.strip().lower() in _THS_MISSING_STRINGS:
+        return True
+    return is_missing(value)
 
 
-def map_financial_reports(
+def parse_ths_amount(value: Any) -> float | None:
+    """THS 金额 → **亿元**（2 位小数）；缺失 / 非金额格式 → ``None``（家法 R11，不臆造）。
+
+    - ``'4529.44亿'`` → ``4529.44``；``'53.48万亿'`` → ``534800.0``；
+      ``'7262.80万'`` → ``0.73``；``'1234元'`` → ``0.0``
+    - ``False``（实测缺失标记）/ ``None`` / 空串 → ``None``
+    - 比值（``'23.38%'``）等非金额格式 → ``None``；**非字符串**（数值型）同样 → ``None``
+      —— THS 金额恒为带单位字符串（实测 2600+ 个取值零例外），无单位数字不作推断。
+    """
+    if _ths_missing_cell(value) or not isinstance(value, str):
+        return None
+    text = value.strip().replace(",", "").replace("－", "-").replace("−", "-")
+    match = _THS_AMOUNT_RE.match(text)
+    if match is None:
+        return None
+    return round(float(match.group(1)) * _THS_UNIT_SCALE[match.group(2)], config.AMOUNT_DECIMALS)
+
+
+def _ths_value(row: dict[str, Any], *columns: str) -> Any:
+    """按列名顺序取第一个**非缺失**的原始值；列不存在 / ``False`` / 空 → 继续往后试。"""
+    for column in columns:
+        if column in row and not _ths_missing_cell(row[column]):
+            return row[column]
+    return None
+
+
+def _ths_amount(row: dict[str, Any], *columns: str) -> float | None:
+    """取第一个可用列并解析为亿元（列缺失 / 值缺失 / 非金额格式 → ``None``）。"""
+    return parse_ths_amount(_ths_value(row, *columns))
+
+
+def map_ths_financials(
     code: str,
     tables: dict[str, list[dict[str, Any]]],
     *,
-    source: str = "akshare",
     fetched_at: str | None = None,
 ) -> list[dict[str, Any]]:
-    """三表（行 = 报告期，列 = 科目）→ 标准层 ``financial_report`` 行。
+    """THS 三表（行 = 年度报告期，列 = 带单位字符串）→ 标准层 ``financial_report`` 行。
 
     :param tables: ``{报表名: 行列表}``，报表名为 ``REPORT_INCOME`` / ``REPORT_BALANCE`` /
-        ``REPORT_CASHFLOW``；同一报告期的三表会按报告期合并为一行。
+        ``REPORT_CASHFLOW``；同一报告期的三表按报告期合并为一行。
     :returns: 按报告期升序的标准层行（字段见 ``base.FINANCIAL_REQUIRED_FIELDS``）。
 
-    口径（家法 R7 / R9 / R10 / R11）：
-    - 单位：元 → 亿元、保留 2 位小数；空值 ``None``，**不用 0 顶替**；
-    - ``gross_profit`` 缺列时用 ``revenue − cost`` 反算（《数据字典》§3.2 注）；
-    - ``effective_date`` = 报告期 + 4 个月；非年报标 ``is_cumulative=True``
-      （累计口径不可比，不进主评分）。
+    口径（《数据源接入规格》§3.2.1 逐条落地；家法 R7 / R9 / R10 / R11）：
+    - **只取近 ``config.YEARS`` 个完整财年**（三接口各返回 23~31 年，窗口裁剪口径同 §4）；
+    - 金额「亿元」2 位小数（`parse_ths_amount`），缺失 ``None``，**不用 0 顶替**；
+    - ``gross_profit`` = 营业收入 − 营业成本（金融股无营业成本 → ``None``）；
+    - ``cash`` 三级回退：资产负债表 ``总现金`` → ``货币资金`` → 现金流表
+      ``*期末现金及现金等价物余额``（银行股前两列整列不存在，由第三级兜底）；
+    - ``report_type='annual'`` / ``is_cumulative=False`` / ``currency='CNY'`` /
+      ``source='ths'`` 固定（``indicator="按年度"``；THS 仅覆盖 A 股，均为人民币报表）。
     """
     by_period: dict[str, dict[str, dict[str, Any]]] = {}
     for report, rows in tables.items():
@@ -654,37 +700,47 @@ def map_financial_reports(
 
     stamp = fetched_at or datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     out: list[dict[str, Any]] = []
-    for period in sorted(by_period):
+    for period in sorted(by_period)[-config.YEARS :]:
         income = by_period[period].get(REPORT_INCOME, {})
         balance = by_period[period].get(REPORT_BALANCE, {})
         cashflow = by_period[period].get(REPORT_CASHFLOW, {})
 
-        revenue = to_internal_billion(_subject(income, "revenue"))
-        gross = to_internal_billion(_subject(income, "gross_profit"))
-        cost = to_internal_billion(_subject(income, "cost"))
-        if gross is None and revenue is not None and cost is not None:
-            gross = round(revenue - cost, config.AMOUNT_DECIMALS)
+        revenue = _ths_amount(income, *_THS_COLUMNS["revenue"])
+        cost = _ths_amount(income, *_THS_COLUMNS["cost"])
+        gross = (
+            round(revenue - cost, config.AMOUNT_DECIMALS)
+            if revenue is not None and cost is not None
+            else None
+        )
+        cash = None
+        for source_row, column in (
+            (balance, "总现金"),
+            (balance, "货币资金"),
+            (cashflow, "*期末现金及现金等价物余额"),
+        ):
+            cash = _ths_amount(source_row, column)
+            if cash is not None:
+                break
 
-        report_type = report_type_of(period)
         out.append(
             {
                 "code": code,
                 "report_period": period,
-                "report_type": report_type,
-                "is_cumulative": report_type != "annual",
+                "report_type": "annual",
+                "is_cumulative": False,
                 "revenue": revenue,
                 "gross_profit": gross,
-                "net_profit": to_internal_billion(_subject(income, "net_profit")),
-                "total_assets": to_internal_billion(_subject(balance, "total_assets")),
-                "total_liabilities": to_internal_billion(_subject(balance, "total_liabilities")),
-                "equity": to_internal_billion(_subject(balance, "equity")),
-                "cash": to_internal_billion(_subject(balance, "cash")),
-                "op_cashflow": to_internal_billion(_subject(cashflow, "op_cashflow")),
-                "icf": to_internal_billion(_subject(cashflow, "icf")),
-                "fcf": to_internal_billion(_subject(cashflow, "fcf")),
+                "net_profit": _ths_amount(income, *_THS_COLUMNS["net_profit"]),
+                "total_assets": _ths_amount(balance, *_THS_COLUMNS["total_assets"]),
+                "total_liabilities": _ths_amount(balance, *_THS_COLUMNS["total_liabilities"]),
+                "equity": _ths_amount(balance, *_THS_COLUMNS["equity"]),
+                "cash": cash,
+                "op_cashflow": _ths_amount(cashflow, *_THS_COLUMNS["op_cashflow"]),
+                "icf": _ths_amount(cashflow, *_THS_COLUMNS["icf"]),
+                "fcf": _ths_amount(cashflow, *_THS_COLUMNS["fcf"]),
                 "effective_date": effective_date_of(period),
-                "currency": "CNY",  # 新浪三表为人民币报表（D-24 加的字段）
-                "source": source,
+                "currency": "CNY",
+                "source": "ths",
                 "fetched_at": stamp,
             }
         )
@@ -700,9 +756,10 @@ __all__ = [
     "effective_date_of",
     "exchange_of",
     "is_missing",
-    "map_financial_reports",
+    "map_ths_financials",
     "market_of",
     "normalize_code",
+    "parse_ths_amount",
     "pick",
     "report_period_of",
     "report_type_of",

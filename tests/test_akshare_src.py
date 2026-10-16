@@ -31,13 +31,14 @@ from src.common import (
 )
 from src.datasource import base
 from src.datasource.akshare_src import (
+    ENDPOINTS,
     REPORT_BALANCE,
     REPORT_CASHFLOW,
     REPORT_INCOME,
     AkShareSource,
     _snapshot_code,
-    _subject,
-    map_financial_reports,
+    map_ths_financials,
+    parse_ths_amount,
 )
 
 FIXED_DAY = date(2026, 10, 14)
@@ -431,11 +432,12 @@ def test_financials_hk_not_supported_yet(tmp_path) -> None:
         source.financials("HK00700")
 
 
-# ── 三表合并 → 标准层 ────────────────────────────────────────────────────
+# ── 报告期语义（共用 helper）────────────────────────────────────────────
 def test_report_period_and_type_helpers() -> None:
     assert report_period_of({"报告日": "2024-12-31"}) == "2024-12-31"
     assert report_period_of({"报告日": "20241231"}) == "2024-12-31"
     assert report_period_of({"报告期": "2024"}) == "2024-12-31"
+    assert report_period_of({"报告期": 2024}) == "2024-12-31"  # THS：年份 int
     assert report_period_of({"科目": "营业收入"}) is None
     assert report_type_of("2024-12-31") == "annual"
     assert report_type_of("2025-06-30") == "h1"
@@ -450,40 +452,203 @@ def test_effective_date_is_report_period_plus_four_months() -> None:
     assert effective_date_of("2024-09-30") == "2025-01-30"  # 跨年
 
 
-def test_map_financial_reports_builds_standard_rows() -> None:
+# ── THS 三表解析（D-39：金额为带单位字符串 → 亿元；False = 缺失）──────────────
+def test_ths_endpoints_map_to_three_tables() -> None:
+    """ENDPOINTS 三个 THS 键与 akshare 函数名逐一对齐（键名 `financial_{slug}_ths`）。"""
+    assert ENDPOINTS["financial_income_ths"] == "stock_financial_benefit_ths"
+    assert ENDPOINTS["financial_balance_ths"] == "stock_financial_debt_ths"
+    assert ENDPOINTS["financial_cashflow_ths"] == "stock_financial_cash_ths"
+
+
+def test_parse_ths_amount_converts_units_to_billion() -> None:
+    """带单位字符串 → 亿元（2 位小数）：实测四档 万亿/亿/万/元（规格 §3.2.1）。"""
+    assert parse_ths_amount("4529.44亿") == 4529.44
+    assert parse_ths_amount("53.48万亿") == 534800.0  # 万亿 → ×10^4（工行资产实测）
+    assert parse_ths_amount("1.05万亿") == 10500.0
+    assert parse_ths_amount("7262.80万") == 0.73  # 万 → ÷10^4
+    assert parse_ths_amount("-2.42万亿") == -24200.0  # 负值（投资/筹资现金流常见）
+    assert parse_ths_amount("1234元") == 0.0  # 元 → ÷10^8（规格列出的单位档）
+    assert parse_ths_amount("1,234.56亿") == 1234.56  # 千分位
+    assert parse_ths_amount("0.00亿") == 0.0  # 字符串 0 是有效值（家法 R11）
+
+
+def test_parse_ths_amount_missing_and_non_amount_formats() -> None:
+    """缺失（False / None / 空串形态）与非金额格式（% / 数值型）→ None，不臆造（R11）。
+
+    数值型不在实测域内（THS 金额恒为带单位字符串，实测 2600+ 取值零例外）→ 不推断。
+    """
+    for value in (False, None, "", "  ", "--", "-", "false"):
+        assert parse_ths_amount(value) is None, value
+    assert parse_ths_amount("23.38%") is None  # 比率不是金额
+    assert parse_ths_amount(123) is None
+    assert parse_ths_amount(0) is None
+
+
+def test_map_ths_financials_builds_standard_rows() -> None:
+    """三表（行 = 年度，列 = 带单位字符串）→ 标准层行；必填字段齐全。"""
     tables = {
         REPORT_INCOME: [
             {
-                "报告日": "2024-12-31",
-                "营业总收入": 100e8,
-                "营业总成本": 60e8,
-                "归属于母公司所有者的净利润": 30e8,
+                "报告期": 2025,
+                "其中：营业收入": "1449.33亿",
+                "其中：营业成本": "1024.09亿",
+                "*营业总收入": "1449.33亿",
+                "*归属于母公司所有者的净利润": "83.81亿",
             }
         ],
         REPORT_BALANCE: [
             {
-                "报告日": "2024-12-31",
-                "资产总计": 500e8,
-                "负债合计": 200e8,
-                "归属于母公司所有者权益合计": 300e8,
-                "货币资金": float("nan"),
+                "报告期": 2025,
+                "*资产合计": "4529.44亿",
+                "*负债合计": "2818.47亿",
+                "*归属于母公司所有者权益合计": "1004.80亿",
+                "总现金": "376.85亿",
+                "货币资金": "374.28亿",
             }
         ],
-        REPORT_CASHFLOW: [{"报告日": "2024-12-31", "经营活动产生的现金流量净额": 40e8}],
+        REPORT_CASHFLOW: [
+            {
+                "报告期": 2025,
+                "*经营活动产生的现金流量净额": "194.85亿",
+                "*投资活动产生的现金流量净额": "-169.51亿",
+                "*筹资活动产生的现金流量净额": "-76.62亿",
+                "*期末现金及现金等价物余额": "266.77亿",
+            }
+        ],
     }
-    rows = map_financial_reports("SH600900", tables, fetched_at="2026-10-14T00:00:00Z")
+    rows = map_ths_financials("SH600188", tables, fetched_at="2026-10-16T00:00:00Z")
 
     assert len(rows) == 1
     row = rows[0]
     assert set(base.FINANCIAL_REQUIRED_FIELDS) <= set(row)
+    assert row["report_period"] == "2025-12-31"  # 年份 int → 年末日期
     assert row["report_type"] == "annual"
     assert row["is_cumulative"] is False
-    assert row["revenue"] == 100.0
-    assert row["gross_profit"] == 40.0  # revenue − cost 反算
-    assert row["net_profit"] == 30.0
-    assert row["cash"] is None  # NaN → None，不是 0
-    assert row["effective_date"] == "2025-04-30"
-    assert row["source"] == "akshare"
+    assert row["revenue"] == 1449.33
+    assert row["gross_profit"] == 425.24  # 营收 − 营业成本（计算，非直取）
+    assert row["net_profit"] == 83.81  # 归母，直给
+    assert row["total_assets"] == 4529.44
+    assert row["total_liabilities"] == 2818.47
+    assert row["equity"] == 1004.8
+    assert row["cash"] == 376.85  # `总现金` 优先于 `货币资金`
+    assert row["op_cashflow"] == 194.85
+    assert row["icf"] == -169.51
+    assert row["fcf"] == -76.62
+    assert row["effective_date"] == "2026-04-30"
+    assert row["source"] == "ths"
+    assert row["currency"] == "CNY"
+
+
+def test_map_ths_financials_trims_to_recent_five_years() -> None:
+    """三接口一次返回 23~31 年 → 只取近 config.YEARS 个完整财年（规格 §3.2.1）。"""
+    years = list(range(2016, 2026))  # 10 个年份
+    tables = {
+        REPORT_INCOME: [
+            {"报告期": year, "其中：营业收入": f"{100 + index}亿"}
+            for index, year in enumerate(years)
+        ]
+    }
+    rows = map_ths_financials("SH600900", tables, fetched_at="x")
+
+    assert config.YEARS == 5
+    assert [row["report_period"] for row in rows] == [
+        f"{year}-12-31" for year in sorted(years)[-5:]
+    ]
+    assert rows[0]["revenue"] == 105.0  # 裁剪后最早一年 = 2021（100+5）
+
+
+def test_map_ths_financials_bank_style_direct_parent_columns_and_cash_fallback() -> None:
+    """金融股样式（工行实测）：无 `货币资金`/`总现金`/`其中：营业成本` 列。
+
+    - ``equity`` / ``net_profit`` 取**归母口径直给列**（绕开 D-31① 列名变体）；
+    - ``cash`` 三级回退到现金流表 ``*期末现金及现金等价物余额``；
+    - ``gross_profit`` → ``None``（无营业成本，**不是 0**，家法 R11）。
+    """
+    tables = {
+        REPORT_INCOME: [
+            {
+                "报告期": 2025,
+                "其中：营业收入": "8382.70亿",
+                "*营业总收入": "8382.70亿",
+                "*归属于母公司所有者的净利润": "3685.62亿",
+            }
+        ],
+        REPORT_BALANCE: [
+            {
+                "报告期": 2025,
+                "*资产合计": "53.48万亿",
+                "*负债合计": "49.24万亿",
+                "*归属于母公司所有者权益合计": "4.24万亿",
+            }
+        ],
+        REPORT_CASHFLOW: [
+            {
+                "报告期": 2025,
+                "*经营活动产生的现金流量净额": "1.89万亿",
+                "*期末现金及现金等价物余额": "1.77万亿",
+            }
+        ],
+    }
+    row = map_ths_financials("SH601398", tables, fetched_at="x")[0]
+
+    assert row["total_assets"] == 534800.0  # 53.48万亿
+    assert row["equity"] == 42400.0  # 归母权益（万亿量级），直给
+    assert row["net_profit"] == 3685.62
+    assert row["cash"] == 17700.0  # 第三级回退：现金流表期末余额
+    assert row["gross_profit"] is None
+
+
+def test_map_ths_financials_cash_prefers_total_then_currency() -> None:
+    """cash 回退链：`总现金` 优先；`总现金` 缺失（False）→ 回退 `货币资金`。"""
+    tables = {
+        REPORT_BALANCE: [
+            {"报告期": 2025, "总现金": "376.85亿", "货币资金": "374.28亿"},
+            {"报告期": 2024, "总现金": False, "货币资金": "314.85亿"},
+        ]
+    }
+    rows = map_ths_financials("SH600188", tables, fetched_at="x")
+    by_period = {row["report_period"]: row for row in rows}
+    assert by_period["2025-12-31"]["cash"] == 376.85  # 总现金优先
+    assert by_period["2024-12-31"]["cash"] == 314.85  # 总现金 False → 货币资金
+
+
+def test_map_ths_financials_revenue_falls_back_to_total_revenue() -> None:
+    """revenue：`其中：营业收入` 缺失（False）→ 回退 `*营业总收入`（规格 §3.2.1）。"""
+    tables = {
+        REPORT_INCOME: [{"报告期": 2025, "其中：营业收入": False, "*营业总收入": "1449.33亿"}]
+    }
+    row = map_ths_financials("SH600188", tables, fetched_at="x")[0]
+    assert row["revenue"] == 1449.33
+
+
+def test_map_ths_financials_uses_parent_columns_when_merged_also_present() -> None:
+    """归母列与合并口径列同现时取**归母**（THS 直给；口径与《数据字典》§3.2 一致）。"""
+    tables = {
+        REPORT_BALANCE: [
+            {
+                "报告期": 2025,
+                "*归属于母公司所有者权益合计": "1004.80亿",
+                "所有者权益（或股东权益）合计": "1710.97亿",
+            }
+        ],
+        REPORT_INCOME: [
+            {
+                "报告期": 2025,
+                "*归属于母公司所有者的净利润": "83.81亿",
+                "净利润": "142.26亿",
+            }
+        ],
+    }
+    row = map_ths_financials("SH600188", tables, fetched_at="x")[0]
+    assert row["equity"] == 1004.8  # 不是 1710.97（合并口径含少数股东权益）
+    assert row["net_profit"] == 83.81  # 不是 142.26（含少数股东损益）
+
+
+def test_map_ths_financials_missing_required_stays_none() -> None:
+    """必填列缺失（False）→ None（家法 R11：不打 0；由清洗层判入「待补」）。"""
+    tables = {REPORT_BALANCE: [{"报告期": 2025, "*归属于母公司所有者权益合计": False}]}
+    row = map_ths_financials("SH600188", tables, fetched_at="x")[0]
+    assert row["equity"] is None
 
 
 # ── 行业映射：申万一级/二级 + 金融类标记（2026-10-15 实装，见 D-8）──────────
@@ -540,104 +705,79 @@ def test_industry_tree_uses_sw_nodes_for_a(tmp_path) -> None:
     assert all(node["standard"] == "申万2021" for node in nodes)
 
 
-# ── 跨行业列名变体（D-31①：金融股 equity 取不到 / 普通股回落到合并口径）──────────
-def test_subject_matches_equity_across_industry_column_variants() -> None:
-    """工行 / 平安 / 茅台三种写法都要取到**归母**值（一个都不在精确候选里）。
+# ── financials()：THS 三接口调用与缓存（D-39）────────────────────────────
+def _ths_fake_ak(calls: list[tuple[str, dict]] | None = None) -> SimpleNamespace:
+    """三个 THS 接口的假模块（各返回一张 2025 年报；可选记录调用参数）。"""
 
-    实测列名（2026-10-15，`data/raw/akshare/.../financial_*_balance.json`）：
-    工商银行「归属于母公司股东的权益」（无「合计」）、中国平安「归属于母公司的股东权益合计」、
-    贵州茅台「归属于母公司股东权益合计」。
-    """
-    cases = {
-        "工商银行": (
-            {
-                "归属于母公司股东的权益": 4_326_994.0,
-                "少数股东权益": 28_850.0,
-                "负债及股东权益总计": 57_070_593.0,
-            },
-            4_326_994.0,
+    def record(name: str, rows: list[dict]):
+        def fn(**kwargs):
+            if calls is not None:
+                calls.append((name, kwargs))
+            return rows
+
+        return fn
+
+    return SimpleNamespace(
+        stock_financial_benefit_ths=record(
+            "income",
+            [
+                {
+                    "报告期": 2025,
+                    "其中：营业收入": "100亿",
+                    "其中：营业成本": "60亿",
+                    "*归属于母公司所有者的净利润": "30亿",
+                }
+            ],
         ),
-        "中国平安": (
-            {
-                "归属于母公司的股东权益合计": 1_028_084.0,
-                "少数股东权益": 425_996.0,
-                "所有者权益合计": 1_454_080.0,
-            },
-            1_028_084.0,
+        stock_financial_debt_ths=record(
+            "balance",
+            [
+                {
+                    "报告期": 2025,
+                    "*资产合计": "500亿",
+                    "*负债合计": "200亿",
+                    "*归属于母公司所有者权益合计": "300亿",
+                    "货币资金": "1亿",
+                }
+            ],
         ),
-        "贵州茅台": (
-            {
-                "归属于母公司股东权益合计": 251_253.6,
-                "少数股东权益": 10_842.8,
-                "所有者权益(或股东权益)合计": 262_096.4,
-            },
-            251_253.6,
+        stock_financial_cash_ths=record(
+            "cashflow", [{"报告期": 2025, "*经营活动产生的现金流量净额": "40亿"}]
         ),
-    }
-    for label, (row, expected) in cases.items():
-        assert _subject(row, "equity") == expected, f"{label} 未取到归母权益"
+    )
 
 
-def test_subject_skips_empty_placeholder_columns() -> None:
-    """行内存在占位空列（实测 ``所有者权益: None``）时不得命中，要继续往后找。"""
-    row = {"所有者权益": None, "归属于母公司股东权益合计": 100.0}
-    assert _subject(row, "equity") == 100.0
-
-
-def test_subject_falls_back_to_merged_equity_when_parent_absent() -> None:
-    """只有合并口径（无归母列）时仍取合并值 —— 宁可口径略宽，也不要整个指标缺失。"""
-    assert _subject({"所有者权益(或股东权益)合计": 200.0}, "equity") == 200.0
-
-
-def test_subject_matches_parent_net_profit_variants() -> None:
-    """归母净利润的三种写法都要优先于裸「净利润」（后者含少数股东损益）。"""
-    for column in (
-        "归属于母公司所有者的净利润",
-        "归属于母公司的净利润",
-        "归属于母公司股东的净利润",
-    ):
-        row = {column: 5.0, "净利润": 6.0}
-        assert _subject(row, "net_profit") == 5.0, column
-
-
-def test_map_financial_reports_marks_interim_cumulative() -> None:
-    """累计口径标记：非年报 → is_cumulative=True（不进主评分）。"""
-    tables = {
-        REPORT_INCOME: [{"报告日": "2025-06-30", "营业总收入": 50e8, "营业总成本": 30e8}],
-    }
-    row = map_financial_reports("SH600900", tables, fetched_at="x")[0]
-    assert row["report_type"] == "h1"
-    assert row["is_cumulative"] is True  # 累计口径不可比，不进主评分（家法 R7）
-
-
-def test_financials_merges_three_tables(tmp_path) -> None:
-    def report(stock: str, symbol: str, **kwargs):
-        if symbol == REPORT_INCOME:
-            return [{"报告日": "2024-12-31", "营业总收入": 100e8, "营业总成本": 60e8}]
-        if symbol == REPORT_BALANCE:
-            return [{"报告日": "2024-12-31", "资产总计": 500e8, "负债合计": 200e8, "货币资金": 1e8}]
-        return [{"报告日": "2024-12-31", "经营活动产生的现金流量净额": 40e8}]
-
-    ak = SimpleNamespace(stock_financial_report_sina=report)
-    rows = make_source(ak, tmp_path).financials("SH600900")
+def test_financials_calls_ths_endpoints_with_plain_code(tmp_path) -> None:
+    """financials() 走 THS 三接口：symbol=**纯 6 位代码**、indicator=按年度（§3.2.1 传参）。"""
+    calls: list[tuple[str, dict]] = []
+    rows = make_source(_ths_fake_ak(calls), tmp_path).financials("SH600188")
 
     assert len(rows) == 1
-    assert rows[0]["code"] == "SH600900"
-    assert rows[0]["gross_profit"] == 40.0
+    assert rows[0]["code"] == "SH600188"
+    assert rows[0]["revenue"] == 100.0
+    assert rows[0]["gross_profit"] == 40.0  # 100 − 60
     assert rows[0]["cash"] == 1.0
+    assert sorted(name for name, _ in calls) == ["balance", "cashflow", "income"]
+    for _, kwargs in calls:
+        assert kwargs["symbol"] == "600188"  # 不带 SH 前缀
+        assert kwargs["indicator"] == "按年度"
+
+
+def test_financials_cache_lands_in_cold_with_existing_key_convention(tmp_path) -> None:
+    """缓存键沿用既有约定 ``financial_{code}_{slug}``、落 ``cold/`` 固定分区（D-37）。"""
+    make_source(_ths_fake_ak(), tmp_path).financials("SH600188")
+
+    cold = tmp_path / "cold"
+    assert (cold / "financial_SH600188_income.json").exists()
+    assert (cold / "financial_SH600188_balance.json").exists()
+    assert (cold / "financial_SH600188_cashflow.json").exists()
 
 
 def test_financials_uses_cache_on_second_run(tmp_path) -> None:
-    calls = {"n": 0}
-
-    def report(**kwargs):
-        calls["n"] += 1
-        return [{"报告日": "2024-12-31", "营业总收入": 1e8}]
-
-    ak = SimpleNamespace(stock_financial_report_sina=report)
-    make_source(ak, tmp_path).financials("SH600900")
-    make_source(ak, tmp_path).financials("SH600900")
-    assert calls["n"] == 3  # 三张表各取一次；第二次全部命中缓存
+    calls: list[tuple[str, dict]] = []
+    make_source(_ths_fake_ak(calls), tmp_path).financials("SH600188")
+    make_source(_ths_fake_ak(calls), tmp_path).financials("SH600188")
+    assert len(calls) == 3  # 三张表各取一次；第二次全部命中缓存
 
 
 # ── 慢接口单独超时（D-10：实测全量列表接口约 13 分钟）────────────────────
