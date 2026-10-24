@@ -17,6 +17,12 @@ venv/
 /public/data/stock/
 !/public/data/.gitkeep
 
+# 跑批辅助（batch/）：选样清单与跑批日志由脚本生成、每次重写 → 不入库
+# （清单确定性来自「按代码序取前 N」，随时可重新生成；脚本与 README 照常入库）
+/batch/*_codes.txt
+/batch/*_out.txt
+/batch/*_err.txt
+
 # 编辑器 / 系统
 .vscode/
 .idea/
