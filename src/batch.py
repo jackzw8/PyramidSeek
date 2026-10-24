@@ -30,7 +30,7 @@ from typing import Any
 if __package__ in (None, ""):  # 支持 `python src/batch.py` 直接运行（家法 R17）
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src import config  # noqa: E402
+from src import config, net  # noqa: E402
 from src.build import BuildInputs  # noqa: E402
 from src.build.build_meta import (  # noqa: E402
     build_industries,
@@ -346,6 +346,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.offline and not Path(args.fixtures).exists():
         print(f"[batch][ERROR] fixtures 不存在：{args.fixtures}", file=sys.stderr)
         return 2
+    if not args.offline:
+        # D-46：本机 IPv6「有前缀没出口」时，每个 AAAA 地址建连白等 21s
+        # （一张财报 44s）。探测一次，不通就本进程只用 IPv4；PYRAMID_IPV6=0/1 可强制。
+        net.ensure_ipv4_preferred()
     return run(args)
 
 

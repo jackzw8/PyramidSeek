@@ -133,6 +133,17 @@ INDUSTRY_CONS_INTERVAL_SECONDS = 0.5
 # 「单股批量接口」的中等超时：三表（实测 ~44s/张）与行情（~22s/次）远超默认 15s，
 # 但也不该套用 1800s 的「全量翻页」上限 —— 目标站点挂起时会白等半小时（D-8 实跑踩到）。
 FETCH_TIMEOUT_MEDIUM_SECONDS = 300
+
+# ── IPv6 自检（D-46）─────────────────────────────────────────────────────
+# 本机 IPv6 可能「有前缀、没出口」：DNS 有 AAAA、本机也配了全局地址，但包发到网关就没了。
+# 此时 urllib3 会按 getaddrinfo 顺序逐个地址建连，每个不通的 IPv6 要等满 Windows 的
+# SYN 重试上限 21s（quotes.sina.cn 有 2 个 AAAA → 一次建连白等 42s）。
+# 入口（src.batch，非 --offline）启动时探测一次；不通就把本进程的 getaddrinfo 过滤成 IPv4。
+# 手动控制：环境变量 PYRAMID_IPV6=0 强制只用 IPv4 / =1 强制保留 IPv6（两者都跳过探测）。
+IPV6_PROBE_TARGETS = ("quotes.sina.cn", "www.baidu.com")  # 都带 AAAA 的稳定目标
+IPV6_PROBE_PORT = 443
+IPV6_PROBE_TIMEOUT_SECONDS = 1.5  # 单地址建连超时（死链路要 21s 才超时，必须自己卡短）
+IPV6_PROBE_MAX_ADDRESSES = 1  # 每个目标试 1 个地址即可：两个独立目标都失败才判不通
 HTTP_USER_AGENT = "PyramidSeek/0.1 (personal research; contact: local)"
 # 全量列表类接口（内部翻页）实测需十几分钟，见《计划完成情况》D-10；
 # 15s 是"单次请求"约束，套到批量接口上会让它必败，故单独给一个宽松上限。
