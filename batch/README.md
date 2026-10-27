@@ -19,7 +19,7 @@
 ## 正式跑批入口（在代码仓目录下执行）
 
 ```powershell
-cd d:\AIwork\PyramidSeek\PyramidSeekApp
+cd d:\AIwork\project\PyramidSeekApp
 $env:PYTHONIOENCODING = 'utf-8'   # 控制台中文乱码时
 
 python -m src.batch --mode <模式> [参数]
@@ -56,7 +56,7 @@ python -m src.batch --mode <模式> [参数]
 ### 冷启动（一次性 + 扩池）
 
 ```powershell
-cd d:\AIwork\PyramidSeek\PyramidSeekApp   # 代码仓根（本目录的上一级），以下命令都在这里执行
+cd d:\AIwork\project\PyramidSeekApp   # 代码仓根（本目录的上一级），以下命令都在这里执行
 # ① 选样（默认申万二级：131 行业 × 前 10 = 1222 只；跳过「未分类」）并直接后台启动
 python batch\build_industry_top.py --run
 #    旧一级口径（31 行业 × 前 10 = 310 只）：再加 --level l1
