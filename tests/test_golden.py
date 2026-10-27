@@ -25,7 +25,6 @@ from src.engine.scoring import score_universe
 REPO = Path(__file__).resolve().parent.parent
 FIXTURES = REPO / "fixtures" / "financials.json"
 GOLDEN = REPO / "fixtures" / "golden_python.json"
-ENGINE = REPO.parent / "项目文档" / "pyramidseek-web" / "js" / "engine.js"
 RUNNER = REPO / "tests" / "run_engine.js"
 
 # 子分 / 雷达里**不取整**的键（其余为分位子分，按 06 §11 已取整 → 严格相等）
@@ -85,15 +84,14 @@ def test_python_matches_committed_golden() -> None:
     assert _python_rows() == json.loads(GOLDEN.read_text(encoding="utf-8"))
 
 
-@pytest.mark.skipif(not ENGINE.exists(), reason="演示前端不在本仓库")
-def test_js_engine_matches_python() -> None:
+def test_js_engine_matches_python(demo_web_js_dir: Path) -> None:
     """JS 参考实现吃同一份 fixtures，与 Python 逐项比对（§11 口径）。"""
     node = _node()
     if node is None:
         pytest.skip("找不到 node（设 PYRAMIDSEEK_NODE 或加入 PATH）")
 
     completed = subprocess.run(
-        [node, str(RUNNER), str(FIXTURES), str(ENGINE)],
+        [node, str(RUNNER), str(FIXTURES), str(demo_web_js_dir / "engine.js")],
         capture_output=True,
         text=True,
         encoding="utf-8",

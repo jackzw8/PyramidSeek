@@ -163,7 +163,10 @@ def fetch_universe(
             source="fetch",
         )
 
-    outcome.sources["list_stocks"] = outcome.sources.get("list_stocks:A", "none")
+    # 注意：不要在这里补一个裸的 ``sources["list_stocks"]`` 汇总键。原先它取
+    # ``sources.get("list_stocks:A", "none")``，``--markets HK`` 时该键恒为 "none"，
+    # 而 ``degraded`` 只豁免行情/快照 → 只跑港股必然误报 degraded=True，
+    # 并把「产物需标 degraded」的 note 写进产物（PL-03）。按市场分的键已足以表达来源。
 
     financials: dict[str, list[dict[str, Any]]] = {}
     # 模式开关（D-32）：`daily` 模式不抓三表 —— 财报来自**标准层落库**（上一次

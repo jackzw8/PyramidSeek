@@ -301,11 +301,24 @@ def write_standard(
     conn = _connect(db_path)
     try:
         init_schema(conn)
-        counts = {
-            "stock": upsert(conn, "stock", list(getattr(result, "stocks", []))),
-            "financial_report": upsert(conn, "financial_report", financials),
-            "price_daily": upsert(conn, "price_daily", prices),
-        }
+        # 三张表的写入必须是**一个事务**（PL-05）：原先每个 upsert 各自自动提交，
+        # 任一环节失败就留下「股票已更新、财报还是旧的」半更新状态 —— 而 Runbook 里
+        # 「失败重跑」是标准动作，半更新会让重跑的基线比上一次更歪。
+        # Parquet 导出放在事务**之外**：COPY TO 是文件 IO、不参与回滚，失败应单独容错。
+        conn.execute("BEGIN TRANSACTION")
+        try:
+            counts = {
+                "stock": upsert(conn, "stock", list(getattr(result, "stocks", []))),
+                "financial_report": upsert(conn, "financial_report", financials),
+                "price_daily": upsert(conn, "price_daily", prices),
+            }
+            conn.execute("COMMIT")
+        except BaseException:
+            try:
+                conn.execute("ROLLBACK")
+            except Exception:  # 连接已断时回滚也会失败 —— 不能盖住原始异常
+                logger.warning("事务回滚失败（连接可能已断开）", exc_info=True)
+            raise
         written: list[Path] = []
         if export:
             for table in ("stock", "financial_report", "price_daily"):

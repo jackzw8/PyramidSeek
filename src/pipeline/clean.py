@@ -26,7 +26,7 @@ from typing import Any
 from .. import config
 
 # 通用工具取自 leaf 模块 src/common.py（2026-10-14 由 akshare_src 提取，见《计划完成情况》D-12）
-from ..common import is_missing, market_of, normalize_code, report_type_of
+from ..common import is_missing, market_of, normalize_code, report_type_of, round_half_up
 
 logger = logging.getLogger(__name__)
 
@@ -395,7 +395,7 @@ def merge_price_rows(
                 Issue(LEVEL_WARN, "close", f"{trade_date} 原始价为 0，无法反算复权因子", code)
             )
         else:
-            item["adj_factor"] = round(float(close_qfq) / float(close), decimals)
+            item["adj_factor"] = round_half_up(float(close_qfq) / float(close), decimals)
         merged.append(item)
     return merged, issues
 

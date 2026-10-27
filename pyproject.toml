@@ -15,4 +15,9 @@ select = ["E", "F", "W", "I", "UP", "B"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-addopts = "-q"
+# -rs：skip 原因必须可见（原先只有 -q，双引擎对账整片 skip 时看起来仍然"全绿"）
+addopts = "-q -rs"
+# 演示版前端（双引擎对账的 JS 参考实现，家法 R13）。本机路径 —— **搬迁后只改这一处**；
+# 也可用环境变量 PYRAMIDSEEK_WEB_JS 覆盖（定位逻辑见 tests/conftest.py）。
+# 设为 PYRAMIDSEEK_REQUIRE_ENGINE=1 时找不到即 fail（把对账变成门禁）。
+demo_engine_js = "D:/移动云盘挂载/REDACTED/PyramidSeek/项目文档/pyramidseek-web/js"

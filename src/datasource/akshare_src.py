@@ -40,6 +40,7 @@ from ..common import (
     pick,
     report_period_of,
     report_type_of,
+    round_half_up,
     status_of,
     to_internal_billion,
     to_records,
@@ -406,7 +407,9 @@ class AkShareSource:
             what=f"日行情（{code} / {adjust}）",
             code=code,
             timeout=config.FETCH_TIMEOUT_MEDIUM_SECONDS,  # 单次实测 ~22s，见 D-8
-            symbol=code if market == "HK" else code[2:],
+            # 标准层代码是「市场前缀(2) + 数字」→ 两种市场都去掉前缀：A 股 ``600519``、
+            # 港股 ``00700``。港股曾误传完整 ``HK00700``，stock_hk_hist 只认 5 位数字（DS-01）。
+            symbol=code[2:],
             period="daily",
             adjust=_ADJUST_TO_AK.get(adjust, adjust),
         )
@@ -758,7 +761,7 @@ def map_sina_financials(
         gross = to_internal_billion(_subject(income, "gross_profit"))
         cost = to_internal_billion(_subject(income, "cost"))
         if gross is None and revenue is not None and cost is not None:
-            gross = round(revenue - cost, config.AMOUNT_DECIMALS)
+            gross = round_half_up(revenue - cost, config.AMOUNT_DECIMALS)
 
         report_type = report_type_of(period)
         out.append(
@@ -837,7 +840,9 @@ def parse_ths_amount(value: Any) -> float | None:
     match = _THS_AMOUNT_RE.match(text)
     if match is None:
         return None
-    return round(float(match.group(1)) * _THS_UNIT_SCALE[match.group(2)], config.AMOUNT_DECIMALS)
+    return round_half_up(
+        float(match.group(1)) * _THS_UNIT_SCALE[match.group(2)], config.AMOUNT_DECIMALS
+    )
 
 
 def _ths_value(row: dict[str, Any], *columns: str) -> Any:
@@ -891,7 +896,7 @@ def map_ths_financials(
         revenue = _ths_amount(income, *_THS_COLUMNS["revenue"])
         cost = _ths_amount(income, *_THS_COLUMNS["cost"])
         gross = (
-            round(revenue - cost, config.AMOUNT_DECIMALS)
+            round_half_up(revenue - cost, config.AMOUNT_DECIMALS)
             if revenue is not None and cost is not None
             else None
         )

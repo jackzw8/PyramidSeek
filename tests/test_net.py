@@ -50,9 +50,7 @@ def _patch_infos(monkeypatch: pytest.MonkeyPatch, infos: list) -> None:
 
 
 def _patch_socket(monkeypatch: pytest.MonkeyPatch, *, fail: bool) -> None:
-    monkeypatch.setattr(
-        socket, "socket", lambda *a, **k: _FakeSocket(*a, fail=fail, **k)
-    )
+    monkeypatch.setattr(socket, "socket", lambda *a, **k: _FakeSocket(*a, fail=fail, **k))
 
 
 # ── getaddrinfo 包装 ──────────────────────────────────────────────────────
@@ -67,9 +65,7 @@ def test_install_keeps_pure_ipv6_host(monkeypatch: pytest.MonkeyPatch) -> None:
     """纯 IPv6 目标（没有 A 记录）不能因为过滤而变成空集。"""
     _patch_infos(monkeypatch, [V6])
     net.install_ipv4_only()
-    assert [info[0] for info in socket.getaddrinfo("ipv6-only.example", 443)] == [
-        socket.AF_INET6
-    ]
+    assert [info[0] for info in socket.getaddrinfo("ipv6-only.example", 443)] == [socket.AF_INET6]
 
 
 def test_install_is_idempotent(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -105,9 +101,7 @@ def test_probe_failure_switches_to_ipv4(monkeypatch: pytest.MonkeyPatch) -> None
     _patch_infos(monkeypatch, [V6, V4])
     monkeypatch.setattr(net, "ipv6_reachable", lambda *a, **k: False)
     assert net.ensure_ipv4_preferred() is True
-    assert [info[0] for info in socket.getaddrinfo("quotes.sina.cn", 443)] == [
-        socket.AF_INET
-    ]
+    assert [info[0] for info in socket.getaddrinfo("quotes.sina.cn", 443)] == [socket.AF_INET]
 
 
 def test_probe_success_keeps_dual_stack(monkeypatch: pytest.MonkeyPatch) -> None:

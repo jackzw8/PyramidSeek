@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import os
 import time
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -469,6 +469,27 @@ def test_price_daily_rejects_unknown_adjust(tmp_path) -> None:
         source.price_daily("SH600900", "nope")
 
 
+def test_price_daily_strips_market_prefix_for_both_markets(tmp_path) -> None:
+    """DS-01：标准层代码带 2 字符市场前缀，两个市场传给 akshare 时都必须去掉。
+
+    港股曾误传完整 ``HK00700``，而 ``stock_hk_hist`` 只认 5 位数字 ``00700`` →
+    港股行情必然失败，且当时没用例覆盖，缺陷静默。
+    """
+    seen: list[tuple[str, str]] = []
+
+    def hist(**kwargs):
+        seen.append((kwargs.get("symbol"), kwargs.get("adjust")))
+        return [{"日期": "2024-12-31", "开盘": 1.0, "收盘": 1.0, "最高": 1.0, "最低": 1.0}]
+
+    source = make_source(
+        SimpleNamespace(stock_zh_a_hist=hist, stock_hk_hist=hist), tmp_path, partition="cold"
+    )
+    source.price_daily("SH600900", "qfq")
+    source.price_daily("HK00700", "qfq")
+
+    assert seen == [("600900", "qfq"), ("00700", "qfq")]
+
+
 def test_industry_tree_marks_hk_downgrade(tmp_path) -> None:
     """ADR-011：港股不直接提供 GICS，先用东财口径并在 industry_std 标注。"""
     ak = SimpleNamespace(
@@ -506,6 +527,25 @@ def test_report_period_and_type_helpers() -> None:
     assert report_type_of("2025-06-30") == "h1"
     assert report_type_of("2025-03-31") == "q1"
     assert report_type_of("2025-09-30") == "q3"
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "2024-12-31 00:00:00",  # datetime / Timestamp 的 str 形态（14 位数字）
+        datetime(2024, 12, 31, 0, 0, 0),
+        "2024-12-31T00:00:00",
+    ],
+)
+def test_report_period_of_accepts_datetime_forms(raw: object) -> None:
+    """DS-03：带时分秒的日期曾返回 ``None`` → 该报告期**整行财报被静默丢弃**。"""
+    assert report_period_of({"报告日": raw}) == "2024-12-31"
+
+
+def test_report_period_of_rejects_non_iso_order() -> None:
+    """日/月顺序不同的写法不能硬取前 8 位（会得到 ``3112-20-24`` 的垃圾值）。"""
+    assert report_period_of({"报告日": "31/12/2024"}) is None
+    assert report_period_of({"报告日": "2024-13-01"}) is None  # 月份越界
 
 
 def test_effective_date_is_report_period_plus_four_months() -> None:
