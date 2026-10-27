@@ -245,6 +245,29 @@ def test_empty_input_still_creates_schema(tmp_path) -> None:
     assert store.read_table("stock", db_path=db_path) == []
 
 
+def test_write_standard_is_atomic(tmp_path, monkeypatch) -> None:
+    """PL-05：三张表必须同一个事务 —— 中途失败不能留下「股票已写、财报没写」的半更新。
+
+    半更新对「失败重跑」是定时炸弹：Runbook 里重跑是标准动作，但半更新会让这一次的
+    基线比上一次更歪（旧财报配新股票，评分口径就已不自洽）。
+    """
+    db_path = tmp_path / "standard.duckdb"
+    real_upsert = store.upsert
+
+    def flaky(conn, table, rows):
+        if table == "financial_report":
+            raise RuntimeError("模拟写入失败")
+        return real_upsert(conn, table, rows)
+
+    monkeypatch.setattr(store, "upsert", flaky)
+
+    with pytest.raises(RuntimeError, match="模拟写入失败"):
+        store.write_standard(make_result(), db_path=db_path, export=False)
+
+    # 表已建（DDL 在事务外），但 stock 的写入必须随事务一起回滚
+    assert store.read_table("stock", db_path=db_path) == []
+
+
 # ── 幂等（家法 R19）──────────────────────────────────────────────────────
 def test_rerun_is_idempotent(tmp_path) -> None:
     db_path = tmp_path / "standard.duckdb"

@@ -254,7 +254,9 @@ def test_pdf_and_announcement_are_cached(tmp_path) -> None:
 # ── D-37：stale_after 路由固定分区 + mtime TTL ───────────────────────────
 def test_stale_after_routes_cache_to_cold_dir(tmp_path) -> None:
     """官方源数据全是财报类全历史：stale_after 模式下缓存落固定分区 cold/。"""
-    stale = OfficialSource(cache_dir=tmp_path, stale_after=timedelta(days=10), today=lambda: FIXED_DAY)
+    stale = OfficialSource(
+        cache_dir=tmp_path, stale_after=timedelta(days=10), today=lambda: FIXED_DAY
+    )
     assert stale._cache_dir_today() == tmp_path / "cold"
 
     daily = OfficialSource(cache_dir=tmp_path, today=lambda: FIXED_DAY)
@@ -270,7 +272,9 @@ def test_stale_announcement_cache_is_refetched(tmp_path) -> None:
     import time as time_mod
 
     session = FakeSession(cninfo_handler([2024]))
-    source = make_source(cninfo_handler([2024]), tmp_path, session=session, stale_after=timedelta(days=10))
+    source = make_source(
+        cninfo_handler([2024]), tmp_path, session=session, stale_after=timedelta(days=10)
+    )
     source.annual_report_documents("SH600900")
     calls_after_first = len(session.calls)
     assert calls_after_first > 0
@@ -280,9 +284,9 @@ def test_stale_announcement_cache_is_refetched(tmp_path) -> None:
     stamp = time_mod.time() - 30 * 86400
     os.utime(cache_file, (stamp, stamp))
 
-    make_source(cninfo_handler([2024]), tmp_path, session=session, stale_after=timedelta(days=10)).annual_report_documents(
-        "SH600900"
-    )
+    make_source(
+        cninfo_handler([2024]), tmp_path, session=session, stale_after=timedelta(days=10)
+    ).annual_report_documents("SH600900")
     assert len(session.calls) > calls_after_first  # 超龄 → 重新检索
 
 

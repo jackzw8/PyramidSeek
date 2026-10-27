@@ -207,6 +207,36 @@ def test_primary_success_is_not_degraded() -> None:
     assert not any("降级" in note for note in outcome.notes)
 
 
+def test_hk_only_run_is_not_degraded() -> None:
+    """PL-03：只跑港股时原先写死 ``sources["list_stocks"] = sources.get("list_stocks:A", "none")``。
+
+    ``--markets HK`` 下 ``list_stocks:A`` 不存在 → 该键恒为 "none"，而 ``degraded`` 只豁免
+    行情/快照 → **只要只跑港股就必然误报 degraded=True**，还把「产物需标 degraded」的
+    note 写进产物，掩盖真实降级。
+    """
+    chain = stub_chain(
+        # 港股行业树补全，把「list_stocks 汇总键」隔离成唯一变量（行业树缺失是真实降级，
+        # 东财港股行业接口不可用 → 那属于 DS-38 的已知降级，不该混进本用例）
+        primary=dict(
+            industries={
+                "A": [{"standard": "申万2021", "version": "v1", "level": 1}],
+                "HK": [{"standard": "GICS", "version": "v1", "level": 1}],
+            }
+        )
+    )
+    outcome = fetch.fetch_universe(
+        markets=("HK",),
+        chain=[chain["primary"], chain["official"], chain["fixture"]],
+        persist=False,
+    )
+
+    assert outcome.sources["list_stocks:HK"] == "akshare"
+    assert outcome.sources["financials:HK00700"] == "akshare"
+    assert "list_stocks" not in outcome.sources  # 不再有恒 "none" 的汇总键
+    assert outcome.degraded is False
+    assert not any("degraded=true" in note for note in outcome.notes)
+
+
 def test_official_takes_over_when_primary_fails() -> None:
     chain = stub_chain(primary=dict(fail=("list_stocks", "financials", "industry_tree")))
     outcome = fetch.fetch_universe(

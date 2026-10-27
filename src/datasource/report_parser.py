@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Any
 
 from .. import config
+from ..common import round_half_up
 from .base import DataSourceError
 
 # ── 表标题（切分锚点）─────────────────────────────────────────────────────
@@ -52,16 +53,20 @@ SUMMARY_MARKERS = ("摘要", "簡明", "概要")
 
 # ── 单位（顺序敏感：先长后短，避免「元」吃掉「万元」）─────────────────────
 UNIT_FACTORS: tuple[tuple[str, float], ...] = (
+    # **按字长降序**：正则交替取首个命中，短单位排在前面会被长单位的前缀截胡
     ("百万元", 1e6),
     ("百萬元", 1e6),
     ("百萬", 1e6),
+    ("亿元", 1e8),
+    ("億元", 1e8),
     ("千元", 1e3),
     ("万元", 1e4),
     ("萬元", 1e4),
     ("元", 1.0),
 )
-# A 股写法：「单位：元」
-UNIT_PATTERN = re.compile(r"单位[：:]\s*(百万元|百萬元|千元|万元|萬元|元)")
+# A 股写法：「单位：元」/「单位：亿元」；港股年报用繁体「單位：億元」
+# DS-02：曾缺「亿元」→ 整表放大 1e8 倍且能过校验（数值合法，只有量级错）
+UNIT_PATTERN = re.compile(r"(?:单位|單位)[：:]\s*(百万元|百萬元|亿元|億元|千元|万元|萬元|元)")
 # ── 币种（ISO 4217 三字母；港股可能是人民币 / 港币 / 美元报表）──────────────
 CURRENCY_ALIASES: dict[str, str] = {
     "人民幣": "CNY",
@@ -81,7 +86,7 @@ CURRENCY_ALIASES: dict[str, str] = {
 # 港股写法：币种紧跟单位，如「人民幣百萬元」——**没有**「单位：」前缀（D-24 实测取证）
 CURRENCY_UNIT_PATTERN = re.compile(
     r"(" + "|".join(re.escape(alias) for alias in CURRENCY_ALIASES) + r")"
-    r"\s*(百万元|百萬元|百萬|千元|万元|萬元|元)"
+    r"\s*(百万元|百萬元|百萬|亿元|億元|千元|万元|萬元|元)"
 )
 
 # ── 三表科目（标准层字段 → 年报科目名候选，按优先级）──────────────────────
@@ -583,7 +588,7 @@ def _to_billion(value: float | None, unit: float) -> float | None:
     """元 → 亿元，保留 2 位小数（家法 R10）；``None`` 保持 ``None``（R11）。"""
     if value is None:
         return None
-    return round(value * unit / 1e8, config.AMOUNT_DECIMALS)
+    return round_half_up(value * unit / 1e8, config.AMOUNT_DECIMALS)
 
 
 def build_report_rows(
@@ -654,7 +659,7 @@ def build_report_rows(
             # （`收入成本 (329,173)`）→ 被解析成负数。统一按"费用取绝对值"再减，
             # 否则港股会算成 revenue + cost（实测腾讯毛利会变成 10809 亿，
             # 而年报里的毛利是 4225.93 亿 —— D-24 验收时抓到的错值）。
-            gross = round(revenue - abs(cost), config.AMOUNT_DECIMALS)
+            gross = round_half_up(revenue - abs(cost), config.AMOUNT_DECIMALS)
 
         rows.append(
             {

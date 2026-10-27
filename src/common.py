@@ -43,10 +43,13 @@ def is_missing(value: Any) -> bool:
 
 
 def to_internal_billion(value: Any) -> float | None:
-    """元 → 亿元，保留 2 位小数；缺失返回 ``None``（**不用 0 顶替**）。"""
+    """元 → 亿元，保留 2 位小数；缺失返回 ``None``（**不用 0 顶替**）。
+
+    舍入走 :func:`round_half_up`（家法：禁内置 ``round``，见 PL-08/EN-02）。
+    """
     if is_missing(value):
         return None
-    return round(float(value) / 1e8, config.AMOUNT_DECIMALS)
+    return round_half_up(float(value) / 1e8, config.AMOUNT_DECIMALS)
 
 
 # ── 证券代码语义 ──────────────────────────────────────────────────────────
@@ -155,13 +158,25 @@ def pick(row: dict[str, Any], *names: str) -> Any:
 
 # ── 报告期语义 ────────────────────────────────────────────────────────────
 def report_period_of(row: dict[str, Any]) -> str | None:
-    """取一行里的报告期并归一为 ``YYYY-MM-DD``；取不到返回 ``None``。"""
+    """取一行里的报告期并归一为 ``YYYY-MM-DD``；取不到返回 ``None``。
+
+    数字串**取前 8 位**即可，因为数据源三种形态都出现在同一列上：``"20241231"``、
+    ``"2024-12-31"``、``"2024-12-31 00:00:00"``（``datetime`` / ``Timestamp`` 的 ``str``，
+    共 14 位数字）。早先只认「恰好 8 位」，第三种直接返回 ``None``，导致该报告期**整行
+    被静默丢弃**、表现为「数据源没数据」（DS-03）。
+
+    取出的年月日做一次合法性校验：像 ``31/12/2024`` 这种日/月顺序不同的写法，硬取前 8 位
+    会得到 ``3112-20-24`` 的垃圾值 —— 宁可返回 ``None``（家法 R11：不臆造）。
+    """
     raw = pick(row, *_PERIOD_KEYS)
     if raw is None:
         return None
     digits = "".join(ch for ch in str(raw) if ch.isdigit())
-    if len(digits) == 8:
-        return f"{digits[:4]}-{digits[4:6]}-{digits[6:]}"
+    if len(digits) >= 8:
+        year, month, day = int(digits[:4]), int(digits[4:6]), int(digits[6:8])
+        if not (1990 <= year <= 2100 and 1 <= month <= 12 and 1 <= day <= 31):
+            return None
+        return f"{digits[:4]}-{digits[4:6]}-{digits[6:8]}"
     if len(digits) == 4:
         return f"{digits}-12-31"
     return None
