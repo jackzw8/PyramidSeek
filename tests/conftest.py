@@ -9,7 +9,8 @@
 
 定位顺序（先命中先用）：
 
-1. 环境变量 ``PYRAMIDSEEK_WEB_JS``（js 目录，或直接给 ``engine.js`` 的路径）
+1. 环境变量 ``PYRAMIDSEEK_WEB_JS``（js 目录，或直接给 ``engine.js`` 的路径）——
+   **覆盖**语义：设了就只认它，连它也无效才算找不到
 2. ``pyproject.toml`` 的 ``demo_engine_js``（本机路径 —— **搬迁后只改这一处**）
 3. 搬迁前的旧布局：代码仓同级下的 ``项目文档/pyramidseek-web/js``
 
@@ -45,22 +46,23 @@ def _resolve(raw: str | Path) -> Path | None:
 
 
 def demo_web_js(config: pytest.Config) -> Path | None:
-    """定位演示版前端 js 目录；找不到返回 ``None``。"""
-    candidates: list[str] = []
+    """定位演示版前端 js 目录；找不到返回 ``None``。
+
+    ``PYRAMIDSEEK_WEB_JS`` 是**覆盖**语义（设了就只认它）：显式指定错路径应当报错，
+    而不是悄悄回退到配置里的默认值 —— 否则「我以为在跑对账、其实跑的是别的目录」。
+    """
     env = os.environ.get("PYRAMIDSEEK_WEB_JS")
     if env:
-        candidates.append(env)
+        return _resolve(env)
+
     ini = config.getini("demo_engine_js")
     if ini:
-        candidates.append(ini)
-    # 搬迁前的旧布局：代码仓与 `项目文档/` 同级（保留，兼容未搬迁的环境）
-    candidates.append(str(REPO.parent.joinpath("项目文档", *_JS_REL)))
-
-    for raw in candidates:
-        found = _resolve(raw)
+        found = _resolve(ini)
         if found is not None:
             return found
-    return None
+
+    # 搬迁前的旧布局：代码仓与 `项目文档/` 同级（保留，兼容未搬迁的环境）
+    return _resolve(REPO.parent.joinpath("项目文档", *_JS_REL))
 
 
 @pytest.fixture(scope="session")
