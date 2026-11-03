@@ -405,3 +405,37 @@ def test_score_snapshot_columns_include_radar_dimensions(tmp_path) -> None:
         "rank_in_group",
         "is_top10pct",
     )
+
+
+# ── 最新报告期聚合（D-52 预筛用）─────────────────────────────────────────
+def test_read_latest_report_periods(tmp_path) -> None:
+    db_path = tmp_path / "standard.duckdb"
+    store.write_standard(
+        make_result(
+            financials={
+                "SH600900": [
+                    financial_row(report_period="2024-12-31"),
+                    financial_row(report_period="2025-09-30", report_type="q3"),
+                ],
+                "SH600004": [
+                    financial_row(
+                        code="SH600004", report_period="2025-06-30", report_type="h1"
+                    )
+                ],
+            }
+        ),
+        db_path=db_path,
+        export=False,
+    )
+
+    assert store.read_latest_report_periods(db_path=db_path) == {
+        "SH600900": "2025-09-30",
+        "SH600004": "2025-06-30",
+    }
+
+
+def test_read_latest_report_periods_missing_db_returns_empty(tmp_path) -> None:
+    """库不存在时返回空字典，且**不能顺手建一个空库**（预筛不该有副作用）。"""
+    missing = tmp_path / "nope.duckdb"
+    assert store.read_latest_report_periods(db_path=missing) == {}
+    assert not missing.exists()

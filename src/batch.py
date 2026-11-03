@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import shutil
 import sys
 from datetime import UTC, date, datetime, timedelta
@@ -30,7 +31,7 @@ from typing import Any
 if __package__ in (None, ""):  # 支持 `python src/batch.py` 直接运行（家法 R17）
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src import config, net  # noqa: E402
+from src import common, config, net  # noqa: E402
 from src.build import BuildInputs  # noqa: E402
 from src.build.build_meta import (  # noqa: E402
     build_industries,
@@ -130,20 +131,51 @@ def _read_pending(path: Path) -> list[str]:
     )
 
 
-def _stale_after_for(mode: str, offline: bool) -> timedelta | None:
-    """模式 → 全历史数据新鲜度 TTL（D-37）；``None`` = 永不过期。
+def _stale_after_for(mode: str, offline: bool, today: date | None = None) -> timedelta | None:
+    """模式 → 全历史数据新鲜度 TTL（D-37 / D-52）；``None`` = 永不过期。
 
-    ``cold`` 基线永不过期；``monthly`` / ``financials``（含 ``retry`` 补抓）按
-    ``config.MONTHLY_FRESH_DAYS`` / ``FINANCIALS_FRESH_DAYS`` 判断 cold/ 缓存是否超龄。
+    ``cold`` 基线永不过期；``monthly`` 按月 TTL；``financials`` / ``retry`` 按**披露季分档**
+    （披露季 ``FINANCIALS_FRESH_DAYS`` 短、淡季 ``FINANCIALS_FRESH_DAYS_OFF_SEASON`` 长，D-52）。
     ``daily`` 不抓历史键，返回值无影响；``offline`` 不走数据源缓存。
+
+    :param today: 判定窗口用的日期（默认取北京今天；测试注入用）。
     """
     if offline:
         return None
     if mode == "monthly":
         return timedelta(days=config.MONTHLY_FRESH_DAYS)
     if mode in {"financials", "retry"}:
-        return timedelta(days=config.FINANCIALS_FRESH_DAYS)
+        return timedelta(days=common.financials_ttl_days(today or common.beijing_today()))
     return None
+
+
+def _prescreen_enabled() -> bool:
+    """预筛总开关：``PYRAMID_PRESCREEN=0`` 整体关闭（回退 D-37 的纯 TTL 行为）。"""
+    return os.environ.get("PYRAMID_PRESCREEN", "1") != "0"
+
+
+def _prescreen_financials(
+    codes: list[str], *, expected_period: str, db_path: Path | None = None
+) -> tuple[list[str], int]:
+    """预筛：把「标准层已有报告期已追平」的标的从待抓清单剔除（D-52）。
+
+    动机：财报一年只变 4 次（+ 更正），跑批时大头是**没变**的票。按报告期判定比按
+    mtime/TTL 判定精确得多 —— 一轮 1222 只可从 ≈4.4h 降到 ≈1.5h。
+
+    安全失败：读库异常 / 空库 / 标的不在库里 → 一律保留，退化为全量抓取；
+    只在 ``financials`` 模式生效（``retry`` 是补抓失败项，必须真抓）。
+
+    :return: （待抓清单，跳过数）
+    """
+    try:
+        latest = store.read_latest_report_periods(db_path=db_path)
+    except Exception:  # noqa: BLE001  库损坏 / 锁冲突 → 宁可全量，也不要漏抓
+        logger.warning("预筛读标准层失败，本次退化为全量抓取", exc_info=True)
+        return list(codes), 0
+    if not latest:
+        return list(codes), 0
+    kept = [code for code in codes if latest.get(code, "") < expected_period]
+    return kept, len(codes) - len(kept)
 
 
 def prepare_out_dir(out_dir: Path) -> None:
@@ -203,6 +235,30 @@ def run(args: argparse.Namespace) -> int:
         f"[batch] mode={args.mode}｜with_financials={with_financials}｜with_history={with_history}"
     )
 
+    today_cn = common.beijing_today()
+    if with_financials and not args.offline:
+        window = common.disclosure_window(today_cn) or "淡季"
+        print(
+            f"[batch] 财报缓存：{window}｜TTL {common.financials_ttl_days(today_cn)} 天"
+            f"（按北京日期 {today_cn.isoformat()} 判定，D-52）"
+        )
+
+    # D-52 预筛：只对 financials 模式 + 有明确清单 + 会落库时生效（retry/daily/cold 不预筛）；
+    # PYRAMID_PRESCREEN=0 可整体关闭（回退到 D-37 的纯 TTL 行为）
+    if (
+        args.mode == "financials"
+        and codes
+        and not args.no_store
+        and not args.offline
+        and _prescreen_enabled()
+    ):
+        expected = common.expected_report_period(today_cn)
+        codes, skipped = _prescreen_financials(codes, expected_period=expected, db_path=args.db)
+        print(f"[batch] 预筛：应到报告期 {expected}｜跳过 {skipped} 只，待抓 {len(codes)} 只")
+        if skipped and not codes:
+            print("[batch] 预筛：全部标的已追平，本次不抓财报（从标准层读回）")
+            with_financials = False
+
     try:
         outcome = fetch.fetch_universe(
             markets=tuple(args.markets),
@@ -215,8 +271,8 @@ def run(args: argparse.Namespace) -> int:
                 # 都会重建 131 个行业成分（≈15~30 分钟）。建仓类模式一律复用 cold/ 固定
                 # 分区，避免切模式白等一輪（D-43）。只有 daily 走按日分区，取最新列表/快照。
                 cache_partition=(None if args.mode == "daily" or args.offline else "cold"),
-                # 全历史数据新鲜度 TTL（D-37）：超龄才重抓，长跑批跨天/跨周仍可续传
-                stale_after=_stale_after_for(args.mode, args.offline),
+                # 全历史数据新鲜度 TTL（D-37 / D-52）：超龄才重抓，长跑批跨天/跨周仍可续传
+                stale_after=_stale_after_for(args.mode, args.offline, today_cn),
             ),
             today=date.fromisoformat(as_of),
             persist=not args.no_store,
