@@ -174,3 +174,62 @@ def test_missing_fixtures_is_rejected(tmp_path: Path) -> None:
     )
 
     assert code == 2
+
+
+# ── 财报 TTL 分档 + 预筛（D-52）───────────────────────────────────────────
+def test_stale_after_financials_splits_by_season() -> None:
+    from datetime import date, timedelta
+
+    in_season = batch._stale_after_for("financials", False, date(2026, 4, 20))
+    off_season = batch._stale_after_for("financials", False, date(2026, 6, 15))
+    assert in_season == timedelta(days=config.FINANCIALS_FRESH_DAYS)
+    assert off_season == timedelta(days=config.FINANCIALS_FRESH_DAYS_OFF_SEASON)
+    # retry 与 financials 同档；cold / offline 永不过期；monthly 走月 TTL
+    assert batch._stale_after_for("retry", False, date(2026, 6, 15)) == off_season
+    assert batch._stale_after_for("cold", False, date(2026, 6, 15)) is None
+    assert batch._stale_after_for("financials", True, date(2026, 6, 15)) is None
+    assert batch._stale_after_for("monthly", False, date(2026, 6, 15)) == timedelta(days=20)
+
+
+def test_prescreen_drops_codes_already_at_expected(monkeypatch) -> None:
+    latest = {
+        "SH600000": "2026-09-30",  # 已追平 → 跳过
+        "SH600004": "2026-06-30",  # 落后一格 → 保留
+        "SH600006": "2026-12-31",  # 比应到还新（异常但安全）→ 跳过
+    }
+    monkeypatch.setattr(store, "read_latest_report_periods", lambda **_: latest)
+
+    kept, skipped = batch._prescreen_financials(
+        ["SH600000", "SH600004", "SH600006", "SZ000001"],  # 最后一只库里没有
+        expected_period="2026-09-30",
+    )
+
+    assert kept == ["SH600004", "SZ000001"]  # 库里查不到的必须保留（可能从没抓过）
+    assert skipped == 2
+
+
+def test_prescreen_degrades_when_db_empty(monkeypatch) -> None:
+    monkeypatch.setattr(store, "read_latest_report_periods", lambda **_: {})
+    kept, skipped = batch._prescreen_financials(["SH600000"], expected_period="2026-09-30")
+    assert kept == ["SH600000"]
+    assert skipped == 0
+
+
+def test_prescreen_degrades_when_db_broken(monkeypatch) -> None:
+    def _boom(**_kwargs: object) -> dict[str, str]:
+        raise RuntimeError("库损坏")
+
+    monkeypatch.setattr(store, "read_latest_report_periods", _boom)
+    kept, skipped = batch._prescreen_financials(["SH600000"], expected_period="2026-09-30")
+    assert kept == ["SH600000"]  # 宁可全量，也不要漏抓
+    assert skipped == 0
+
+
+def test_prescreen_disabled_by_env(monkeypatch) -> None:
+    """`PYRAMID_PRESCREEN=0` 整体关闭预筛（回退 D-37 纯 TTL 行为）。"""
+    monkeypatch.setenv("PYRAMID_PRESCREEN", "0")
+    assert batch._prescreen_enabled() is False
+    monkeypatch.delenv("PYRAMID_PRESCREEN", raising=False)
+    assert batch._prescreen_enabled() is True
+    monkeypatch.setenv("PYRAMID_PRESCREEN", "1")
+    assert batch._prescreen_enabled() is True

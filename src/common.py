@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 import math
-from datetime import date
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from . import config
@@ -206,9 +206,74 @@ def effective_date_of(report_period: str, lag_months: int = config.EFFECTIVE_LAG
     return f"{year:04d}-{month:02d}-{min(day, _last_day(year, month)):02d}"
 
 
+# ── 披露日历（D-52）──────────────────────────────────────────────────────
+def beijing_today(now: datetime | None = None) -> date:
+    """北京日期（UTC+8，无夏令时）。
+
+    披露窗口与「应披露报告期」的判定都必须用它 —— 用 UTC 日期会在北京时间 00:00~08:00
+    之间错判一整天（例：11-06 07:00 北京 = 11-05 23:00 UTC，按 UTC 算会误落在三季报窗口内）。
+    """
+    moment = now or datetime.now(UTC)
+    return (moment + timedelta(hours=8)).date()
+
+
+def disclosure_window(today: date) -> str | None:
+    """今天落在哪个披露季窗口（返回窗口名）；淡季返回 ``None``。
+
+    窗口表见 ``config.DISCLOSURE_WINDOWS``（含 5 天缓冲，端点日也算窗口内）。
+    """
+    month_day = (today.month, today.day)
+    for name, start, end in config.DISCLOSURE_WINDOWS:
+        if start <= month_day <= end:
+            return name
+    return None
+
+
+def financials_ttl_days(today: date) -> int:
+    """财报缓存 TTL（天）：披露季短、淡季长（D-52）。"""
+    if disclosure_window(today):
+        return config.FINANCIALS_FRESH_DAYS
+    return config.FINANCIALS_FRESH_DAYS_OFF_SEASON
+
+
+def expected_report_period(today: date) -> str:
+    """当前时点「最新可能已披露」的报告期（预筛判定依据）。
+
+    预筛用（D-52）：缓存里的最新报告期**已追平或超过**它 → 这只票不必重抓。
+
+    切换点是**各季披露开始日**，不是截止日 —— 报表是提前陆续披露的，若按「截止日 + 缓冲」
+    切换，10 月整月（三季报陆续发布）都会被判成「只需半年报」，等于整季漏更新。
+
+    ====================  ==========================
+    日期区间              应到报告期
+    ====================  ==========================
+    1/1  ~ 1/24           上年 09-30（年报季未启动）
+    1/25 ~ 3/31           上年 12-31（年报陆续披露）
+    4/1  ~ 6/30           本年 03-31（一季报陆续披露）
+    7/1  ~ 9/30           本年 06-30（半年报陆续披露）
+    10/1 ~ 12/31          本年 09-30（三季报陆续披露）
+    ====================  ==========================
+    """
+    year = today.year
+    month_day = (today.month, today.day)
+    if month_day >= (10, 1):
+        return f"{year}-09-30"
+    if month_day >= (7, 1):
+        return f"{year}-06-30"
+    if month_day >= (4, 1):
+        return f"{year}-03-31"
+    if month_day >= (1, 25):
+        return f"{year - 1}-12-31"
+    return f"{year - 1}-09-30"
+
+
 __all__ = [
+    "beijing_today",
+    "disclosure_window",
     "effective_date_of",
     "exchange_of",
+    "expected_report_period",
+    "financials_ttl_days",
     "is_missing",
     "market_of",
     "normalize_code",

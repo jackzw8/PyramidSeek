@@ -378,6 +378,27 @@ def read_table(table: str, *, db_path: Path | None = None) -> list[dict[str, Any
         conn.close()
 
 
+def read_latest_report_periods(*, db_path: Path | None = None) -> dict[str, str]:
+    """每只标的在标准层里的**最新报告期**（``{code: "YYYY-MM-DD"}``）——D-52 预筛用。
+
+    比 ``read_table`` 轻：只回一列聚合结果，不把 5 年 × 全市场的明细搬进内存。
+    **库文件不存在 → 返回空字典**（调用方按「无缓存」处理，退化为全量抓取；
+    不能因为预筛去建一个空库出来）。
+    """
+    db_path = Path(db_path) if db_path else config.DATA_DIR / "standard.duckdb"
+    if not db_path.exists():
+        return {}
+    conn = _connect(db_path)
+    try:
+        init_schema(conn)
+        rows = conn.execute(
+            "SELECT code, max(report_period) FROM financial_report GROUP BY code"
+        ).fetchall()
+        return {str(code): str(period)[:10] for code, period in rows if code and period}
+    finally:
+        conn.close()
+
+
 def table_columns(table: str, *, db_path: Path | None = None) -> list[str]:
     """取表列名（按 DDL 顺序）——用于断言「表结构与《数据字典》一致」。"""
     db_path = Path(db_path) if db_path else config.DATA_DIR / "standard.duckdb"
