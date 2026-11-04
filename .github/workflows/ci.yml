@@ -43,17 +43,22 @@ jobs:
           pytest -q --tb=line 2>&1 | tee pytest.log
 
       # 公开仓库的 Actions 原始日志需 admin 权限才能下载；
-      # 把失败用例顶成 annotation（网页与 check-runs API 都能匿名读）
+      # 把 pytest 输出摘录顶成 annotation（网页与 check-runs API 都能匿名读）
       - name: Pytest failures -> annotations
         if: failure()
         run: |
-          if [ -f pytest.log ]; then
-            grep -aE "^(FAILED|ERROR) " pytest.log | head -30 | while IFS= read -r line; do
-              echo "::error::${line}"
-            done
-            echo "===== pytest.log tail ====="
-            tail -30 pytest.log
-          fi
+          python - <<'PY'
+          import pathlib, sys
+          p = pathlib.Path("pytest.log")
+          if not p.exists():
+              print("::error::pytest.log 未生成（上一步没产出日志）")
+              sys.exit(0)
+          raw = p.read_text(encoding="utf-8", errors="replace").splitlines()
+          print(f"::error::pytest.log {len(raw)} 行 / {p.stat().st_size} 字节")
+          msg = " ⏎ ".join(raw[:15] + ["......"] + raw[-45:])
+          msg = msg.replace("%", "%25").replace("\r", "").replace("\n", "%0A")
+          print("::error::" + msg[:8000])
+          PY
 
       # M3-5：离线跑批产出全部产物并校验（schema + 引用完整性），坏产物直接拦下
       - name: Batch + validate (offline)
