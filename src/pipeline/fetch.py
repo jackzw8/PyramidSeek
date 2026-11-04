@@ -154,6 +154,35 @@ def _fill_hk_industry(stocks: list[dict[str, Any]], codes: list[str], chain: lis
         return
 
 
+def _fill_hk_shares(stocks: list[dict[str, Any]], codes: list[str], chain: list[Any]) -> None:
+    """港股股本回填（D-58）：港股列表接口不给股本 → 从指标接口反算（亿股）。
+
+    ``eps = net_profit ÷ shares``，没有股本这项恒缺失。失败静默跳过（eps 留空而已）。
+    """
+    for source in chain:
+        fn = getattr(source, "hk_shares", None)
+        if fn is None:
+            continue
+        try:
+            mapping = fn(codes)
+        except Exception as exc:  # noqa: BLE001  增强信息，失败不阻断
+            logger.warning("港股股本回填失败（%s）：%s", getattr(source, "name", "?"), exc)
+            continue
+        if not mapping:
+            continue
+        filled = 0
+        for stock in stocks:
+            if str(stock.get("market")) != "HK":
+                continue
+            shares = mapping.get(str(stock.get("code")))
+            if not shares:
+                continue
+            stock["shares"] = shares
+            filled += 1
+        logger.info("港股股本：本轮回填 %d 只（来源 %s）", filled, getattr(source, "name", "?"))
+        return
+
+
 def fetch_universe(
     *,
     markets: tuple[str, ...] = config.MARKETS,
@@ -241,10 +270,11 @@ def fetch_universe(
             source="fetch",
         )
 
-    # 港股行业回填（D-58）：只补本批次涉及、且在港股通名单内的标的
+    # 港股行业与股本回填（D-58）：只补本批次涉及、且在港股通名单内的标的
     hk_codes = [str(row.get("code")) for row in stocks if str(row.get("market")) == "HK"]
     if hk_codes:
         _fill_hk_industry(stocks, hk_codes, chain)
+        _fill_hk_shares(stocks, hk_codes, chain)
 
     # 注意：不要在这里补一个裸的 ``sources["list_stocks"]`` 汇总键。原先它取
     # ``sources.get("list_stocks:A", "none")``，``--markets HK`` 时该键恒为 "none"，
