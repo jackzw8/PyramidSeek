@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import logging
 import math
 from datetime import UTC, datetime
 from typing import Any
@@ -30,6 +31,8 @@ from .akshare_src import (
     REPORT_INCOME,
     AkShareSource,
 )
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["EastMoneySource", "map_em_a_financials", "map_em_hk_financials"]
 
@@ -192,10 +195,17 @@ def map_em_hk_financials(
     tables: dict[str, list[dict[str, Any]]],
     *,
     fetched_at: str | None = None,
+    indicators: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
-    """东财港股三张长表 → 标准层行；科目名跨股不统一，按 ``_EM_HK_ITEMS`` 关键词组兜底。"""
+    """东财港股三张长表 → 标准层行；科目名跨股不统一，按 ``_EM_HK_ITEMS`` 关键词组兜底。
+
+    ``indicators`` 是「财务分析主要指标」的行（D-58）：三表**没有毛利科目**，
+    用其中的 ``GROSS_PROFIT_RATIO`` 反算 ``gross_profit = revenue × 比率``，
+    这样评分层的 ``gross_profit ÷ revenue`` 正好等于该比率（口径一致）。
+    """
     lookups = {report: _hk_lookup(rows) for report, rows in tables.items()}
     periods = set().union(*(set(lookup) for lookup in lookups.values())) if lookups else set()
+    margin_by_period = _hk_margin_ratios(indicators or [])
     stamp = _stamp(fetched_at)
     out: list[dict[str, Any]] = []
     for period in sorted(periods)[-config.YEARS :]:
@@ -223,8 +233,33 @@ def map_em_hk_financials(
                 values["total_liabilities"] = round_half_up(
                     assets - total_equity, config.AMOUNT_DECIMALS
                 )
-        out.append(_row(code, period, values, stamp, "em", None))
+        # 毛利：`_row` 用 `revenue − cost` 自算，但腾讯等票的「销售成本」科目名对不上 →
+        # 为 None；此时用指标接口的毛利率反算（D-58），保证 gross_margin 有值。
+        row = _row(code, period, values, stamp, "em", None)
+        if row.get("gross_profit") is None:
+            ratio = margin_by_period.get(period)
+            revenue = row.get("revenue")
+            if ratio is not None and revenue:
+                row["gross_profit"] = round_half_up(
+                    revenue * ratio / 100.0, config.AMOUNT_DECIMALS
+                )
+        out.append(row)
     return out
+
+
+def _hk_margin_ratios(rows: list[dict[str, Any]]) -> dict[str, float]:
+    """「财务分析主要指标」→ ``{报告期: 毛利率百分数}``（如 ``56.21``）。"""
+    ratios: dict[str, float] = {}
+    for row in rows:
+        period = str(row.get("REPORT_DATE") or "")[:10]
+        raw = row.get("GROSS_PROFIT_RATIO")
+        if not period or raw is None:
+            continue
+        try:
+            ratios[period] = float(raw)
+        except (TypeError, ValueError):
+            continue
+    return ratios
 
 
 class EastMoneySource(AkShareSource):
@@ -266,4 +301,24 @@ class EastMoneySource(AkShareSource):
             )
             for report in (REPORT_INCOME, REPORT_BALANCE, REPORT_CASHFLOW)
         }
-        return map_em_hk_financials(code, tables)
+        return map_em_hk_financials(code, tables, indicators=self._hk_indicators(code, stock))
+
+    def _hk_indicators(self, code: str, stock: str) -> list[dict[str, Any]]:
+        """港股「财务分析主要指标」（D-58）：补三表缺的毛利率。
+
+        东财港股三表没有毛利科目 → 评分器的 ``gross_margin`` 恒缺失 → 港股不入主榜。
+        失败只降级（毛利率留空），不阻断三表主体数据。
+        """
+        try:
+            return self._fetch(
+                f"hk_indicator_{code}",
+                self.ak.stock_financial_hk_analysis_indicator_em,
+                what=f"东财港股指标（{code}）",
+                code=code,
+                timeout=config.FETCH_TIMEOUT_MEDIUM_SECONDS,
+                symbol=stock,
+                indicator="年度",
+            )
+        except Exception as exc:  # noqa: BLE001  增强数据，失败不阻断
+            logger.warning("港股指标接口不可用，%s 的毛利率将留空：%s", code, exc)
+            return []
