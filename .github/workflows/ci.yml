@@ -1,10 +1,12 @@
 name: CI
 
-# M0-4：CI 空跑 —— PR 触发 lint + pytest（离线，不依赖外部数据源）
+# M0-4：CI 空跑 —— lint + pytest + 离线跑批产物校验（不依赖外部数据源）
+# 触发：PR / 手动（workflow_dispatch）。
+# 2026-11-04 摘掉 push(branches: main)：本项目一律在 main 上提交、不开代码分支（R21），
+# push 触发等于「每次提交都跑一遍 + 每推一封失败邮件」；它只是「测试备份」（ADR-014），
+# 不参与发布链路，本地门禁 `publish --check` 比它更严格。
 on:
   pull_request:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
