@@ -34,7 +34,7 @@ from src.datasource.registry import (  # noqa: E402
     source_label,
 )
 
-from . import store  # noqa: E402
+from . import store, utf8_env  # noqa: E402
 from .runner import BatchBusy, runner  # noqa: E402
 
 app = Flask(__name__, static_folder="static", static_url_path="")
@@ -139,6 +139,7 @@ def api_publish_gate():
             errors="replace",
             timeout=1200,
             check=False,
+            env=utf8_env(),
         )
     except subprocess.TimeoutExpired:
         return jsonify({"error": "门禁超时（20 分钟）"}), 504
@@ -161,6 +162,7 @@ def api_publish():
             errors="replace",
             timeout=1800,
             check=False,
+            env=utf8_env(),
         )
     except subprocess.TimeoutExpired:
         return jsonify({"error": "发布超时（30 分钟）"}), 504

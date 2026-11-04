@@ -26,7 +26,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from src import config  # noqa: E402
 
-from . import store  # noqa: E402
+from . import store, utf8_env  # noqa: E402
 
 __all__ = ["BatchBusy", "Runner", "runner"]
 
@@ -110,6 +110,7 @@ class Runner:
                 encoding="utf-8",
                 errors="replace",
                 bufsize=1,
+                env=utf8_env(),  # 子进程必须输出 UTF-8，否则按 cp936 写出 → 日志全 `��`
             )
             self.status = {
                 "running": True,
