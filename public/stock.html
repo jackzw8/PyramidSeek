@@ -50,12 +50,12 @@
       <div class="chart-ctrl">
         <span id="k-rt" style="font-size:13px;color:#5f5e5a;margin-right:12px"></span>
         <span class="tg" id="tg-period">
-          <button data-v="day" class="on">日K</button><button data-v="month">月K</button>
+          <button data-v="day" class="on">日K</button><button data-v="week">周K</button><button data-v="month">月K</button>
         </span>
       </div>
     </div>
     <div class="chart-box" id="kline"></div>
-    <p class="note" style="font-size:12px">红涨绿跌；DIF 蓝 / DEA 金。行情由浏览器<b>实时向前端接口请求</b>（不随产物发布）：日K 取近 320 个交易日、月K 取近 120 个月；接口不可用时本卡隐藏，<b>不影响评分与财务数据</b>。<b>复权口径</b>：日K 前复权；<b>月K 不复权</b>（实测长跨度「前复权」因子失真，会画出假趋势），港股两者均不复权 —— 除权日跳空属正常。年ROE 柱仅月K 显示，自「报告期 + 4 个月」起生效（家法 R9）。</p>
+    <p class="note" style="font-size:12px">红涨绿跌；DIF 蓝 / DEA 金。行情由浏览器<b>实时向前端接口请求</b>（不随产物发布）：日K 取近 320 个交易日、周K 取近 156 周、月K 取近 120 个月；接口不可用时本卡隐藏，<b>不影响评分与财务数据</b>。<b>复权口径</b>：日K 前复权；<b>周K / 月K 不复权</b>（实测长跨度「前复权」因子失真，会画出假趋势），港股两者均不复权 —— 除权日跳空属正常。年ROE 柱仅月K 显示，自「报告期 + 4 个月」起生效（家法 R9）。</p>
   </div>
 
   <p class="note">年ROE 柱「报告期 + 4 个月起生效」；四张财务表读自产物（《产物契约》§3.4），标准层暂缺的字段（如应收账款/固定资产周转）显示「—」。本工具仅供学习研究，不构成任何投资建议。</p>

@@ -20,7 +20,8 @@
   const KLINE_URL = 'https://web.ifzq.gtimg.cn/appstock/app/fqkline/get';
   const RT_URL = 'https://qt.gtimg.cn/q=';
   const TIMEOUT = 8000;
-  const BARS = { day: 320, month: 120 };   // 日K ≈1.3 年；月K ≈10 年
+  const BARS = { day: 320, week: 156, month: 120 }; // 日≈1.3 年；周≈3 年；月≈10 年
+  const PERIODS = new Set(['day', 'week', 'month']);
 
   /** `SH600519` / `HK00700` → 腾讯格式 `sh600519` / `hk00700` */
   function toTx(code) {
@@ -57,13 +58,13 @@
    *   月K 只做长周期形态观察，用不复权 + 图注更可信（除权日跳空属正常市场现象）。
    *
    * @param {string} code 产物代码（`SH600519` / `HK00700`）
-   * @param {'day'|'month'} period
+   * @param {'day'|'week'|'month'} period
    * @returns {Promise<{bars: Array, period: string, adjusted: boolean, note: string}|null>}
    */
   async function kline(code, period) {
-    const p = period === 'month' ? 'month' : 'day';
+    const p = PERIODS.has(period) ? period : 'day';
     const tx = toTx(code);
-    const adj = p === 'month' ? '' : 'qfq';           // 月K 不复权（见上）
+    const adj = p === 'day' ? 'qfq' : '';            // 周/月 不复权（长跨度前复权因子失真，D-57）
     const url = `${KLINE_URL}?param=${tx},${p},,,${BARS[p]},${adj}`;
     const json = await fetchWithTimeout(url, false);
     if (!json || json.code !== 0) return null;

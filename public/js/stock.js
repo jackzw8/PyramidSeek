@@ -109,7 +109,7 @@
   }
 
   // ── K 线 · MACD（月K 追加年ROE）—— 行情由前端按需取，D-56 / M4-7 ──
-  let kPeriod = 'day';                            // 'day' | 'month'
+  let kPeriod = 'day';                            // 'day' | 'week' | 'month'
   const kCache = new Map();                       // period → 数据 | null（null 也缓存，避免反复重试）
 
   function roeSteps() {
@@ -384,9 +384,16 @@
   }
 
   // ── 行情加载（前端按需取，失败静默降级）──
+  const K_TITLES = {
+    day: ['日K · MACD', 'Daily Trend'],
+    week: ['周K · MACD', 'Weekly Trend'],
+    month: ['月K · MACD · 年ROE', 'Monthly Trend'],
+  };
+
   function setChartTitle(period) {
-    document.getElementById('k-title').textContent = period === 'month' ? '月K · MACD · 年ROE' : '日K · MACD';
-    document.getElementById('k-sub').textContent = period === 'month' ? 'Monthly Trend' : 'Daily Trend';
+    const [title, sub] = K_TITLES[period] || K_TITLES.day;
+    document.getElementById('k-title').textContent = title;
+    document.getElementById('k-sub').textContent = sub;
   }
 
   async function loadChart(host) {
