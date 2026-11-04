@@ -25,6 +25,8 @@ INDUSTRY_STANDARD = {"A": "申万2021", "HK": "GICS"}
 # 港股行业口径降级路径（ADR-011 / 数据源规格 §6）：AkShare 不直接提供 GICS，
 # M1 先用东财口径跑通全链路，industry_std 标注为下面这个值；GICS 自建映射独立推进。
 INDUSTRY_STANDARD_HK_FALLBACK = "东财口径（待校准 GICS）"
+# D-58：港股行业实装口径 —— 东财 `stock_hk_company_profile_em` 的「所属行业」，仅港股通成分
+INDUSTRY_STANDARD_HK_GGLT = "东财行业（港股通）"
 INDUSTRY_UNCLASSIFIED = "未分类"  # 缺失映射的股票归入此组，暂不参与行业分位
 # 金融类判定（《评分算法规格》§8「金融类：毛利率/周转率不适用 → 单列」）：
 # 按**申万一级**行业名判定（A 股行业口径 = 申万2021）。
@@ -138,6 +140,11 @@ FETCH_INTERVAL_JITTER_SECONDS: tuple[float, float] = (2.0, 3.0)
 # 需要请求间隔；抖动时给中等超时（默认 15s 会误杀，见 D-8）。逐个失败只跳过该行业。
 INDUSTRY_CONS_TIMEOUT_SECONDS = 120
 INDUSTRY_CONS_INTERVAL_SECONDS = 0.5
+
+# 港股「所属行业」逐只查询间隔（D-58）：东财 `stock_hk_company_profile_em` 单次 ~0.6s，
+# 站点阈值约 3 次/秒 → 1.2s 间隔稳在阈值内。仅港股通成分会用到（667 只 ≈ 13 分钟）。
+HK_INDUSTRY_INTERVAL_SECONDS = 1.2
+
 # 「单股批量接口」的中等超时：三表（实测 ~44s/张）与行情（~22s/次）远超默认 15s，
 # 但也不该套用 1800s 的「全量翻页」上限 —— 目标站点挂起时会白等半小时（D-8 实跑踩到）。
 FETCH_TIMEOUT_MEDIUM_SECONDS = 300

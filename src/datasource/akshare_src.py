@@ -562,6 +562,73 @@ class AkShareSource:
                     mapping[code] = (l1_code, l1_name, l2_code, l2_name)
         return nodes, mapping
 
+    # ── 港股行业（D-58）────────────────────────────────────────────────────
+    def _hk_ggt_codes(self) -> set[str]:
+        """港股通成分（``stock_hk_ggt_components_em``，缓存 ``cold/hk_ggt``）。
+
+        港股行业只能**逐只**查（东财无行业板块接口），全市场 2804 只太贵（≈1 小时），
+        故覆盖范围限定港股通成分（≈667 只）。
+        """
+        rows = self._fetch(
+            "hk_ggt",
+            getattr(self.ak, "stock_hk_ggt_components_em"),  # noqa: B009  版本差异兜底
+            what="港股通成分股",
+        )
+        return {
+            "HK" + str(row.get("代码") or "").strip().zfill(5)
+            for row in rows
+            if str(row.get("代码") or "").strip()
+        }
+
+    def hk_industry(self, codes: list[str]) -> dict[str, str]:
+        """港股「所属行业」映射（D-58）：东财公司资料逐只查 + 文件缓存。
+
+        背景：``ENDPOINTS["industry_hk"]`` 原配的 ``stock_hk_industry_name_em`` 在
+        akshare 1.19.1 **并不存在**（``getattr`` 直接 AttributeError），港股行业因此长期
+        静默降级 fixtures、全部「未分类」，进不了榜单。
+
+        - 只查**港股通成分**，其余不查（上层按「未分类」处理）；
+        - 缓存 ``cold/hk_industry``（``code → industry``，无 TTL）：命中秒回、新标的增量补；
+        - 单只失败只跳过该只，不阻断整批。
+
+        :returns: ``{code: 行业名}``（未覆盖的标的不在返回里）
+        """
+        try:
+            ggt = self._hk_ggt_codes()
+        except DataSourceError as exc:
+            logger.warning("港股通成分不可用，港股行业本次全部按「未分类」：%s", exc)
+            return {}
+
+        cached = self._load_cache("hk_industry") or []
+        mapping = {
+            str(row.get("code")): str(row.get("industry") or "")
+            for row in cached
+            if row.get("code") and row.get("industry")
+        }
+
+        fresh: list[dict[str, Any]] = []
+        for raw in dict.fromkeys(str(code) for code in codes):
+            if raw in mapping or raw not in ggt:
+                continue
+            symbol = raw[2:] if raw.upper().startswith("HK") else raw
+            try:
+                self._interval_sleep(config.HK_INDUSTRY_INTERVAL_SECONDS)
+                frame = self.ak.stock_hk_company_profile_em(symbol=symbol)
+                industry = str(frame.iloc[0].get("所属行业") or "").strip()
+            except Exception as exc:  # noqa: BLE001  单只失败不阻断整批
+                logger.warning("港股行业查询失败 %s：%s", raw, exc)
+                continue
+            if industry:
+                mapping[raw] = industry
+                fresh.append({"code": raw, "industry": industry})
+
+        if fresh:
+            self._save_cache("hk_industry", [*cached, *fresh])
+            logger.info(
+                "港股行业：新增 %d 只（缓存累计 %d 只）", len(fresh), len(cached) + len(fresh)
+            )
+        return mapping
+
     def industry_tree(self, market: str) -> list[dict[str, Any]]:
         if market not in config.MARKETS:
             raise ValueError(f"不支持的市场：{market!r}（应为 {config.MARKETS} 之一）")
