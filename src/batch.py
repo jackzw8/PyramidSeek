@@ -213,6 +213,11 @@ def run(args: argparse.Namespace) -> int:
             "cold": (True, True, True),
             "retry": (True, True, False),
         }[args.mode]
+        # 历史行情改前端按需取（D-56 / M4-7）：跑批一律不抓。
+        # 硬闸在 config.HISTORY_FETCH_ENABLED，这里再兜一层，防止模式表被改回去误取。
+        if with_history and not config.HISTORY_FETCH_ENABLED:
+            with_history, with_raw = False, False
+            print("[batch] 历史行情采集已停用（M4-7：详情页按需取）→ with_history=False")
 
     codes = list(args.codes or [])
     if args.codes_file:

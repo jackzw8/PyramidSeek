@@ -411,8 +411,12 @@ def test_end_to_end_with_real_fixtures() -> None:
     assert outcome.universe.prices == {}
 
 
-def test_missing_price_data_alone_is_not_degraded() -> None:
-    """**无行情不算降级**：kline 是契约里的可选字段（§3.4），主源提供其余数据即不降级。"""
+def test_missing_price_data_alone_is_not_degraded(monkeypatch) -> None:
+    """**无行情不算降级**：kline 是契约里的可选字段（§3.4），主源提供其余数据即不降级。
+
+    2026-11-04（D-56 / M4-7）：历史行情默认**不采集**（前端按需取），本用例先开硬闸再验。
+    """
+    monkeypatch.setattr(config, "HISTORY_FETCH_ENABLED", True)
     chain = stub_chain()
     chain["primary"]._prices.clear()  # 主源不给行情（如某股停牌 / 无历史）
     outcome = fetch.fetch_universe(markets=("A",), chain=[chain["primary"]], persist=False)
@@ -421,9 +425,30 @@ def test_missing_price_data_alone_is_not_degraded() -> None:
     assert outcome.degraded is False
 
 
-def test_price_fetch_is_qfq_only_by_default() -> None:
+def test_history_fetch_disabled_by_default() -> None:
+    """D-56 / M4-7：**默认不采集历史行情** —— 传 ``with_history=True`` 也绕不过硬闸。
+
+    行情改由前端在详情页按需取（腾讯接口 CORS `*`）；跑批只保留 `market_snapshot`
+    （停牌判定 / dataDate.price）。
+    """
+    chain = stub_chain()
+    outcome = fetch.fetch_universe(
+        markets=("A",), chain=[chain["primary"]], persist=False, with_history=True
+    )
+
+    assert not [call for call in chain["primary"].calls if call[0] == "price_daily"]
+    assert outcome.universe.prices == {}
+    # 快照照常采集（不受行情开关影响）
+    assert any(name.startswith("market_snapshot") for name in outcome.sources)
+
+
+def test_price_fetch_is_qfq_only_by_default(monkeypatch) -> None:
     """D-32 决策 2：默认**只取前复权**（1 次/只，B 级）；``with_raw=True``
-    （monthly/cold 模式）才补「不复权」以输出 ``hfq``。"""
+    （monthly/cold 模式）才补「不复权」以输出 ``hfq``。
+
+    2026-11-04（D-56 / M4-7）：底层能力保留，入口默认关闭 —— 本用例先开硬闸再验。
+    """
+    monkeypatch.setattr(config, "HISTORY_FETCH_ENABLED", True)
     chain = stub_chain()
     outcome = fetch.fetch_universe(markets=("A",), chain=[chain["primary"]], persist=False)
 

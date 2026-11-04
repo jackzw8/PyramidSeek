@@ -131,6 +131,11 @@ def fetch_universe(
     :param limit: 每个市场最多取多少只（``codes`` 优先级更高）。
     :param persist: 是否落库（``False`` 只做采集与清洗）。
     """
+    # 历史行情改前端按需取（D-56 / M4-7）：硬闸放在这里，任何调用方都绕不过去。
+    # `market_snapshot`（停牌判定 / dataDate.price）不受影响，仍然照常采集。
+    if with_history and not config.HISTORY_FETCH_ENABLED:
+        with_history, with_raw = False, False
+
     stocks: list[dict[str, Any]] = []
     outcome = FetchOutcome(universe=clean.CleanResult())
     seen: set[str] = set()
