@@ -29,6 +29,39 @@ def market_standard(inputs: BuildInputs, market: str) -> str:
     return config.INDUSTRY_STANDARD.get(market, "")
 
 
+def _universe(inputs: BuildInputs) -> dict[str, Any]:
+    """样本口径回执（M5-3）：本轮实际清洗后的样本，按市场统计。"""
+    by_market: dict[str, dict[str, Any]] = {}
+    for stock in inputs.stocks:
+        code = str(stock.get("code") or "")
+        market = str(stock.get("market") or ("HK" if code.startswith("HK") else "A"))
+        slot = by_market.setdefault(market, {"stocks": 0, "l1": set(), "l2": set()})
+        slot["stocks"] += 1
+        for level, key in (("l1", "l1_name"), ("l2", "l2_name")):
+            value = str(stock.get(key) or "").strip()
+            if value and value != config.INDUSTRY_UNCLASSIFIED:
+                slot[level].add(value)
+    return {
+        "byMarket": {
+            market: {
+                "stocks": slot["stocks"],
+                "industriesL1": len(slot["l1"]),
+                "industriesL2": len(slot["l2"]),
+            }
+            for market, slot in sorted(by_market.items())
+        },
+        "industryStandard": dict(config.INDUSTRY_STANDARD),
+    }
+
+
+def _quality(inputs: BuildInputs) -> dict[str, Any]:
+    """质量回执（M5-3）：缺财报标的与全链路失败接口，供控制台 / 前端标注。"""
+    return {
+        "missingFinancials": list(inputs.missing_financials),
+        "failedInterfaces": list(inputs.failed_interfaces),
+    }
+
+
 def build_meta(inputs: BuildInputs, out_dir: Path) -> Path:
     """生成 ``meta.json``，返回写出路径。"""
     data_date: dict[str, str] = {}
@@ -57,6 +90,9 @@ def build_meta(inputs: BuildInputs, out_dir: Path) -> Path:
             "chain": inputs.source_policy.get("chain", []),
             "byMarket": inputs.source_policy.get("byMarket", {}),
         }
+    # 口径与质量回执（M5-3 / ADR-014）
+    payload["universe"] = _universe(inputs)
+    payload["quality"] = _quality(inputs)
     return write_json(out_dir / "meta.json", payload)
 
 
