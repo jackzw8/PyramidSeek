@@ -32,6 +32,19 @@
   pre#log .ln-err{color:#ff9a9a}
   pre#log .ln-warn{color:#e3c07a}
   pre#log .ln-sum{color:#7ec8e3}
+  .pick{display:flex;gap:6px}
+  .pick input{flex:1}
+  .mini{padding:5px 10px;font-size:12px;white-space:nowrap}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:9}
+  .modal[hidden]{display:none}
+  .modal-box{background:#fff;border-radius:10px;width:min(600px,92vw);max-height:82vh;display:flex;flex-direction:column;padding:14px}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .modal-path{font:12px ui-monospace,Consolas,monospace;color:var(--sub);margin-bottom:8px;word-break:break-all}
+  .modal-list{overflow:auto;flex:1;border:1px solid var(--line);border-radius:8px;padding:4px;min-height:180px}
+  .modal-list div{padding:6px 8px;cursor:pointer;border-radius:6px;font-size:13px}
+  .modal-list div:hover{background:#eef2f7}
+  .modal-foot{margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .modal-foot .hint{font-size:12px;color:var(--sub)}
   table{width:100%;border-collapse:collapse;font-size:13px}
   th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
   th{color:var(--sub);font-weight:400}
@@ -71,18 +84,27 @@
     <div class="row">
       <div class="field" style="flex:1"><label>股票池：自定义 codes（逗号 / 空格分隔，如 SH600519, HK00700；留空 = 全市场）</label>
         <input type="text" id="codes" placeholder="SH600519, HK00700"></div>
-      <div class="field"><label>或：选样清单文件（--codes-file）</label>
-        <input type="text" id="codesFile" placeholder="batch/industry_l2_top_codes.txt"></div>
+      <div class="field" style="flex:1"><label>或：选样清单文件（--codes-file）</label>
+        <div class="pick"><input type="text" id="codesFile" placeholder="data/lists/industry_l2_top_codes.txt">
+          <button type="button" class="mini" id="btnPickFile">浏览…</button></div></div>
     </div>
     <div class="row">
-      <div class="field"><label>行业选样层级</label>
+      <div class="field"><label>清单类型</label>
+        <select id="selKind">
+          <option value="industry">A 股行业选样</option>
+          <option value="hk_ggt">港股通成分股</option>
+        </select></div>
+      <div class="field" id="levelField"><label>行业层级</label>
         <select id="selLevel">
-          <option value="l2">申万二级（默认，约 130 行业）</option>
+          <option value="l2">申万二级（约 130 行业）</option>
           <option value="l1">申万一级（约 31 行业）</option>
         </select></div>
-      <div class="field"><label>每行业取前 N</label>
+      <div class="field" id="perField"><label>每行业取前 N</label>
         <input type="number" id="selPer" value="10" min="1" max="100"></div>
-      <button id="btnSelect">生成行业清单</button>
+      <div class="field" style="flex:1"><label>保存到目录</label>
+        <div class="pick"><input type="text" id="selDir" value="data/lists">
+          <button type="button" class="mini" id="btnPickDir">浏览…</button></div></div>
+      <button id="btnSelect">生成清单</button>
     </div>
     <div class="msg" id="selMsg"></div>
     <div class="row">
@@ -128,6 +150,18 @@
     <h2>5. 历史任务</h2>
     <table><thead><tr><th>run_id</th><th>模式</th><th>市场</th><th>源</th><th>状态</th><th>结束时间</th></tr></thead>
     <tbody id="history"></tbody></table>
+  </div>
+  <div class="modal" id="picker" hidden>
+    <div class="modal-box">
+      <div class="modal-head"><b id="pkTitle">选择</b>
+        <button type="button" class="mini" id="pkClose">关闭</button></div>
+      <div class="modal-path" id="pkPath">/</div>
+      <div class="modal-list" id="pkList"></div>
+      <div class="modal-foot">
+        <span class="hint">只列仓库内的目录；文件只列 .txt（点文件即选中）</span>
+        <button type="button" id="pkOk">选定当前目录</button>
+      </div>
+    </div>
   </div>
 </main>
 
@@ -223,27 +257,110 @@ async function tailLog() {
   el.scrollTop = el.scrollHeight;
 }
 
+let pkMode = 'dir';
+let pkPath = '';
+
+function pickerOpen(mode) {
+  pkMode = mode;
+  const seed = mode === 'file'
+    ? ($('codesFile').value || 'data/lists')
+    : ($('selDir').value || 'data/lists');
+  pkPath = mode === 'file' && /\.[a-z0-9]+$/i.test(seed)
+    ? seed.replace(/[\\/][^\\/]*$/, '')
+    : seed;
+  $('pkTitle').textContent = mode === 'file' ? '选择清单文件（.txt）' : '选择保存目录';
+  $('pkOk').style.display = mode === 'dir' ? '' : 'none';
+  $('picker').hidden = false;
+  loadFs(pkPath);
+}
+
+function pickerClose() { $('picker').hidden = true; }
+
+function pickerTake(value) {
+  if (pkMode === 'file') $('codesFile').value = value;
+  else $('selDir').value = value;
+  pickerClose();
+}
+
+async function loadFs(path) {
+  const list = $('pkList');
+  const { ok, body } = await api('/api/fs?path=' + encodeURIComponent(path || ''));
+  if (!ok) { list.textContent = body.error || '读取失败'; return; }
+  pkPath = body.cwd;
+  $('pkPath').textContent = '/' + (body.cwd || '');
+  list.innerHTML = '';
+  const join = (name) => (body.cwd ? body.cwd + '/' : '') + name;
+
+  if (body.parent !== null) {
+    const up = document.createElement('div');
+    up.textContent = '..（上一级）';
+    up.onclick = () => loadFs(body.parent);
+    list.appendChild(up);
+  }
+  body.dirs.forEach((name) => {
+    const d = document.createElement('div');
+    d.textContent = '[目录] ' + name;
+    d.onclick = () => loadFs(join(name));
+    list.appendChild(d);
+  });
+  if (pkMode === 'file') {
+    body.files.forEach((name) => {
+      const f = document.createElement('div');
+      f.textContent = '[文件] ' + name;
+      f.onclick = () => pickerTake(join(name));
+      list.appendChild(f);
+    });
+  }
+  if (!body.dirs.length && !(pkMode === 'file' && body.files.length)) {
+    const empty = document.createElement('div');
+    empty.textContent = '（没有子目录' + (pkMode === 'file' ? ' / .txt 文件' : '') + '）';
+    empty.style.cursor = 'default';
+    list.appendChild(empty);
+  }
+}
+
+$('btnPickFile').onclick = () => pickerOpen('file');
+$('btnPickDir').onclick = () => pickerOpen('dir');
+$('pkClose').onclick = pickerClose;
+$('pkOk').onclick = () => pickerTake(pkPath);
+$('picker').onclick = (e) => { if (e.target === $('picker')) pickerClose(); };
+
+$('selKind').onchange = () => {
+  const industry = $('selKind').value === 'industry';
+  $('levelField').style.display = industry ? '' : 'none';
+  $('perField').style.display = industry ? '' : 'none';
+};
+
 $('btnSelect').onclick = async () => {
+  const kind = $('selKind').value;
   const msg = $('selMsg');
   msg.className = 'msg';
-  msg.textContent = '选样中…（行业映射首次约 1 分钟，之后秒回）';
+  msg.textContent = kind === 'hk_ggt'
+    ? '拉取港股通成分股…（约 13 秒）'
+    : '选样中…（行业映射首次约 1 分钟，之后秒回）';
   $('btnSelect').disabled = true;
   try {
     const { ok, body } = await api('/api/select', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({level: $('selLevel').value, perIndustry: +$('selPer').value || 10}),
+      body: JSON.stringify({
+        kind,
+        level: $('selLevel').value,
+        perIndustry: +$('selPer').value || 10,
+        outDir: $('selDir').value.trim(),
+      }),
     });
     if (!ok) {
-      msg.textContent = body.error || '选样失败';
+      msg.textContent = body.error || '生成失败';
       msg.className = 'msg err';
       return;
     }
     $('codesFile').value = body.path;
-    msg.textContent = `已生成 ${body.count} 只 / ${body.groups.length} 个行业 → ${body.path}`
+    const detail = body.groups && body.groups.length ? ` / ${body.groups.length} 个行业` : '';
+    msg.textContent = `已生成 ${body.count} 只${detail} → ${body.path}`
       + '（已填进上面的清单框，直接点「启动跑批」）';
   } catch (e) {
-    msg.textContent = '选样请求失败：' + e;
+    msg.textContent = '请求失败：' + e;
     msg.className = 'msg err';
   } finally {
     $('btnSelect').disabled = false;
