@@ -168,6 +168,7 @@
 <script>
 const $ = (id) => document.getElementById(id);
 let sources = {};
+let runCooldownUntil = 0; // 提交后的冷却截止时间（见 render 与 btnRun）
 
 async function api(path, opts) {
   const res = await fetch(path, opts);
@@ -203,7 +204,9 @@ function fillSources(payload) {
 
 function render(st) {
   const running = st.running;
-  $('btnRun').disabled = running;
+  // 跑批本身只要 1~2 秒，光靠 running 状态挡不住连点（每次点的时候上一次已结束），
+  // 再加 3 秒冷却，避免误触产生一串重复记录
+  $('btnRun').disabled = running || Date.now() < runCooldownUntil;
   $('btnStop').disabled = !running;
   $('phase').textContent = st.phase || 'idle';
   $('phase').className = 'phase ' + (st.phase || '');
@@ -388,6 +391,13 @@ $('btnSelect').onclick = async () => {
 };
 
 $('btnRun').onclick = async () => {
+  if (Date.now() < runCooldownUntil) {
+    $('runMsg').textContent = '刚提交过，等 3 秒再点（跑批只要几秒，别重复启动）';
+    $('runMsg').className = 'msg err';
+    return;
+  }
+  runCooldownUntil = Date.now() + 3000;
+  $('btnRun').disabled = true;
   const codes = $('codes').value.split(/[,\s，]+/).filter(Boolean);
   const payload = {
     mode: $('mode').value,

@@ -6,13 +6,25 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
 import threading
 from pathlib import Path
 from typing import Any
 
-_DB_PATH = Path(__file__).resolve().parent / "runs.db"
 _LOCK = threading.Lock()
+
+# 库路径可由 PS_CONSOLE_DB 覆盖 —— 测试必须指到临时文件，否则每跑一次 pytest
+# 都往真实历史里塞几条（实测一次 test_console 就 +3 条，历史表全是垃圾）。
+_ENV_DB = "PS_CONSOLE_DB"
+
+
+def _db_path() -> Path:
+    override = os.environ.get(_ENV_DB)
+    if override:
+        return Path(override)
+    return Path(__file__).resolve().parent / "runs.db"
+
 
 _DDL = """
 CREATE TABLE IF NOT EXISTS runs (
@@ -33,8 +45,9 @@ CREATE TABLE IF NOT EXISTS runs (
 
 
 def _connect() -> sqlite3.Connection:
-    _DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(_DB_PATH, timeout=10)
+    path = _db_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(path, timeout=10)
     conn.row_factory = sqlite3.Row
     return conn
 
