@@ -35,6 +35,9 @@ class BuildInputs:
     notes: tuple[str, ...] = ()  # 降级留痕（写进 meta.notes）
     # M5-1：本轮实际选源（写进 meta.sourcePolicy，ADR-015）
     source_policy: dict[str, Any] = field(default_factory=dict)
+    # M5-3：质量回执（写进 meta.quality）—— 缺财报标的与全链路失败接口
+    missing_financials: tuple[str, ...] = ()
+    failed_interfaces: tuple[str, ...] = ()
     data_date_financial: str | None = None
     data_date_price: str | None = None
 

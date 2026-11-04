@@ -41,6 +41,7 @@ from src.build.build_meta import (  # noqa: E402
 )
 from src.build.build_ranking import build_ranking  # noqa: E402
 from src.build.build_stock import build_stock  # noqa: E402
+from src.build.manifest import build_manifest  # noqa: E402
 from src.build.validate import validate_products  # noqa: E402
 from src.datasource.base import DataSourceError  # noqa: E402
 from src.datasource.registry import (  # noqa: E402
@@ -97,6 +98,17 @@ def assemble_inputs(
         degraded=bool(outcome.degraded or universe.degraded),
         notes=tuple(outcome.notes),
         source_policy=dict(outcome.source_policy),
+        # M5-3 质量回执：缺财报标的（financials:* 无数据）与全链路失败接口
+        missing_financials=tuple(
+            sorted(
+                {
+                    key.split(":", 1)[1]
+                    for key, value in outcome.sources.items()
+                    if key.startswith("financials:") and value in ("none", "fixture")
+                }
+            )
+        ),
+        failed_interfaces=tuple(outcome.failed_interfaces),
         data_date_financial=_max_field(financials, "report_period"),
         # daily 模式不抓历史行情 → 行情截止日回落到快照日期（D-32：FetchOutcome.snapshot_date）
         data_date_price=_max_field(prices, "trade_date") or outcome.snapshot_date,
@@ -352,6 +364,8 @@ def run(args: argparse.Namespace) -> int:
         written.append(build_ranking(inputs, market, out_dir))
     for score in inputs.scored:
         written.append(build_stock(inputs, score.code, out_dir))
+    # manifest 最后生成：扫描全目录（此时 stock/*.json 才齐全），否则会漏文件
+    written.append(build_manifest(inputs, out_dir))
     print(f"[batch] 产物 {len(written)} 个 → {out_dir}")
 
     if not args.offline:
