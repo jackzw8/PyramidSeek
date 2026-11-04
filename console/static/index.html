@@ -29,6 +29,9 @@
   .phase{padding:1px 8px;border-radius:10px;background:#eef2f7;font-size:12px}
   .phase.done{background:#e5f2ea;color:var(--ok)} .phase.failed{background:#faecea;color:var(--bad)}
   pre#log{height:280px;overflow:auto;background:#14161a;color:#c9d4de;font:12px/1.55 ui-monospace,Consolas,monospace;padding:12px;border-radius:8px;white-space:pre-wrap}
+  pre#log .ln-err{color:#ff9a9a}
+  pre#log .ln-warn{color:#e3c07a}
+  pre#log .ln-sum{color:#7ec8e3}
   table{width:100%;border-collapse:collapse;font-size:13px}
   th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
   th{color:var(--sub);font-weight:400}
@@ -184,11 +187,28 @@ async function loadPending() {
     : '（无失败项）';
 }
 
+const LN_ERR = /\bERROR\b|Traceback|Exception\b/;
+const LN_WARN = /(^|\s)(WARNING|note)[:\s]|降级到|全链路失败|自检：/;
+
 async function tailLog() {
   const { body } = await api('/api/log?tail=200');
   const lines = body.lines || [];
   const el = $('log');
-  el.textContent = lines.join('\n') || '（等待输出…）';
+  if (!lines.length) {
+    el.textContent = '（等待输出…）';
+    return;
+  }
+  // 逐行着色：真错误才红，说明性提示（note / 降级 / 自检）黄，避免把预期提示看成报错
+  el.innerHTML = '';
+  lines.forEach((line) => {
+    const div = document.createElement('div');
+    div.textContent = line;
+    if (LN_ERR.test(line)) div.className = 'ln-err';
+    else if (LN_WARN.test(line)) div.className = 'ln-warn';
+    else if (line.startsWith('[batch] 产物校验') || line.startsWith('[batch] 完成'))
+      div.className = 'ln-sum';
+    el.appendChild(div);
+  });
   el.scrollTop = el.scrollHeight;
 }
 

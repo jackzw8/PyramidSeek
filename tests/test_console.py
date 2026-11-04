@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 
+from console import utf8_env
 from console.app import app
 
 RUN_TIMEOUT = 120  # offline 全量 fixtures 约 5~10s，留足余量
@@ -42,6 +43,19 @@ def test_state_reports_sources_and_defaults(client) -> None:
     assert any(s["default"] for s in body["sources"]["A"])
 
 
+def test_child_process_env_forces_utf8() -> None:
+    """子进程必须显式带 UTF-8 环境。
+
+    Windows 上 `python -m src.batch` 的 stdout 是管道时按 locale（cp936）输出，
+    控制台按 utf-8 解码 → 日志整片 `��`（U+FFFD，原字节已丢）。父进程开没开 UTF-8
+    取决于启动它的终端，不能指望 —— 所以在子进程侧强制。
+    """
+    env = utf8_env()
+    assert env["PYTHONIOENCODING"] == "utf-8"
+    assert env["PYTHONUTF8"] == "1"
+    assert "PATH" in env  # 继承父进程环境，不能只剩两个变量
+
+
 def test_run_offline_end_to_end(client) -> None:
     """offline 小样本：启动 → 进度 → 完成 → 历史落库（M5-5 验收同款路径）。"""
     resp = client.post(
@@ -59,6 +73,8 @@ def test_run_offline_end_to_end(client) -> None:
     # 日志可 tail 且包含产物行
     log = client.get("/api/log?tail=200").get_json()["lines"]
     assert any("产物" in line for line in log)
+    # 日志不得出现替换字符（编码不一致的直接症状）
+    assert not any("\ufffd" in line for line in log), "日志含 U+FFFD：子进程输出与解码编码不一致"
     # 历史落库
     history = client.get("/api/history").get_json()["runs"]
     assert any(run["run_id"] == status["runId"] and run["status"] == "done" for run in history)
