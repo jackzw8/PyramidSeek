@@ -163,6 +163,19 @@
       </div>
     </div>
   </div>
+  <div class="modal" id="pubConfirm" hidden>
+    <div class="modal-box" style="width:min(540px,92vw)">
+      <div class="modal-head"><b>确认发布到 Pages</b></div>
+      <div class="modal-list" id="pubInfo" style="cursor:default"></div>
+      <div class="modal-foot">
+        <span class="hint">发布后线上约 1 分钟生效</span>
+        <span>
+          <button type="button" class="mini" id="pubCancel">取消</button>
+          <button type="button" class="primary" id="pubOk">确认发布</button>
+        </span>
+      </div>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -442,12 +455,44 @@ $('btnGate').onclick = async () => {
   const body = await res.json();
   $('pubLog').textContent = (body.output || []).join('\n') || (body.ok ? '门禁通过' : '门禁失败');
 };
-$('btnPublish').onclick = async () => {
-  if (!confirm('确认发布当前产物到 GitHub Pages？（会先跑门禁）')) return;
+async function doPublish() {
   $('pubLog').textContent = '发布中（门禁 + 构建 + 推送，约 2 分钟）…';
   const { ok, body } = await api('/api/publish', {method:'POST'});
   $('pubLog').textContent = (body.output || []).join('\n') || (body.error || '');
   if (ok) $('pubLog').textContent += '\n✅ 发布完成，稍后刷新 https://jackzw8.github.io/PyramidSeek/';
+}
+
+// 发布前先看「将要发的是什么」：只校验产物合规、不校验内容的话，很容易把
+// 别的东西（比如 e2e 测试跑出来的 fixtures）推上线。
+$('btnPublish').onclick = async () => {
+  const { ok, body } = await api('/api/product');
+  if (!ok) {
+    $('pubLog').textContent = body.error || '读取产物摘要失败';
+    return;
+  }
+  const info = $('pubInfo');
+  info.innerHTML = '';
+  const byMarket = Object.entries(body.byMarket || {})
+    .map(([m, v]) => `${m}=${(v || {}).stocks ?? 0} 只`).join(' / ') || '—';
+  const lines = [
+    `产物生成于：${fmtLocal(body.generatedAt)}`,
+    `股票总数：${body.codeCount} 只（${byMarket}）`,
+    `榜单行数：A=${body.rows.A ?? 0} / HK=${body.rows.HK ?? 0}`,
+    `前几只：${body.codes.join('、') || '—'}`,
+  ];
+  lines.forEach((text) => {
+    const div = document.createElement('div');
+    div.textContent = text;
+    div.style.cursor = 'default';
+    info.appendChild(div);
+  });
+  $('pubConfirm').hidden = false;
+};
+
+$('pubCancel').onclick = () => { $('pubConfirm').hidden = true; };
+$('pubOk').onclick = () => {
+  $('pubConfirm').hidden = true;
+  doPublish();
 };
 
 refresh(); loadPending(); tailLog();

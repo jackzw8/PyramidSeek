@@ -193,6 +193,40 @@ def api_pending():
     return jsonify({"items": _pending()})
 
 
+@app.get("/api/product")
+def api_product():
+    """当前待发布产物的摘要（发布前二次确认用）。
+
+    动机：发布只校验「产物合不合规」，不校验「这是不是你想发的那份」。曾出现
+    e2e 测试把 fixtures 跑到 `public/data` 后用户一点发布就推上 Pages —— 有摘要
+    就能一眼看出「怎么是五粮液，不是我跑的腾讯」。
+    """
+    data_dir = config.PUBLIC_DATA_DIR
+    meta_path = data_dir / "meta.json"
+    if not meta_path.exists():
+        return jsonify({"error": "public/data 里还没有产物，请先跑一次批"}), 404
+
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    rows: dict[str, int] = {}
+    for market in config.MARKETS:
+        path = data_dir / "ranking" / f"{market}.json"
+        if not path.exists():
+            continue
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        rows[market] = len(payload.get("rows") or [])
+    codes = sorted(item.stem for item in (data_dir / "stock").glob("*.json"))
+    return jsonify(
+        {
+            "generatedAt": meta.get("generatedAt"),
+            "snapshotVersion": meta.get("snapshotVersion"),
+            "byMarket": (meta.get("universe") or {}).get("byMarket") or {},
+            "rows": rows,
+            "codes": codes[:8],
+            "codeCount": len(codes),
+        }
+    )
+
+
 @app.post("/api/publish-gate")
 def api_publish_gate():
     """只跑门禁不推送（``publish --check``），供「先跑门禁」按钮使用。"""
