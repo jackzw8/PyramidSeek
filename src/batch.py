@@ -43,6 +43,11 @@ from src.build.build_ranking import build_ranking  # noqa: E402
 from src.build.build_stock import build_stock  # noqa: E402
 from src.build.validate import validate_products  # noqa: E402
 from src.datasource.base import DataSourceError  # noqa: E402
+from src.datasource.registry import (  # noqa: E402
+    DEFAULT_SOURCE,
+    available_sources,
+    validate_selection,
+)
 from src.engine.indicators import raw_indicators  # noqa: E402
 from src.engine.industry import build_pools  # noqa: E402
 from src.engine.scoring import score_universe  # noqa: E402
@@ -91,6 +96,7 @@ def assemble_inputs(
         pools=build_pools(stocks),
         degraded=bool(outcome.degraded or universe.degraded),
         notes=tuple(outcome.notes),
+        source_policy=dict(outcome.source_policy),
         data_date_financial=_max_field(financials, "report_period"),
         # daily 模式不抓历史行情 → 行情截止日回落到快照日期（D-32：FetchOutcome.snapshot_date）
         data_date_price=_max_field(prices, "trade_date") or outcome.snapshot_date,
@@ -264,14 +270,28 @@ def run(args: argparse.Namespace) -> int:
             print("[batch] 预筛：全部标的已追平，本次不抓财报（从标准层读回）")
             with_financials = False
 
+    # 财报选源（M5-1 / ADR-015）：平权可选、按市场各选一个，失败不自动换源。
+    # --offline 固定走 fixtures，不接受选源。
+    selection = (
+        None
+        if args.offline
+        else validate_selection(
+            {key: value for key, value in (("A", args.source_a), ("HK", args.source_hk)) if value}
+        )
+    )
+    if selection:
+        print("[batch] 财报选源：" + "｜".join(f"{m}={s}" for m, s in sorted(selection.items())))
+
     try:
         outcome = fetch.fetch_universe(
             markets=tuple(args.markets),
             codes=codes or None,
             limit=args.limit,
+            sources=selection,
             chain=fetch.default_chain(
                 offline=args.offline,
                 fixtures_path=args.fixtures,
+                sources=selection,
                 # 列表 / 申万映射属「时点数据」，受本参数影响；若按日分区则每天首次跑批
                 # 都会重建 131 个行业成分（≈15~30 分钟）。建仓类模式一律复用 cold/ 固定
                 # 分区，避免切模式白等一輪（D-43）。只有 daily 走按日分区，取最新列表/快照。
@@ -375,6 +395,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="标的清单文件（每行一个代码，# 开头为注释；与 --codes 合并去重）",
     )
     parser.add_argument("--limit", type=int, default=None, help="每个市场最多取多少只")
+    parser.add_argument(
+        "--source-a",
+        choices=available_sources("A"),
+        default=None,
+        help=f"A 股财报源（平权可选，默认 {DEFAULT_SOURCE['A']}）",
+    )
+    parser.add_argument(
+        "--source-hk",
+        choices=available_sources("HK"),
+        default=None,
+        help=f"港股财报源（平权可选，默认 {DEFAULT_SOURCE['HK']}）",
+    )
     parser.add_argument("--fixtures", type=Path, default=config.FIXTURES_FILE, help="fixtures 路径")
     parser.add_argument("--out", type=Path, default=config.PUBLIC_DATA_DIR, help="产物输出目录")
     parser.add_argument(

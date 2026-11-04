@@ -173,18 +173,27 @@ def test_offline_chain_never_touches_network(monkeypatch) -> None:
     def boom(*args, **kwargs):
         raise AssertionError("offline 模式不应构造网络数据源")
 
-    monkeypatch.setattr(fetch, "AkShareSource", boom)
-    monkeypatch.setattr(fetch, "AkShareThsSource", boom)
+    # M5-1：联网源统一经 registry.build_source 构造；offline 应完全绕过它
+    monkeypatch.setattr(fetch, "build_source", boom)
 
     chain = fetch.default_chain(offline=True)
     assert len(chain) == 1
     assert isinstance(chain[0], FixturesSource)
 
 
-def test_default_chain_orders_sources_for_online() -> None:
-    """联网链序（D-45）：新浪主源 → 同花顺 THS → fixtures（官方源已移出链）。"""
+def test_default_chain_uses_selected_source_for_online() -> None:
+    """联网主链（M5-1 / ADR-015）：**默认东财单源** + fixtures 兜底；多级回退链已废除。"""
     chain = fetch.default_chain()
-    assert [source.name for source in chain] == ["akshare", "ths", "fixture"]
+    assert [source.name for source in chain] == ["em", "fixture"]
+    # 显式换源：注册表把 "sina" 映射到 AkShareSource（内部 name 仍为 "akshare"）
+    assert [source.name for source in fetch.default_chain(sources={"A": "sina"})] == [
+        "akshare",
+        "fixture",
+    ]
+    assert [source.name for source in fetch.default_chain(sources={"A": "ths"})] == [
+        "ths",
+        "fixture",
+    ]
 
 
 # ── 回退顺序与降级留痕 ────────────────────────────────────────────────────

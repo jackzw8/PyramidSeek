@@ -50,6 +50,13 @@ def build_meta(inputs: BuildInputs, out_dir: Path) -> Path:
         "degraded": bool(inputs.degraded),
         "notes": "；".join(part for part in notes if part),
     }
+    # 实际选源回执（M5-1 / ADR-015）：让「换源后分数变了」可追溯。
+    # 字段可选：旧版产物 / 纯离线回归没有该键仍合法（contractVersion 不变）。
+    if inputs.source_policy:
+        payload["sourcePolicy"] = {
+            "chain": inputs.source_policy.get("chain", []),
+            "byMarket": inputs.source_policy.get("byMarket", {}),
+        }
     return write_json(out_dir / "meta.json", payload)
 
 

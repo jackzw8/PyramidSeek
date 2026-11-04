@@ -33,6 +33,8 @@ class BuildInputs:
     pools: dict[str, PoolInfo] = field(default_factory=dict)
     degraded: bool = False
     notes: tuple[str, ...] = ()  # 降级留痕（写进 meta.notes）
+    # M5-1：本轮实际选源（写进 meta.sourcePolicy，ADR-015）
+    source_policy: dict[str, Any] = field(default_factory=dict)
     data_date_financial: str | None = None
     data_date_price: str | None = None
 

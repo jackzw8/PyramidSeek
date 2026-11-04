@@ -32,9 +32,9 @@ from pathlib import Path
 from typing import Any
 
 from .. import config
-from ..datasource.akshare_src import AkShareSource, AkShareThsSource
 from ..datasource.base import DataSourceError
 from ..datasource.fixtures_src import FixturesSource
+from ..datasource.registry import build_source, validate_selection
 from . import clean, store
 
 logger = logging.getLogger(__name__)
@@ -49,25 +49,28 @@ class FetchOutcome:
     sources: dict[str, str] = field(default_factory=dict)  # 接口 → 实际提供数据的源
     fallbacks: dict[str, list[str]] = field(default_factory=dict)  # 接口 → 前序失败原因
     notes: list[str] = field(default_factory=list)
+    # M5-1：本轮实际选源（供产物 meta.sourcePolicy 留痕，ADR-015）
+    source_policy: dict[str, Any] = field(default_factory=dict)
+    # 主链首个源名 = 本轮「期望源」；非它提供即视为降级（保持 D-8 的降级语义）
+    expected_source: str = ""
     # 全市场快照成功时的跑批日（ISO）：daily 模式不抓历史行情 → 行情截止日由快照提供（D-32）
     snapshot_date: str | None = None
 
     @property
     def degraded(self) -> bool:
-        """是否发生降级：**有数据的**接口只要不是主源提供即视为降级。
+        """是否发生降级：有数据的接口不是**本轮所选源**提供，或最终无数据。
 
-        例外：行情（``price_daily:*``）**全链路无数据不算降级** —— 产物契约里 ``kline``
-        是可选字段（§3.4），缺行情只影响月K 卡片，不代表数据源降级（2026-10-15 实跑：
-        fixtures 不含行情、部分港股无行情）。
+        ADR-015 后选源是显式参数，正常路径下所有接口都由同一个源提供；测试用的
+        多级 stub 链仍靠 ``expected_source`` 判断谁算「降级」。
+        行情 / 全市场快照是增强接口，缺失不影响主榜与评分，豁免。
         """
         for name, source in self.sources.items():
-            if source == "none":
-                # 行情与全市场快照都是「增强」接口：缺了不影响主榜与评分的正确性
-                # （快照缺失只是少一个停牌判定维度，且会留 note 提示），不算降级。
-                if name.startswith("price_daily") or name.startswith("market_snapshot"):
-                    continue
-                return True
-            if source != config.PRIMARY_SOURCE_NAME:
+            enhanced = name.startswith(("price_daily", "market_snapshot"))
+            if source in ("none", "fixture"):
+                if not enhanced:
+                    return True
+                continue
+            if self.expected_source and source != self.expected_source and not enhanced:
                 return True
         return False
 
@@ -116,7 +119,10 @@ def fetch_universe(
     markets: tuple[str, ...] = config.MARKETS,
     codes: list[str] | None = None,
     limit: int | None = None,
-    chain: list[Any],
+    chain: list[Any] | None = None,
+    sources: dict[str, str] | None = None,
+    cache_partition: str | None = None,
+    stale_after: Any | None = None,
     today: date | None = None,
     persist: bool = True,
     db_path: Path | None = None,
@@ -136,8 +142,31 @@ def fetch_universe(
     if with_history and not config.HISTORY_FETCH_ENABLED:
         with_history, with_raw = False, False
 
-    stocks: list[dict[str, Any]] = []
+    # 主链 vs 财报链（M5-1 / ADR-015）：主链负责列表/快照/行情/行业树；
+    # 财报按市场各选一个源，**链里只有它自己** → 失败不会被静默换成别的源。
+    if chain is None:
+        chain = default_chain(
+            cache_partition=cache_partition, stale_after=stale_after, sources=sources
+        )
+    fin_chains = financial_chains(
+        markets=markets,
+        cache_partition=cache_partition,
+        stale_after=stale_after,
+        sources=sources,
+        fallback_chain=chain,
+    )
     outcome = FetchOutcome(universe=clean.CleanResult())
+    outcome.expected_source = getattr(chain[0], "name", "") if chain else ""
+    outcome.source_policy = {
+        "chain": list(
+            dict.fromkeys(
+                getattr(c, "name", type(c).__name__) for fc in fin_chains.values() for c in fc
+            )
+        ),
+        "byMarket": (validate_selection(sources) if sources else {}),
+    }
+
+    stocks: list[dict[str, Any]] = []
     seen: set[str] = set()
 
     for market in markets:
@@ -182,7 +211,10 @@ def fetch_universe(
         total = len(stocks)
         for idx, row in enumerate(stocks, start=1):
             code = str(row["code"])
-            rows, source, reasons = _try_chain("financials", code, chain=chain)
+            code_market = "HK" if code.upper().startswith("HK") else "A"
+            rows, source, reasons = _try_chain(
+                "financials", code, chain=fin_chains.get(code_market, chain)
+            )
             outcome.sources[f"financials:{code}"] = source
             if reasons:
                 outcome.fallbacks[f"financials:{code}"] = reasons
@@ -313,7 +345,9 @@ def fetch_universe(
         )
 
     for interface, source in sorted(outcome.sources.items()):
-        if source not in (config.PRIMARY_SOURCE_NAME, "none"):
+        if source == "fixture":
+            outcome.notes.append(f"{interface} 降级到 fixtures（离线示例数据）")
+        elif outcome.expected_source and source not in ("none", outcome.expected_source):
             outcome.notes.append(f"{interface} 降级到 {source}")
     for interface in outcome.failed_interfaces:
         outcome.notes.append(f"{interface} 全链路失败（无数据）")
@@ -338,26 +372,54 @@ def default_chain(
     fixtures_path: Path | None = None,
     cache_partition: str | None = None,
     stale_after: Any | None = None,
+    sources: dict[str, str] | None = None,
 ) -> list[Any]:
-    """默认回退链；``offline=True`` 时**只用 fixtures**（不打网络）。
+    """**主链**（列表 / 快照 / 行情 / 行业树）：只放一个源 + fixtures 兜底。
 
-    联网链序（D-45）：**新浪主源 → 同花顺 THS（仅财报第 2 级）→ fixtures**
-    （官方源已移出回退链、仅对账，见 05 §8）。
+    M5-1 / ADR-015：财报源由 :func:`financial_chains` 按市场单独挑，不在主链里做回退。
+    主链仍带 fixtures 仅为兼容「列表接口整体挂掉」的离线可跑性（R16），且会被
+    ``FetchOutcome.degraded`` 明确标记，**不是静默换源**。
 
-    :param cache_partition: 透传给各数据源的缓存分区（D-34）：``"cold"`` 用于
-        冷启动跑批；``None`` = 日常（全历史数据已固定落 ``cold/``，D-37）。
-    :param stale_after: 全历史数据新鲜度 TTL（D-37），透传给各数据源：
-        ``None`` = 永不过期（cold 基线）；monthly/financials 按模式传 ``timedelta``。
+    :param sources: ``{"A": "em", "HK": "em"}``；``None`` = 用注册表默认值。
     """
     fixtures = FixturesSource(fixtures_path)
     if offline:
         return [fixtures]
+    selection = validate_selection(sources)
     return [
-        AkShareSource(partition=cache_partition, stale_after=stale_after),
-        # 财报第 2 级（D-45）：仅当新浪失败时兜底；其余接口一律抛错让链继续
-        AkShareThsSource(partition=cache_partition, stale_after=stale_after),
+        build_source("A", selection["A"], partition=cache_partition, stale_after=stale_after),
         fixtures,
     ]
+
+
+def financial_chains(
+    *,
+    markets: tuple[str, ...],
+    cache_partition: str | None = None,
+    stale_after: Any | None = None,
+    sources: dict[str, str] | None = None,
+    fallback_chain: list[Any] | None = None,
+) -> dict[str, list[Any]]:
+    """按市场构造**单源**财报链：失败即失败，不自动换源（ADR-015 / M5-1）。
+
+    未显式给 ``sources`` 时（如旧测试直接传 ``chain=[stub]``），沿用 ``fallback_chain``，
+    保持既有调用完全兼容。
+    """
+    if sources is None:
+        chain = fallback_chain or []
+        return {market: chain for market in markets}
+    selection = validate_selection(sources)
+    return {
+        market: [
+            build_source(
+                market,
+                selection[market],
+                partition=cache_partition,
+                stale_after=stale_after,
+            )
+        ]
+        for market in markets
+    }
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
