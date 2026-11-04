@@ -118,6 +118,7 @@ def fetch_universe(
     *,
     markets: tuple[str, ...] = config.MARKETS,
     codes: list[str] | None = None,
+    skip_financials: set[str] | None = None,
     limit: int | None = None,
     chain: list[Any] | None = None,
     sources: dict[str, str] | None = None,
@@ -134,6 +135,9 @@ def fetch_universe(
     """按回退链采集 → 清洗 → 落库。
 
     :param codes: 只取这些标的（小样本冒烟用）；``None`` 表示全市场。
+    :param skip_financials: 这些标的**不重抓财报**（预筛已追平），但仍留在 ``stocks`` 里
+        —— 列表 / 行业信息要用**本轮的**（申万行业名会改名，例如「白酒」→「白酒Ⅱ」），
+        只有财报走标准层读回。``codes`` 因此不要为预筛缩减。
     :param limit: 每个市场最多取多少只（``codes`` 优先级更高）。
     :param persist: 是否落库（``False`` 只做采集与清洗）。
     """
@@ -211,6 +215,16 @@ def fetch_universe(
         total = len(stocks)
         for idx, row in enumerate(stocks, start=1):
             code = str(row["code"])
+            if skip_financials and code in skip_financials:
+                # 预筛已追平：不重抓，财报由调用方从标准层读回（保留 stocks 以取本轮行业名）
+                logger.info(
+                    "财报 [%d/%d] %s %s：跳过（预筛已追平）",
+                    idx,
+                    total,
+                    code,
+                    row.get("name") or "",
+                )
+                continue
             code_market = "HK" if code.upper().startswith("HK") else "A"
             rows, source, reasons = _try_chain(
                 "financials", code, chain=fin_chains.get(code_market, chain)
