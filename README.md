@@ -1,139 +1,137 @@
 # 金字塔选股 PyramidSeek
 
-把《HOLDLE 投资交易课》的选股方法论产品化：
+把《HOLDLE 投资交易课》的选股方法论，做成一套**可复现、可自己跑**的评分系统：
+
+> 抓财报 → 算「质量分 + 成长分」→ 同行业分位排名 → 输出静态站点
+
+覆盖 **A 股 + 港股**，核心口径一行：
 
 ```
-东财 / 新浪 / 同花顺 / 腾讯（可选源） →  本地跑批算分  →  静态 JSON 产物  →  GitHub Pages 静态站点
+金字塔分 = clamp(质量分 Q + 成长分 G, 0, 1000)
 ```
 
-- **站点**：<https://jackzw8.github.io/PyramidSeek/>（由 `gh-pages` 分支发布）
-- **定位**：自用 / 小范围；全功能免费；无账号体系（收藏用匿名 `visitorId`）。
-- **市场**：A股 + 港股（本期不做美股）。
-- **核心口径**：`金字塔分 = clamp(质量分 Q + 成长分 G, 0, 1000)`。
-- **架构**：两块 —— 本地跑批端（Flask 控制台 + 数据生产 + 发布器）+ GitHub Pages 静态展示端；两者只通过「产物包 + `manifest.json`」耦合（ADR-014）。
-
-> **免责声明**：本项目为学习 / 研究用途，所有评分与数据**不构成任何投资建议**。
+> ⚠️ **免责声明**：本项目为学习 / 研究用途。所有评分与数据**不构成任何投资建议**，也不保证数据准确或及时。据此操作，风险自负。
 
 ---
 
-## 一、权威文档（动手前必读）
+## 在线站点
 
-| 类型 | 位置 |
+**<https://jackzw8.github.io/PyramidSeek/>**
+
+> 当前是**占位页**。真实产物要等一次本地联网跑批（按行业选样约 1200 只，3~4 小时）后才会推上去 —— 见下面「自己跑一遍」。
+> 想看真实效果，本地跑一次 `--offline`（几秒，用内置示例数据）最快。
+
+---
+
+## 它在做什么
+
+**评分**：质量分 Q 由 6 项财务指标加权（权重合计 1000），成长分 G 由营收 / 净利 / 经营现金流增速算出，两者相加并截断到 0–1000。
+
+**排名**：不给绝对值排名，而是**同行业分位** —— 银行和半导体不该用同一把尺子。
+A 股用申万行业（一级 / 二级），港股用 GICS；某二级行业样本少于 30 只时自动回退到一级。
+
+**财报口径**：取最近 **5 个完整财年**的年报；季报口径不可比，不进主评分；财报在报告期后 4 个月才生效，避免用到未审计数据。
+
+**产物**（纯静态 JSON，前端零依赖）：
+
+| 页面 | 看什么 |
 |---|---|
-| 需求 / 技术 / 计划 / 数据字典 / 数据源 / 评分 / 契约 / ADR / Runbook | `../项目文档/技术文档_Markdown/`（编号 01–09） |
-| 家法（22 条规范） | `../项目文档/项目总结/01_项目规范.md` |
-| 经验沉淀 / 评审发现 | `../项目文档/项目总结/02_项目经验.md` |
-| 使用方法 | `../项目文档/项目总结/03_使用方法.md` |
-
-关键约定（与文档一致，改动先改文档）：
-
-- 金字塔分 `clamp(Q + G, 0, 1000)`；Q 由 6 项指标加权（权重合计 1000）。
-- 行业对比池：A股申万 / 港股 GICS；二级样本 `< 30` 回退一级；概念板块不纳入；分市场不混排。
-- 财报窗口：近 **5 个完整财年（年报）**；财报 **报告期 + 4 个月**生效；季报口径不可比，不进主评分。
-- 单位：金额「亿元、2 位小数」，比率存小数；空值是 `NULL` 不是 `0`。
-- 版本三件套：`snapshotVersion` / `contractVersion` / `formulaVersion`。
-- 港股行业分类按 ADR-011 走降级路径：先用东财口径跑通全链路，`industry_std` 标注「东财口径（待校准 GICS）」。
+| 排行页 | A 股 / 港股主榜，行业筛选，组内前 10% 高亮，拼音搜索 |
+| 个股详情 | 评分构成、雷达图、财务四表、同业对比、日 / 月 K（按需实时取） |
+| 观察池 | 本地收藏，`visitorId` 匿名标识，可导出 / 导入 JSON |
 
 ---
 
-## 二、目录结构
+## 自己跑一遍
 
-```
-PyramidSeekApp/
-├── README.md
-├── requirements.txt                # 运行依赖（固定版本）
-├── requirements-dev.txt            # 开发依赖（pytest / ruff）
-├── pyproject.toml                  # ruff + pytest 配置
-├── .github/workflows/ci.yml        # CI：lint + pytest
-├── src/
-│   ├── config.py                   # 权重/锚点/阈值/分类标准（常量唯一来源）
-│   ├── datasource/                 # 数据源抽象 + AkShare（新浪 / THS）+ 官方源（对账）
-│   ├── pipeline/                   # 采集 / 清洗 / 落库（标准层 + 分析层）
-│   ├── engine/                     # 指标 / 评分 / 行业分位
-│   ├── build/                      # 产物生成（ranking/stock/meta/derived）+ 校验
-│   └── batch.py                    # 总入口：一条命令跑完
-├── schema/                         # 产物 JSON Schema（meta/ranking/stock/search-index，校验用）
-├── fixtures/                       # 示例数据（离线回归 + 黄金样本输入）
-├── public/                         # 前端静态站点（原生 HTML/CSS/JS + 手绘 SVG，零依赖）
-│   ├── index.html                  # 排行页（主榜 + 单列，筛选 / 分页 / 组内前 10% 高亮）
-│   ├── stock.html                  # 个股详情（评分构成 / 雷达 / 月K·MACD·年ROE / 四张表 / 同业面板）
-│   ├── watchlist.html              # 观察池（visitorId + 导出 / 导入）
-│   ├── css/style.css
-│   ├── js/api.js                   # 产物加载层（fetch + 缓存 + 降级 / 断产物提示）
-│   ├── js/common.js                # 公共工具（格式化「—」/ 搜索 / 收藏 / 导航）
-│   ├── js/{ranking,stock,watchlist}.js
-│   └── data/                       # 产物（跑批生成，gitignore）
-├── tests/                          # 单元 / 回归 / 契约测试
-└── data/                           # 本地运行产物（gitignore）
-```
+需要 **Python 3.11+**（本地在 3.14 上验证）。
 
----
-
-## 三、环境与运行
-
-**依赖**：Python 3.11+（本地已验证 3.14）。
-
-```powershell
-# 1) 安装依赖
+```bash
+git clone https://github.com/jackzw8/PyramidSeek.git
+cd PyramidSeek
 python -m pip install -r requirements.txt -r requirements-dev.txt
-
-# 2) 离线跑通整链（仅用 fixtures/，不联网；跑完自动做产物校验）
-python -m src.batch --offline
-
-# 2b) 联网跑批 —— 模式化（D-32，详见《数据源接入规格》§7.1）：
-python -m src.batch --mode daily        # 快照 + 全量重算（日常默认，分钟级）
-python -m src.batch --mode financials   # 三表全量重抓（披露季：1-4 月年报、4/8/10 月季报）
-python -m src.batch --mode monthly      # 行情历史重抓（qfq+raw，校正前复权序列与 hfq）
-python -m src.batch --mode cold         # 冷启动（三表 + 行情历史，本地分批跑）
-python -m src.batch --mode retry        # 补上次失败清单（data/_pending.json）
-
-# 3) 运行测试
-pytest
-
-# 4) 单独校验已有产物（M3-5；失败非零退出）
-python -m src.build.validate [--data public/data]
-
-# 5) 本地预览前端（产物已在 public/data/；浏览器打开 http://localhost:8000/）
-cd public
-python -m http.server 8000
 ```
 
-跑批环境由环境变量 `PS_ENV` 区分（`local` | `ci`），脚本不写死绝对路径、不使用交互输入。
-需要完全可复现的产物时固定时间戳：`python -m src.batch --offline --generated-at 2026-10-15T00:00:00Z`。
+### ① 离线跑通整条链路（几秒，不联网）
 
-> **数据源与耗时（2026-10-16 定案，见《计划完成情况》D-38 / D-42 / D-44 / D-45）**：
-> 财报链序：**新浪三表（主）→ 同花顺 THS（第 2 级）→ fixtures**（三级；官方源移出链、仅对账）；16:53 复测
-> 新浪三表 ≈**5.8s/只**、THS ≈7.9s/只（正常档）；含请求节流（D-42，2~3s 抖动）规划口径
-> **≈13s/只** → 全市场 5000 只 **≈18h（分天）**。**月K 行情停止跑批**，`monthly` 模式停用
-> （akshare 内行情接口均挂新浪/东财且都会限速），产物 `kline` 恒缺省。财报缓存键含源名
-> （`financial_{源}_{code}_{slug}`，D-44）。本地验证与前端联调请用
-> `--codes` / `--limit` 小样本；原始返回按日缓存（`data/raw/<源>/<日期>/`），**同日重跑秒过**。
-> 首次跑批还会建「申万行业映射」（131 个二级行业，约 1 分钟，同样按日缓存）。
+```bash
+python -m src.batch --offline
+```
 
-产物输出目录（默认）：`public/data/`，含 `meta.json`、`industries.json`、
-`ranking/{A,HK}.json`（`rows` 主榜 + `excluded` 单列）、`stock/{code}.json`（一码一文件）。
+用仓库内置的 `fixtures/` 示例数据跑完整流程，产出到 `public/data/`，跑完自动做 schema 校验。
+
+### ② 看效果
+
+```
+双击 预览站点.bat          # 起 http 服务并自动开浏览器（8000 端口）
+```
+
+> ⚠️ 别直接双击 `public/index.html`。页面用 `fetch` 读数据，`file://` 协议下浏览器会拦截跨源请求，
+> 结果是红条报「无法加载」、内容区空白 —— 必须走 http。
+
+### ③ 联网跑真实数据
+
+```bash
+python -m src.batch --mode financials --limit 20    # 先小样本试水
+python -m src.batch --mode daily                    # 日常：快照 + 重算（分钟级）
+python -m src.batch --mode financials               # 披露季：重抓三表
+python -m src.batch --mode retry                    # 补上次失败清单
+```
+
+> 全市场 5500+ 只、约 10 秒/只（含请求节流）：完整跑一遍约 **15 小时**，建议分天；
+> 按行业选样到约 1200 只（每行业前 10）约 **3~4 小时**，控制台里能一键生成这个清单。
+> 中断后重跑同一条命令即可，已抓的走缓存秒过。
+
+### ④ 用图形界面（可选）
+
+```
+双击 启动控制台.bat        # Flask 控制台（5055 端口），跑批 / 选样 / 门禁 / 发布都在里面
+```
+
+控制台能做的事：选数据源、按行业生成选样清单（申万一级/二级、或港股通成分股）、
+启动 / 停止跑批、实时看日志与进度、看失败清单并一键重试、发布前跑门禁。
 
 ---
 
-## 四、当前进度（里程碑）
+## 目录结构
 
-| 里程碑 | 状态 |
-|---|---|
-| **M0 骨架与规范** | ✅ 仓库结构 / `config.py` / `fixtures` / CI |
-| **M1 数据层** | ✅ 数据源抽象 → AkShare → 官方源兜底 → 清洗 → DuckDB/Parquet |
-| **M2 计算层** | ✅ 指标 / 子分 / 成长分 / 行业分位 / 组装总分 / 双引擎黄金样本对账 |
-| **M3 产物层** | ✅ ranking（主榜 + 单列）/ stock / meta 产物 + schema 校验 + 跑批总入口 |
-| **M4 前端** | ✅ 排行（主榜 + 单列、组内前 10% 高亮）/ 详情（雷达 / 财务四表 / 同业）/ 观察池 / 拼音搜索；数据全部来自产物。🔄 **M4-7 实时行情**（前端按需取日/月K，D-56）待开工 |
-| M5 跑批端与发布 | 🔄 进行中：**M5-2 仓库与分支已就绪**（`main` + `gh-pages` + Pages）；M5-1 源可选化 / M5-3~7 未开工 |
-| M6 打磨 | ⬜ 待开工（口径展示 / 缓存 / 提醒 / 文档 / 对账） |
+```
+src/
+  config.py        权重 / 锚点 / 阈值等常量（唯一来源）
+  datasource/      数据源：新浪 / 东财 / 同花顺 / 腾讯（A 股与港股可选）
+  pipeline/        采集 → 清洗 → 落库（DuckDB 标准层 + 分析层）
+  engine/          指标、子分、成长分、行业分位、组装总分
+  build/           产物生成与校验、发布器
+  batch.py         总入口：一条命令跑完整链
+console/           本地跑批控制台（Flask + 子进程）
+public/            前端静态站点（原生 HTML/CSS/JS，零依赖）
+schema/            产物 JSON Schema
+fixtures/          示例数据（离线回归用）
+tests/             单元 / 回归 / 契约测试
+启动控制台.bat      一键起控制台
+预览站点.bat        一键预览站点
+```
 
 ---
 
-## 五、开发纪律（摘自家法 R1–R22，详见 `01_项目规范.md`）
+## 设计要点
 
-1. 改行为先改文档，再改代码；改契约升 `contractVersion`，改公式升 `formulaVersion`。
-2. 常量只有一个家：Python 在 `src/config.py`，JS 在 `engine.js` 顶部常量区。
-3. 双引擎（Python / JS）逐字对齐，用同一份 `fixtures` 做黄金样本对账，CI 强制。
-4. 离线永远可跑：任何改动不得破坏「仅用 `fixtures/` 跑通整链」。
-5. 跑批幂等、产物不手改；产物只由 `batch` 生成。
-6. **一律在 `main` 上做**（R21）：不开代码分支；评分产物随前端由 `publish` 推到 `gh-pages` 快照分支（ADR-014）。
+- **两块架构**：本地跑批端（控制台 + 数据生产 + 发布器）与纯静态展示端，只通过「产物包 + `manifest.json`」耦合，没有服务器、没有数据库在线运行。
+- **数据源平权可选**：A 股 新浪 / 东财 / 同花顺，港股 腾讯 / 东财；默认都走东财。选源是一次跑批的显式参数，**失败不自动换源**（避免同一批数据混了不同口径）。
+- **产物契约**：`meta` / `ranking` / `stock` / `search-index` 四类 JSON，带 `snapshotVersion`（数据快照）、`contractVersion`（结构）、`formulaVersion`（公式）三件套，改动必升版本。
+- **可复现**：依赖固定版本，离线模式只读 `fixtures/`，可固定时间戳重跑出逐字节一致的产物。
+- **发布**：`publish --build` 把 `public/` 全量复制成 `dist/` 并补发布时间戳，`publish --push` 再推到 `gh-pages` 分支，每次发布对应一个 `snap-*` tag，可回滚。
+
+---
+
+## 开发
+
+```bash
+pytest                    # 全部测试（离线，不联网）
+ruff check . && ruff format --check .
+```
+
+CI（`.github/workflows/ci.yml`）跑同样的三步：lint → pytest → 离线跑批校验。**只在 PR 与手动触发**时执行，日常提交不会自动跑。
+
+> 详细设计文档（需求 / 技术说明 / 数据字典 / 数据源规格 / 评分算法 / 契约 / ADR 等 10 份）
+> 在作者本地维护，未随仓库公开。本 README 覆盖上手所需的最小集。
