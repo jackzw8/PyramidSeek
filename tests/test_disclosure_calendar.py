@@ -57,14 +57,8 @@ def test_financials_ttl_days_by_season() -> None:
     assert common.financials_ttl_days(date(2026, 4, 20)) == config.FINANCIALS_FRESH_DAYS
     assert common.financials_ttl_days(date(2026, 8, 20)) == config.FINANCIALS_FRESH_DAYS
     assert common.financials_ttl_days(date(2026, 11, 5)) == config.FINANCIALS_FRESH_DAYS
-    assert (
-        common.financials_ttl_days(date(2026, 6, 15))
-        == config.FINANCIALS_FRESH_DAYS_OFF_SEASON
-    )
-    assert (
-        common.financials_ttl_days(date(2026, 12, 1))
-        == config.FINANCIALS_FRESH_DAYS_OFF_SEASON
-    )
+    assert common.financials_ttl_days(date(2026, 6, 15)) == config.FINANCIALS_FRESH_DAYS_OFF_SEASON
+    assert common.financials_ttl_days(date(2026, 12, 1)) == config.FINANCIALS_FRESH_DAYS_OFF_SEASON
     assert config.FINANCIALS_FRESH_DAYS_OFF_SEASON > config.FINANCIALS_FRESH_DAYS
 
 
@@ -92,7 +86,13 @@ def test_expected_report_period(today: date, expected: str) -> None:
 
 def test_expected_report_period_is_monotonic_within_year() -> None:
     """年内应披露期只会向后推进，不能回退（回退会导致重复重抓）。"""
-    checkpoints = [date(2026, 1, 1), date(2026, 2, 1), date(2026, 4, 1), date(2026, 7, 1),
-                   date(2026, 10, 1), date(2026, 12, 31)]
+    checkpoints = [
+        date(2026, 1, 1),
+        date(2026, 2, 1),
+        date(2026, 4, 1),
+        date(2026, 7, 1),
+        date(2026, 10, 1),
+        date(2026, 12, 31),
+    ]
     periods = [common.expected_report_period(day) for day in checkpoints]
     assert periods == sorted(periods)
