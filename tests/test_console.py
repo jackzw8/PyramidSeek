@@ -20,12 +20,15 @@ RUN_TIMEOUT = 120  # offline 全量 fixtures 约 5~10s，留足余量
 
 @pytest.fixture(autouse=True)
 def _isolated_runs_db(tmp_path, monkeypatch):
-    """每个用例用独立的 sqlite 历史库。
+    """每个用例用独立的 sqlite 历史库 + 独立的产物目录。
 
-    不隔离的话，测试里那次真实跑批会写进 `console/runs.db` —— 实测每跑一次
-    本文件历史表就多 3 条，用户看到的是「我只点了一次怎么一堆记录」。
+    不隔离的话有两处污染（都实测踩过）：
+    - 历史库：测试里那次真实跑批会写进 `console/runs.db`（每跑一次 +3 条）；
+    - **产物目录**：e2e 用例跑的是 `--offline --limit 2`（fixtures = 贵州茅台 + 五粮液），
+      会覆盖真实 `public/data` —— 用户随后一点发布，就把这份假数据推上了 Pages。
     """
     monkeypatch.setenv("PS_CONSOLE_DB", str(tmp_path / "runs.db"))
+    monkeypatch.setenv("PS_CONSOLE_OUT_DIR", str(tmp_path / "public_data"))
 
 
 @pytest.fixture()
