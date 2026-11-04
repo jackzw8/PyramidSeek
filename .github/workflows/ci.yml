@@ -47,9 +47,6 @@ jobs:
       - name: Pytest failures -> annotations
         if: failure()
         run: |
-          if [ -f ci_diag_golden.py ]; then
-            python ci_diag_golden.py || true
-          fi
           python - <<'PY'
           import pathlib, sys
           p = pathlib.Path("pytest.log")
