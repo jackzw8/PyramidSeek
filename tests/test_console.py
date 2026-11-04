@@ -98,8 +98,16 @@ def test_select_rejects_bad_level(client) -> None:
     assert "level" in resp.get_json()["error"]
 
 
+def test_select_rejects_dir_outside_repo(client, monkeypatch, tmp_path) -> None:
+    """保存目录必须在仓库内（本机服务，不留任意路径写文件的口子）。"""
+    monkeypatch.setattr("console.select.REPO_ROOT", tmp_path)
+    resp = client.post("/api/select", json={"kind": "industry", "outDir": "../../.."})
+    assert resp.status_code == 400
+    assert "仓库内" in resp.get_json()["error"]
+
+
 def test_select_writes_list(client, monkeypatch, tmp_path) -> None:
-    """行业选样（mock 数据源）：每行业取前 N、跳过「未分类」与非 normal，清单落到 BATCH_DIR。"""
+    """行业选样（mock 数据源）：每行业取前 N、跳过「未分类」与非 normal，清单落到 outDir。"""
     stocks = [
         {"code": "SH600000", "status": "normal", "l1_name": "银行", "l2_name": "银行"},
         {"code": "SH600001", "status": "normal", "l1_name": "银行", "l2_name": "银行"},
@@ -116,9 +124,12 @@ def test_select_writes_list(client, monkeypatch, tmp_path) -> None:
             return stocks
 
     monkeypatch.setattr("console.select.AkShareSource", _FakeSource)
-    monkeypatch.setattr("console.select.BATCH_DIR", tmp_path)
+    monkeypatch.setattr("console.select.REPO_ROOT", tmp_path)
 
-    resp = client.post("/api/select", json={"level": "l2", "perIndustry": 1})
+    resp = client.post(
+        "/api/select",
+        json={"kind": "industry", "level": "l2", "perIndustry": 1, "outDir": "."},
+    )
     assert resp.status_code == 200, resp.get_json()
     body = resp.get_json()
     assert body["count"] == 2  # 两个行业各取 1；未分类跳过；status=st 被过滤
@@ -131,3 +142,45 @@ def test_select_writes_list(client, monkeypatch, tmp_path) -> None:
     assert "SH600001" not in text  # 每行业只取 1 只
     assert "SZ000002" not in text  # 非 normal 被过滤
     assert "未分类" not in text
+
+
+def test_select_hk_ggt_codes(client, monkeypatch, tmp_path) -> None:
+    """港股通清单：代码归一成 HK + 5 位（700 → HK00700），去重有序。"""
+    monkeypatch.setattr("console.select.REPO_ROOT", tmp_path)
+
+    def _fake_frame() -> dict:
+        return {"代码": ["01191", "700", "01191"]}
+
+    class _Frame:
+        def __getitem__(self, _key):
+            return self
+
+        def tolist(self):
+            return _fake_frame()["代码"]
+
+    monkeypatch.setattr("console.select.ak.stock_hk_ggt_components_em", lambda: _Frame())
+
+    resp = client.post("/api/select", json={"kind": "hk_ggt", "outDir": "."})
+    assert resp.status_code == 200, resp.get_json()
+    body = resp.get_json()
+    assert body["count"] == 2  # 01191 去重，700 补零
+    out = tmp_path / "hk_ggt_codes.txt"
+    text = out.read_text(encoding="utf-8")
+    assert "HK01191" in text and "HK00700" in text
+
+
+def test_fs_lists_dirs_and_txt_only(client, monkeypatch, tmp_path) -> None:
+    """目录浏览：只给目录与 .txt，隐藏目录不出现；越界路径 400。"""
+    (tmp_path / "sub").mkdir()
+    (tmp_path / ".hidden").mkdir()
+    (tmp_path / "a.txt").write_text("x", encoding="utf-8")
+    (tmp_path / "b.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setattr("console.select.REPO_ROOT", tmp_path)
+    monkeypatch.setattr("console.app.REPO_ROOT", tmp_path)
+
+    body = client.get("/api/fs?path=").get_json()
+    assert body["cwd"] == ""
+    assert body["dirs"] == ["sub"]
+    assert body["files"] == ["a.txt"]
+
+    assert client.get("/api/fs?path=../../").status_code == 400

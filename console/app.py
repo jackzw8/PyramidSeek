@@ -7,6 +7,8 @@ API：
 - ``POST /api/run``     启动跑批（body：mode / markets / sourceA / sourceHk /
   codes / codesFile / limit / offline）
 - ``POST /api/stop``    停止当前跑批
+- ``POST /api/select``  生成选样清单（行业选样 / 港股通成分股，目录可选）
+- ``GET  /api/fs``      目录浏览（限仓库内，供前端挑目录与清单文件）
 - ``GET  /api/log``     日志 tail（``?tail=200``）
 - ``GET  /api/history`` sqlite 历史（最近 20 条）
 - ``GET  /api/pending`` 失败清单（``data/_pending.json``）
@@ -36,7 +38,7 @@ from src.datasource.registry import (  # noqa: E402
 
 from . import store, utf8_env  # noqa: E402
 from .runner import BatchBusy, runner  # noqa: E402
-from .select import select_by_industry  # noqa: E402
+from .select import LIST_SUFFIX, REPO_ROOT, resolve_dir, select  # noqa: E402
 
 app = Flask(__name__, static_folder="static", static_url_path="")
 PENDING_PATH = config.DATA_DIR / "_pending.json"
@@ -113,23 +115,60 @@ def api_stop():
 
 @app.post("/api/select")
 def api_select():
-    """行业选样：按申万行业取前 N 家 → 写 ``batch/*_codes.txt``（供 ``--codes-file``）。
+    """生成选样清单（供 ``--codes-file``）。
 
-    取代 ``batch/build_industry_top.py`` 的选样部分：控制台一次跑批只要一个清单文件，
-    不必再开命令行。选样读 cold 缓存的行业映射（无 TTL），命中秒回、首次约 1 分钟。
+    - ``kind=industry``：按申万一级 / 二级取每行业前 N（A 股），读 cold 缓存、命中秒回；
+    - ``kind=hk_ggt``：东财港股通成分股（约 670 只，约 13s）；
+    - ``outDir``：保存目录（相对仓库根，默认 ``data/lists``；越界拒绝）。
     """
     body = request.get_json(silent=True) or {}
     try:
-        result = select_by_industry(
+        result = select(
+            kind=str(body.get("kind") or "industry"),
             level=str(body.get("level") or "l2"),
             per_industry=int(body.get("perIndustry") or 10),
             industries=body.get("industries") or None,
+            out_dir=body.get("outDir") or None,
         )
     except ValueError as exc:
         return jsonify({"error": f"参数无效：{exc}"}), 400
     except Exception as exc:  # 选样要联网，把上游异常翻成可读信息
-        return jsonify({"error": f"选样失败：{type(exc).__name__}: {exc}"}), 502
+        return jsonify({"error": f"生成失败：{type(exc).__name__}: {exc}"}), 502
     return jsonify({"ok": True, **result})
+
+
+@app.get("/api/fs")
+def api_fs():
+    """目录浏览（**仅限仓库内**）：给前端挑「保存目录」与「清单文件」。
+
+    浏览器拿不到本地路径（安全限制），所以由本机后端代列目录 —— 只返回目录名
+    与 ``*.txt``，拒绝 ``../`` 逃逸与隐藏目录。
+    """
+    raw = request.args.get("path") or ""
+    try:
+        target = resolve_dir(raw or ".")
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if not target.is_dir():
+        target = REPO_ROOT
+
+    dirs: list[str] = []
+    files: list[str] = []
+    for item in sorted(target.iterdir(), key=lambda p: p.name):
+        if item.name.startswith(".") or item.name == "__pycache__":
+            continue
+        if item.is_dir():
+            dirs.append(item.name)
+        elif item.suffix.lower() == LIST_SUFFIX:
+            files.append(item.name)
+
+    rel = target.relative_to(REPO_ROOT).as_posix()
+    parent = None
+    if target != REPO_ROOT:
+        parent = target.parent.relative_to(REPO_ROOT).as_posix() or "."
+    return jsonify(
+        {"cwd": "" if rel == "." else rel, "parent": parent, "dirs": dirs, "files": files}
+    )
 
 
 @app.get("/api/log")
