@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PyramidSeek 跑批控制台</title>
+<style>
+  :root{--bg:#f6f6f4;--card:#fff;--line:#e4e3df;--tx:#2c2c2a;--sub:#6b6a66;--acc:#1a5fb4;--ok:#1e8e5a;--bad:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.7 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--tx)}
+  main{max-width:1080px;margin:0 auto;padding:20px 16px 60px}
+  h1{font-size:20px;font-weight:500;margin:0 0 4px}
+  .sub{color:var(--sub);font-size:13px;margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+  .card h2{font-size:14px;font-weight:500;margin:0 0 10px;color:var(--sub)}
+  .row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px}
+  .field{display:flex;flex-direction:column;gap:4px;min-width:150px}
+  label{font-size:12px;color:var(--sub)}
+  select,input[type=text],input[type=number]{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+  input[type=text]{min-width:280px}
+  button{padding:8px 16px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;cursor:pointer}
+  button.primary{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:500}
+  button.danger{background:#fff;border-color:var(--bad);color:var(--bad)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .bar{height:10px;background:#ecebe7;border-radius:6px;overflow:hidden;margin:8px 0}
+  .bar>i{display:block;height:100%;background:var(--acc);width:0;transition:width .4s}
+  .kv{display:flex;gap:18px;flex-wrap:wrap;font-size:13px}
+  .kv b{font-weight:500}
+  .phase{padding:1px 8px;border-radius:10px;background:#eef2f7;font-size:12px}
+  .phase.done{background:#e5f2ea;color:var(--ok)} .phase.failed{background:#faecea;color:var(--bad)}
+  pre#log{height:280px;overflow:auto;background:#14161a;color:#c9d4de;font:12px/1.55 ui-monospace,Consolas,monospace;padding:12px;border-radius:8px;white-space:pre-wrap}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+  th{color:var(--sub);font-weight:400}
+  .st-done{color:var(--ok)} .st-failed{color:var(--bad)} .st-running{color:var(--acc)}
+  .pending-list{max-height:160px;overflow:auto;font-size:13px}
+  .msg{font-size:13px;color:var(--sub);min-height:20px;margin-top:6px}
+  .err{color:var(--bad)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:800px){.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+  <h1>PyramidSeek 跑批控制台</h1>
+  <div class="sub">M5-4 / M5-5 · 子进程跑批（关掉浏览器不中断）· 任务互斥 · 数据源平权可选（ADR-015）</div>
+
+  <div class="card">
+    <h2>1. 配置并触发跑批</h2>
+    <div class="row">
+      <div class="field"><label>模式</label>
+        <select id="mode">
+          <option value="daily">daily（快照+重算）</option>
+          <option value="financials">financials（三表全量）</option>
+          <option value="cold">cold（冷启动全量）</option>
+          <option value="retry">retry（补失败清单）</option>
+        </select></div>
+      <div class="field"><label>市场</label>
+        <select id="markets">
+          <option value="A HK">A 股 + 港股</option>
+          <option value="A">仅 A 股</option>
+          <option value="HK">仅港股</option>
+        </select></div>
+      <div class="field"><label>A 股财报源</label><select id="sourceA"></select></div>
+      <div class="field"><label>港股财报源</label><select id="sourceHk"></select></div>
+      <div class="field"><label>limit（每市场最多 N 只）</label><input type="number" id="limit" min="1" placeholder="不限"></div>
+    </div>
+    <div class="row">
+      <div class="field" style="flex:1"><label>股票池：自定义 codes（逗号 / 空格分隔，如 SH600519, HK00700；留空 = 全市场）</label>
+        <input type="text" id="codes" placeholder="SH600519, HK00700"></div>
+      <div class="field"><label>或：选样清单文件（--codes-file）</label>
+        <input type="text" id="codesFile" placeholder="batch/industry_top_A.txt"></div>
+    </div>
+    <div class="row">
+      <button class="primary" id="btnRun">启动跑批</button>
+      <button class="danger" id="btnStop" disabled>停止</button>
+      <label style="align-self:center"><input type="checkbox" id="offline"> offline（只 fixtures，回归）</label>
+    </div>
+    <div class="msg" id="runMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>2. 进度与日志</h2>
+    <div class="kv">
+      <span>阶段 <span class="phase" id="phase">idle</span></span>
+      <span>进度 <b id="progText">—</b></span>
+      <span>错误 <b id="errCount">0</b></span>
+      <span>run <b id="runId">—</b></span>
+    </div>
+    <div class="bar"><i id="bar"></i></div>
+    <pre id="log">（等待输出…）</pre>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>3. 失败清单（<span id="pendingCount">0</span>）</h2>
+      <div class="pending-list" id="pendingList">（加载中…）</div>
+      <div class="row" style="margin-top:8px">
+        <button id="btnRetry">一键 retry（--mode retry）</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>4. 发布到 Pages</h2>
+      <div class="kv" style="margin-bottom:8px"><span>产物目录 <b id="pubDir">—</b></span></div>
+      <div class="row">
+        <button id="btnGate">先跑门禁（--check）</button>
+        <button class="primary" id="btnPublish">发布（--push，门禁+dist+gh-pages）</button>
+      </div>
+      <pre id="pubLog" style="height:150px;overflow:auto;background:#14161a;color:#c9d4de;font:12px/1.5 ui-monospace,Consolas,monospace;padding:10px;border-radius:8px;white-space:pre-wrap">（发布输出…）</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>5. 历史任务</h2>
+    <table><thead><tr><th>run_id</th><th>模式</th><th>市场</th><th>源</th><th>状态</th><th>结束时间</th></tr></thead>
+    <tbody id="history"></tbody></table>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let sources = {};
+
+async function api(path, opts) {
+  const res = await fetch(path, opts);
+  const body = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, body };
+}
+
+function fillSources(payload) {
+  sources = payload.sources || {};
+  for (const [sel, market] of [['sourceA','A'], ['sourceHk','HK']]) {
+    const el = $(sel); el.innerHTML = '';
+    (sources[market] || []).forEach((s) => {
+      const opt = document.createElement('option');
+      opt.value = s.name;
+      opt.textContent = s.label + (s.default ? '（默认）' : '');
+      if (s.default) opt.selected = true;
+      el.appendChild(opt);
+    });
+  }
+}
+
+function render(st) {
+  const running = st.running;
+  $('btnRun').disabled = running;
+  $('btnStop').disabled = !running;
+  $('phase').textContent = st.phase || 'idle';
+  $('phase').className = 'phase ' + (st.phase || '');
+  $('errCount').textContent = st.errors || 0;
+  $('runId').textContent = st.runId || '—';
+  const p = st.progress || {};
+  if (p.total) {
+    $('progText').textContent = `${p.done}/${p.total}（${Math.round(p.done / p.total * 100)}%）`;
+    $('bar').style.width = (p.done / p.total * 100) + '%';
+  } else { $('progText').textContent = running ? '采集中…' : '—'; }
+}
+
+async function refresh() {
+  try {
+    const { body } = await api('/api/state');
+    fillSources(body);
+    render(body.status || {});
+    $('pendingCount').textContent = body.pendingCount ?? 0;
+    $('pubDir').textContent = body.publicDataDir || '—';
+    const tbody = $('history'); tbody.innerHTML = '';
+    (body.history || []).forEach((r) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${r.run_id}</td><td>${r.mode}</td><td>${r.markets}</td>`
+        + `<td>${r.source_a || '—'} / ${r.source_hk || '—'}</td>`
+        + `<td class="st-${r.status}">${r.status}</td><td>${r.finished_at || '—'}</td>`;
+      tbody.appendChild(tr);
+    });
+    if (!running) loadPending();
+  } catch (e) { /* 控制台重启中 */ }
+}
+
+async function loadPending() {
+  const { body } = await api('/api/pending');
+  const el = $('pendingList');
+  const items = body.items || [];
+  el.innerHTML = items.length
+    ? items.map((x) => `<div>${x.code || JSON.stringify(x).slice(0, 60)}</div>`).join('')
+    : '（无失败项）';
+}
+
+async function tailLog() {
+  const { body } = await api('/api/log?tail=200');
+  const lines = body.lines || [];
+  const el = $('log');
+  el.textContent = lines.join('\n') || '（等待输出…）';
+  el.scrollTop = el.scrollHeight;
+}
+
+$('btnRun').onclick = async () => {
+  const codes = $('codes').value.split(/[,\s，]+/).filter(Boolean);
+  const payload = {
+    mode: $('mode').value,
+    markets: $('markets').value.split(/\s+/),
+    sourceA: $('sourceA').value,
+    sourceHk: $('sourceHk').value,
+    limit: $('limit').value ? +$('limit').value : null,
+    codes: codes.length ? codes : null,
+    codesFile: $('codesFile').value.trim() || null,
+    offline: $('offline').checked,
+  };
+  $('runMsg').textContent = '提交中…'; $('runMsg').className = 'msg';
+  const { ok, status, body } = await api('/api/run', {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload),
+  });
+  if (ok) { $('runMsg').textContent = `已启动：run_id=${body.status.runId}（关掉浏览器不影响）`; }
+  else { $('runMsg').textContent = `被拒绝：${body.error}`; $('runMsg').className = 'msg err'; }
+  refresh();
+};
+
+$('btnStop').onclick = async () => { await api('/api/stop', {method:'POST'}); refresh(); };
+$('btnRetry').onclick = async () => {
+  $('mode').value = 'retry'; $('codes').value = ''; $('codesFile').value = '';
+  $('btnRun').click();
+};
+$('btnGate').onclick = async () => {
+  $('pubLog').textContent = '门禁执行中（pytest 约需 1 分钟）…';
+  const res = await fetch('/api/publish-gate', {method:'POST'});
+  const body = await res.json();
+  $('pubLog').textContent = (body.output || []).join('\n') || (body.ok ? '门禁通过' : '门禁失败');
+};
+$('btnPublish').onclick = async () => {
+  if (!confirm('确认发布当前产物到 GitHub Pages？（会先跑门禁）')) return;
+  $('pubLog').textContent = '发布中（门禁 + 构建 + 推送，约 2 分钟）…';
+  const { ok, body } = await api('/api/publish', {method:'POST'});
+  $('pubLog').textContent = (body.output || []).join('\n') || (body.error || '');
+  if (ok) $('pubLog').textContent += '\n✅ 发布完成，稍后刷新 https://jackzw8.github.io/PyramidSeek/';
+};
+
+refresh(); loadPending(); tailLog();
+setInterval(() => { refresh(); tailLog(); }, 2500);
+</script>
+</body>
+</html>
