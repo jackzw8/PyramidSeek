@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>个股详情 · 金字塔选股 PyramidSeek</title>
+<link rel="stylesheet" href="css/style.css?v=20261104a"/>
+</head>
+<body>
+<div id="ps-nav"></div>
+<main class="wrap">
+  <div id="head" class="card"></div>
+
+  <div class="grid3">
+    <div class="card"><h3>评分构成（可解释）</h3><div class="chart-box" id="t-sub"></div></div>
+
+    <div class="card">
+      <h3>雷达对比图</h3>
+      <div class="filters" style="margin-bottom:6px">
+        <label>同行业对比</label><select id="peer"></select>
+      </div>
+      <div class="chart-box" id="radar"></div>
+      <p class="note" style="font-size:12px">仅允许同行业对比；六维子分 0~100，本股为实线，对比股为虚线。也可在右侧「同行业对比」面板中悬停某股实时预览、点击进入其详情。</p>
+    </div>
+
+    <aside id="peer-panel" class="card">
+      <div class="pp-head">
+        <span class="pp-title">同行业对比</span>
+        <button class="pp-toggle" id="pp-toggle" title="收起 / 展开">—</button>
+      </div>
+      <div class="pp-body">
+        <div class="pp-sub" id="pp-sub"></div>
+        <div class="pp-list" id="pp-list"></div>
+        <div class="pp-tip">悬停预览雷达 · 点击进入详情</div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="card"><h3>获利能力 Profitability</h3><div class="chart-box" id="t-profit"></div></div>
+  <div class="card"><h3>财务结构 Financial Structure</h3><div class="chart-box" id="t-struct"></div></div>
+  <div class="card"><h3>经营能力 Operating Capability</h3><div class="chart-box" id="t-oper"></div></div>
+  <div class="card"><h3>现金流量 Cash Flow（单位：亿元）</h3><div class="chart-box" id="t-cash"></div></div>
+
+  <div class="card">
+    <div class="chart-head">
+      <div class="chart-title">
+        <h3 id="k-title">日K · MACD</h3>
+        <span class="chart-sub" id="k-sub">Daily Trend</span>
+      </div>
+      <div class="chart-ctrl">
+        <span id="k-rt" style="font-size:13px;color:#5f5e5a;margin-right:12px"></span>
+        <span class="tg" id="tg-period">
+          <button data-v="day" class="on">日K</button><button data-v="month">月K</button>
+        </span>
+      </div>
+    </div>
+    <div class="chart-box" id="kline"></div>
+    <p class="note" style="font-size:12px">红涨绿跌；DIF 蓝 / DEA 金。行情由浏览器<b>实时向前端接口请求</b>（不随产物发布）：日K 取近 320 个交易日、月K 取近 120 个月；接口不可用时本卡隐藏，<b>不影响评分与财务数据</b>。<b>复权口径</b>：日K 前复权；<b>月K 不复权</b>（实测长跨度「前复权」因子失真，会画出假趋势），港股两者均不复权 —— 除权日跳空属正常。年ROE 柱仅月K 显示，自「报告期 + 4 个月」起生效（家法 R9）。</p>
+  </div>
+
+  <p class="note">年ROE 柱「报告期 + 4 个月起生效」；四张财务表读自产物（《产物契约》§3.4），标准层暂缺的字段（如应收账款/固定资产周转）显示「—」。本工具仅供学习研究，不构成任何投资建议。</p>
+</main>
+<div id="ps-foot"></div>
+<script src="js/api.js?v=20261104a"></script>
+<script src="js/common.js?v=20261104a"></script>
+<script src="js/search.js?v=20261104a"></script>
+<script src="js/quote.js?v=20261104a"></script>
+<script src="js/stock.js?v=20261104a"></script>
+</body>
+</html>

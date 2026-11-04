@@ -1,0 +1,40 @@
+{
+  "snapshotVersion": "2026-11-04",
+  "contractVersion": "1.2",
+  "markets": [
+    "A",
+    "HK"
+  ],
+  "tree": [
+    {
+      "market": "A",
+      "l1": [
+        {
+          "code": "801120",
+          "name": "食品饮料"
+        }
+      ],
+      "l2": [
+        {
+          "code": "801123",
+          "name": "白酒",
+          "parent": "801120"
+        }
+      ]
+    },
+    {
+      "market": "HK",
+      "l1": [],
+      "l2": []
+    }
+  ],
+  "counts": {
+    "A:食品饮料": {
+      "market": "A",
+      "group": "食品饮料",
+      "level": "L1",
+      "count": 2,
+      "use_fallback": true
+    }
+  }
+}

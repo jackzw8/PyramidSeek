@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>观察池 · 金字塔选股 PyramidSeek</title>
+<link rel="stylesheet" href="css/style.css?v=20261104a"/>
+</head>
+<body>
+<div id="ps-nav"></div>
+<main class="wrap">
+  <div class="page-head">
+    <h1>观察池</h1>
+    <div class="sub">无需登录 ｜ 以「游客标识」区分不同访客的收藏（存于本机浏览器）</div>
+  </div>
+
+  <div class="card">
+    <div class="filters">
+      <span style="font-size:13px;color:var(--muted)">游客标识 visitorId：<b id="vid" style="color:var(--navy)"></b></span>
+      <span style="margin-left:auto"></span>
+      <button class="btn" id="btn-export">导出</button>
+      <button class="btn" id="btn-import">导入</button>
+      <button class="btn danger" id="btn-clear">清空</button>
+    </div>
+    <p class="note" style="font-size:12px">收藏保存在本机浏览器中，清理缓存或更换设备后可能丢失；可用「导出」备份、「导入」恢复。</p>
+    <div id="list"></div>
+  </div>
+</main>
+<div id="ps-foot"></div>
+<script src="js/api.js?v=20261104a"></script>
+<script src="js/common.js?v=20261104a"></script>
+<script src="js/search.js?v=20261104a"></script>
+<script src="js/watchlist.js?v=20261104a"></script>
+</body>
+</html>

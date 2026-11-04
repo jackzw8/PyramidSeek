@@ -1,0 +1,27 @@
+{
+  "meta": {
+    "snapshotVersion": "2026-11-04",
+    "contractVersion": "1.2"
+  },
+  "market": "HK",
+  "columns": [
+    "rank",
+    "code",
+    "name",
+    "market",
+    "l1",
+    "l2",
+    "group",
+    "level",
+    "score",
+    "quality",
+    "growth",
+    "roe",
+    "gross_margin",
+    "cash_ratio",
+    "debt_ratio",
+    "isTop10pct"
+  ],
+  "rows": [],
+  "excluded": []
+}
