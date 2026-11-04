@@ -178,6 +178,19 @@ async function api(path, opts) {
 
 let sourcesSig = '';
 
+/** ISO(UTC) → 本地时间 `YYYY-MM-DD HH:mm:ss`
+ * sqlite 里存的是 UTC（`datetime_utc()`），直接显示会比本地时间少 8 小时；
+ * 历史表的「结束时间」曾经就是原始 ISO，看着像时间不对。
+ */
+function fmtLocal(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} `
+    + `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
 function fillSources(payload) {
   sources = payload.sources || {};
   // 轮询每 2.5s 调一次；源列表没变就**绝不碰 DOM** ——
@@ -231,7 +244,7 @@ async function refresh() {
       const tr = document.createElement('tr');
       tr.innerHTML = `<td>${r.run_id}</td><td>${r.mode}</td><td>${r.markets}</td>`
         + `<td>${r.source_a || '—'} / ${r.source_hk || '—'}</td>`
-        + `<td class="st-${r.status}">${r.status}</td><td>${r.finished_at || '—'}</td>`;
+        + `<td class="st-${r.status}">${r.status}</td><td>${fmtLocal(r.finished_at)}</td>`;
       tbody.appendChild(tr);
     });
     if (!running) loadPending();
