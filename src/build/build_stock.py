@@ -77,6 +77,9 @@ def build_stock(inputs: BuildInputs, code: str, out_dir: Path) -> Path:
         **_tables(rows, shares),
     }
 
+    # `kline` 字段**已退役**（D-56 / M4-7，2026-11-04）：行情改由前端在详情页
+    # 按需取（腾讯 `fqkline`，CORS `*`）。跑批不再采集历史行情 → `inputs.prices`
+    # 恒为空 → 本键恒不输出。保留这段只为兼容**旧产物**重放（契约 §3.4 仍是可选字段）。
     kline = derived.monthly_kline(inputs.prices.get(code) or [])
     if kline is not None:  # 可选字段：无行情时不写该键（契约 §3.4）
         payload["kline"] = kline

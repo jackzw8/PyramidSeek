@@ -397,6 +397,8 @@ class AkShareSource:
         return map_sina_financials(code, tables)
 
     def price_daily(self, code: str, adjust: str = config.DEFAULT_ADJUST) -> list[dict[str, Any]]:
+        # 底层能力保留（单测仍覆盖），但**跑批入口已关闭**：`config.HISTORY_FETCH_ENABLED=False`
+        # 且 `pipeline.fetch.fetch_universe` 有硬闸（D-56 / M4-7）。行情改前端按需取。
         if adjust not in config.ADJUST_MODES:
             raise ValueError(f"不支持的复权方式：{adjust!r}（应为 {config.ADJUST_MODES} 之一）")
         market = market_of(code)
