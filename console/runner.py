@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -99,6 +100,11 @@ class Runner:
                 cmd += ["--limit", str(limit)]
             if offline:
                 cmd.append("--offline")
+            # 产物目录可被覆盖：**测试必须指向 tmp** —— 否则 e2e 用例会把 fixtures 跑到
+            # 真实 `public/data` 上，用户下次发布就发出「贵州茅台 + 五粮液」的假数据。
+            out_override = os.environ.get("PS_CONSOLE_OUT_DIR")
+            if out_override:
+                cmd += ["--out", out_override]
 
             self._log_handle = (run_dir / "log.txt").open("w", encoding="utf-8")
             self._proc = subprocess.Popen(
