@@ -114,6 +114,46 @@ def _try_chain(
     return [], "none", reasons
 
 
+def _fill_hk_industry(stocks: list[dict[str, Any]], codes: list[str], chain: list[Any]) -> None:
+    """港股行业回填（D-58）：从链里找支持 ``hk_industry`` 的源，失败静默跳过。
+
+    行业是**增强信息**：拿不到只是「未分类」（不参与行业分位），绝不能因为它阻断采集。
+    只补本批次涉及、且在港股通名单内的标的（见 ``AkShareSource.hk_industry``）。
+    """
+    for source in chain:
+        fn = getattr(source, "hk_industry", None)
+        if fn is None:
+            continue
+        try:
+            mapping = fn(codes)
+        except Exception as exc:  # noqa: BLE001  增强信息，失败不阻断
+            logger.warning("港股行业回填失败（%s）：%s", getattr(source, "name", "?"), exc)
+            continue
+        if not mapping:
+            continue
+        filled = 0
+        for stock in stocks:
+            if str(stock.get("market")) != "HK":
+                continue
+            industry = mapping.get(str(stock.get("code")))
+            if not industry:
+                continue
+            stock.update(
+                {
+                    "l1_code": industry,
+                    "l1_name": industry,
+                    # 港股只有一级行业（D-58）；l2 是必填字段，填同名而不是 None ——
+                    # 否则 clean 会判「必填缺失」把整只股票丢掉（实测踩过）。
+                    "l2_code": industry,
+                    "l2_name": industry,
+                    "industry_std": config.INDUSTRY_STANDARD_HK_GGLT,
+                }
+            )
+            filled += 1
+        logger.info("港股行业：本轮回填 %d 只（来源 %s）", filled, getattr(source, "name", "?"))
+        return
+
+
 def fetch_universe(
     *,
     markets: tuple[str, ...] = config.MARKETS,
@@ -200,6 +240,11 @@ def fetch_universe(
             + "；".join(f"{key} → {value}" for key, value in outcome.fallbacks.items()),
             source="fetch",
         )
+
+    # 港股行业回填（D-58）：只补本批次涉及、且在港股通名单内的标的
+    hk_codes = [str(row.get("code")) for row in stocks if str(row.get("market")) == "HK"]
+    if hk_codes:
+        _fill_hk_industry(stocks, hk_codes, chain)
 
     # 注意：不要在这里补一个裸的 ``sources["list_stocks"]`` 汇总键。原先它取
     # ``sources.get("list_stocks:A", "none")``，``--markets HK`` 时该键恒为 "none"，
