@@ -13,6 +13,7 @@ import pytest
 
 from console import utf8_env
 from console.app import app
+from console.runner import runner
 
 RUN_TIMEOUT = 120  # offline 全量 fixtures 约 5~10s，留足余量
 
@@ -184,3 +185,23 @@ def test_fs_lists_dirs_and_txt_only(client, monkeypatch, tmp_path) -> None:
     assert body["files"] == ["a.txt"]
 
     assert client.get("/api/fs?path=../../").status_code == 400
+
+
+def test_shutdown_terminates_running_child(client) -> None:
+    """退出钩子：控制台退出时收掉跑批子进程（它占着 DuckDB 与缓存目录）。
+
+    不收的话，杀掉控制台后会留下孤儿 `src.batch`，下次启动直接报「任务独占」。
+    """
+    client.post("/api/run", json={"mode": "offline", "markets": ["A"], "limit": 2})
+
+    proc = None
+    for _ in range(50):
+        proc = runner._proc  # noqa: SLF001 —— 测的正是「拿到子进程句柄」这件事
+        if proc is not None and proc.poll() is None:
+            break
+        time.sleep(0.1)
+    assert proc is not None and proc.poll() is None, "跑批子进程没起来"
+
+    runner.shutdown()
+    assert proc.poll() is not None, "shutdown 后子进程仍在运行"
+    _wait_done(client)  # 让状态线程收尾，别影响后续用例
