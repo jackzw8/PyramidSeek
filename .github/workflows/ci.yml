@@ -38,7 +38,22 @@ jobs:
           ruff format --check .
 
       - name: Test (pytest)
-        run: pytest
+        run: |
+          set -o pipefail
+          pytest -q --tb=line 2>&1 | tee pytest.log
+
+      # 公开仓库的 Actions 原始日志需 admin 权限才能下载；
+      # 把失败用例顶成 annotation（网页与 check-runs API 都能匿名读）
+      - name: Pytest failures -> annotations
+        if: failure()
+        run: |
+          if [ -f pytest.log ]; then
+            grep -aE "^(FAILED|ERROR) " pytest.log | head -30 | while IFS= read -r line; do
+              echo "::error::${line}"
+            done
+            echo "===== pytest.log tail ====="
+            tail -30 pytest.log
+          fi
 
       # M3-5：离线跑批产出全部产物并校验（schema + 引用完整性），坏产物直接拦下
       - name: Batch + validate (offline)
