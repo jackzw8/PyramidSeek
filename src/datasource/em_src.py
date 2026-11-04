@@ -240,9 +240,7 @@ def map_em_hk_financials(
             ratio = margin_by_period.get(period)
             revenue = row.get("revenue")
             if ratio is not None and revenue:
-                row["gross_profit"] = round_half_up(
-                    revenue * ratio / 100.0, config.AMOUNT_DECIMALS
-                )
+                row["gross_profit"] = round_half_up(revenue * ratio / 100.0, config.AMOUNT_DECIMALS)
         out.append(row)
     return out
 
@@ -322,3 +320,29 @@ class EastMoneySource(AkShareSource):
         except Exception as exc:  # noqa: BLE001  增强数据，失败不阻断
             logger.warning("港股指标接口不可用，%s 的毛利率将留空：%s", code, exc)
             return []
+
+    def hk_shares(self, codes: list[str]) -> dict[str, float]:
+        """港股总股本（单位：**亿股**，D-58）：用指标接口反算。
+
+        港股列表接口不给股本 → 评分层的 ``eps = net_profit ÷ shares`` 恒缺失。
+        这里取最新一期 ``HOLDER_PROFIT ÷ BASIC_EPS``（元 ÷ 元/股 = 股，再折亿股）。
+        指标缓存通常已由财报步骤写好，命中即秒回。
+        """
+        out: dict[str, float] = {}
+        for raw in codes:
+            code = str(raw)
+            stock = code[2:] if code.upper().startswith("HK") else code
+            rows = self._hk_indicators(code, stock)
+            if not rows:
+                continue
+            latest = max(rows, key=lambda row: str(row.get("REPORT_DATE") or ""))
+            eps = latest.get("BASIC_EPS")
+            profit = latest.get("HOLDER_PROFIT")
+            try:
+                eps_value = float(eps) if eps is not None else 0.0
+                profit_value = float(profit) if profit is not None else 0.0
+            except (TypeError, ValueError):
+                continue
+            if eps_value and profit_value:
+                out[code] = round(profit_value / eps_value / 1e8, 4)
+        return out
