@@ -36,6 +36,7 @@ from src.datasource.registry import (  # noqa: E402
 
 from . import store, utf8_env  # noqa: E402
 from .runner import BatchBusy, runner  # noqa: E402
+from .select import select_by_industry  # noqa: E402
 
 app = Flask(__name__, static_folder="static", static_url_path="")
 PENDING_PATH = config.DATA_DIR / "_pending.json"
@@ -110,6 +111,27 @@ def api_stop():
     return jsonify({"ok": runner.stop()})
 
 
+@app.post("/api/select")
+def api_select():
+    """行业选样：按申万行业取前 N 家 → 写 ``batch/*_codes.txt``（供 ``--codes-file``）。
+
+    取代 ``batch/build_industry_top.py`` 的选样部分：控制台一次跑批只要一个清单文件，
+    不必再开命令行。选样读 cold 缓存的行业映射（无 TTL），命中秒回、首次约 1 分钟。
+    """
+    body = request.get_json(silent=True) or {}
+    try:
+        result = select_by_industry(
+            level=str(body.get("level") or "l2"),
+            per_industry=int(body.get("perIndustry") or 10),
+            industries=body.get("industries") or None,
+        )
+    except ValueError as exc:
+        return jsonify({"error": f"参数无效：{exc}"}), 400
+    except Exception as exc:  # 选样要联网，把上游异常翻成可读信息
+        return jsonify({"error": f"选样失败：{type(exc).__name__}: {exc}"}), 502
+    return jsonify({"ok": True, **result})
+
+
 @app.get("/api/log")
 def api_log():
     tail = max(10, min(int(request.args.get("tail", 200)), 2000))
@@ -181,7 +203,9 @@ def main() -> None:
     parser.add_argument("--port", type=int, default=5000)
     parser.add_argument("--host", default="127.0.0.1")
     args = parser.parse_args()
-    print(f"[console] http://{args.host}:{args.port}  （关掉浏览器跑批不中断）")
+    # 这一行走 Python 自身的 stdout，可能被重定向/管道按不同编码解释；
+    # 用纯 ASCII，避免与窗口代码页（bat 里 chcp 936）打架。中文提示在 bat 里给。
+    print(f"[console] http://{args.host}:{args.port}  (closing browser keeps batch)")
     app.run(host=args.host, port=args.port, debug=False, threaded=True)
 
 

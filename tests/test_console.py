@@ -89,3 +89,45 @@ def test_concurrent_run_is_rejected_with_reason(client) -> None:
         assert "独占" in resp.get_json()["error"]
     finally:
         _wait_done(client)
+
+
+def test_select_rejects_bad_level(client) -> None:
+    """参数校验：层级只认 l1 / l2，且校验发生在联网之前（不必真拉数据）。"""
+    resp = client.post("/api/select", json={"level": "l3"})
+    assert resp.status_code == 400
+    assert "level" in resp.get_json()["error"]
+
+
+def test_select_writes_list(client, monkeypatch, tmp_path) -> None:
+    """行业选样（mock 数据源）：每行业取前 N、跳过「未分类」与非 normal，清单落到 BATCH_DIR。"""
+    stocks = [
+        {"code": "SH600000", "status": "normal", "l1_name": "银行", "l2_name": "银行"},
+        {"code": "SH600001", "status": "normal", "l1_name": "银行", "l2_name": "银行"},
+        {"code": "SZ000001", "status": "normal", "l1_name": "电子", "l2_name": "半导体"},
+        {"code": "SZ000002", "status": "st", "l1_name": "电子", "l2_name": "半导体"},
+        {"code": "SZ000003", "status": "normal", "l1_name": "", "l2_name": ""},
+    ]
+
+    class _FakeSource:
+        def __init__(self, **_kwargs) -> None:
+            pass
+
+        def list_stocks(self, _market: str) -> list[dict]:
+            return stocks
+
+    monkeypatch.setattr("console.select.AkShareSource", _FakeSource)
+    monkeypatch.setattr("console.select.BATCH_DIR", tmp_path)
+
+    resp = client.post("/api/select", json={"level": "l2", "perIndustry": 1})
+    assert resp.status_code == 200, resp.get_json()
+    body = resp.get_json()
+    assert body["count"] == 2  # 两个行业各取 1；未分类跳过；status=st 被过滤
+    assert [g["name"] for g in body["groups"]] == ["半导体", "银行"]
+
+    out = tmp_path / "industry_l2_top_codes.txt"
+    assert out.exists()
+    text = out.read_text(encoding="utf-8")
+    assert "SZ000001" in text and "SH600000" in text
+    assert "SH600001" not in text  # 每行业只取 1 只
+    assert "SZ000002" not in text  # 非 normal 被过滤
+    assert "未分类" not in text
