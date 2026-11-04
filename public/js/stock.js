@@ -1,10 +1,11 @@
-/* 个股详情（M4-4）——数据来自产物 `stock/{code}.json`（《产物契约》§3.4 / §3.5）
+/* 个股详情（M4-4；M4-7 起行情改前端按需取）——数据来自产物 `stock/{code}.json`（《产物契约》§3.4 / §3.5）
  *
  * - 评分构成 / 雷达六维 / 四张财务表 / 同业列表：**全部读产物字段**，前端不算分；
- * - 月K·MACD·年ROE：月K 读产物 `kline`（前复权主序列 + `hfq` 后复权子对象），
- *   MACD(12,26,9) 由月K 收盘价现算，年ROE 阶梯读产物 `years` + `profitability.roe`
+ * - **K 线 · MACD**（M4-7 / D-56）：行情由 `quote.js` 按需向前端接口请求（日K / 月K 可切），
+ *   MACD(12,26,9) 由收盘价现算；**年ROE 阶梯仅月K 显示**，读产物 `years` + `profitability.roe`
  *   （年报自「报告期 + 4 个月」起生效，家法 R9）；
- * - 缺失值（null）显示「—」（技术说明书 §7.6）；无行情数据时月K 卡给出提示。
+ * - 行情只做展示：接口失败 → 该卡隐藏，**不影响评分区**；港股接口不复权，图上标注；
+ * - 缺失值（null）显示「—」（技术说明书 §7.6）。
  */
 (function () {
   const PS = window.PS;
@@ -107,10 +108,9 @@
     host.innerHTML = ''; host.appendChild(s);
   }
 
-  // ── 月K · MACD · 年ROE（读数来自产物 kline；年ROE 自「报告期 + 4 个月」生效）──
-  const MONTHS_RECENT = 96;                       // 「近8年」
-  let kRange = '8y';
-  let kAdj = 'qfq';
+  // ── K 线 · MACD（月K 追加年ROE）—— 行情由前端按需取，D-56 / M4-7 ──
+  let kPeriod = 'day';                            // 'day' | 'month'
+  const kCache = new Map();                       // period → 数据 | null（null 也缓存，避免反复重试）
 
   function roeSteps() {
     const out = [];
@@ -124,16 +124,18 @@
     return out;
   }
 
-  function priceChart(host) {
-    const kline = self.kline;
-    if (!kline || !Array.isArray(kline.months) || !kline.months.length) {
-      host.innerHTML = '<div class="empty">该股暂无行情数据（产物未包含 <code>kline</code>）。<br/>待行情采集就绪后重新跑批即可显示月K · MACD · 年ROE。</div>';
-      return;
+  function rtTime(s) {
+    if (!s) return '—';
+    if (/^\d{14}$/.test(s)) {                        // A 股：20261104115848
+      return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)} ${s.slice(8, 10)}:${s.slice(10, 12)}`;
     }
-    const months = kline.months;
-    const qfq = { o: kline.o, h: kline.h, l: kline.l, c: kline.c };
-    const hfq = kline.hfq || qfq;
-    const steps = roeSteps();
+    return String(s).replace(/\//g, '-');            // 港股：2026/11/04 11:44:05
+  }
+
+  function drawChart(host, data) {
+    const bars = data.bars;
+    const isMonth = data.period === 'month';
+    const steps = isMonth ? roeSteps() : [];
     const roeAt = (label) => {
       let v = null;
       steps.forEach((st) => { if (st.eff <= label) v = st; });
@@ -141,8 +143,8 @@
     };
 
     const W = 900, ML = 8, MR = 46;
-    const H1 = 250, H2 = 84, H3 = 64, GAP = 10, HX = 18;
-    const H = H1 + H2 + H3 + GAP * 2 + HX;
+    const H1 = 250, H2 = 84, H3 = isMonth ? 64 : 0, GAP = 10, HX = 18;
+    const H = H1 + H2 + H3 + GAP * (isMonth ? 2 : 1) + HX;
     const wrap = document.createElement('div');
     wrap.className = 'chart-wrap';
     const s1 = svg('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', height: H });
@@ -153,22 +155,18 @@
 
     function draw() {
       s1.innerHTML = '';
-      const src = kAdj === 'hfq' ? hfq : qfq;
-      const indexes = [];
-      for (let i = 0; i < months.length; i++) {
-        if (!PS.MISSING(src.c[i])) indexes.push(i);           // 缺失月跳过（家法 R11）
-      }
-      const n8 = Math.min(MONTHS_RECENT, indexes.length);
-      const idx = kRange === '8y' ? indexes.slice(-n8) : indexes;
-      const n = idx.length;
-      const bars = idx.map((i) => ({
-        o: src.o[i], h: src.h[i], l: src.l[i], c: src.c[i], month: months[i],
-      }));
+      const n = bars.length;
       const md = macd(bars.map((b) => b.c));
-      const step = (W - ML - MR) / n, bw = Math.max(1.6, step - 2);
+      const step = (W - ML - MR) / n, bw = Math.max(1.2, step - 1.2);
       const x = (i) => ML + step * (i + 0.5);
       const lo = Math.min(...bars.map((b) => b.l)), hi = Math.max(...bars.map((b) => b.h));
       const py = (v) => 8 + (H1 - 16) * (1 - (v - lo) / ((hi - lo) || 1));
+
+      if (data.note) {                                    // 港股：接口不支持复权，明确标注
+        const nt = svg('text', { x: W - MR - 4, y: 15, 'text-anchor': 'end', 'font-size': 10, fill: '#8a97a3' });
+        nt.textContent = data.note;
+        s1.appendChild(nt);
+      }
 
       niceTicks(lo, hi, 4).forEach((tv) => {
         const yy = py(tv);
@@ -195,35 +193,39 @@
       const t2 = svg('text', { x: ML + 2, y: y2 + 11, 'font-size': 10, fill: '#8a97a3' });
       t2.textContent = 'MACD(12,26,9)'; s1.appendChild(t2);
 
-      // 年ROE 面板（阶梯柱，报告期 + 4 个月生效）
+      // 年ROE 面板（**仅月K**：日K 跨度短，阶梯无意义；阶梯柱，报告期 + 4 个月生效）
       const y3 = y2 + H2 + GAP;
-      const rmax = Math.max(...steps.map((st) => st.roe), 0.01);
-      const rh = (v) => (v / rmax) * (H3 - 16);
-      const firstShown = bars[0].month;
-      let lastYear = null;
-      bars.forEach((b, i) => {
-        const st = roeAt(b.month);
-        if (!st) return;
-        s1.appendChild(svg('rect', { x: x(i) - bw / 2, y: y3 + H3 - 8 - rh(st.roe), width: bw, height: Math.max(1, rh(st.roe)), fill: '#2e5496', opacity: .85 }));
-        if (st.year !== lastYear) {                       // 每段阶梯起点标年份
-          lastYear = st.year;
-          const t = svg('text', { x: x(i), y: y3 + H3 + 2, 'text-anchor': 'middle', 'font-size': 9.5, fill: '#8a97a3' });
-          t.textContent = st.year; s1.appendChild(t);
-        }
-      });
-      const t3 = svg('text', { x: ML + 2, y: y3 + 11, 'font-size': 10, fill: '#8a97a3' });
-      t3.textContent = '年ROE'; s1.appendChild(t3);
+      let firstShown = '';
+      if (isMonth) {
+        const rmax = Math.max(...steps.map((st) => st.roe), 0.01);
+        const rh = (v) => (v / rmax) * (H3 - 16);
+        firstShown = bars[0].date.slice(0, 7);
+        let lastYear = null;
+        bars.forEach((b, i) => {
+          const st = roeAt(b.date.slice(0, 7));
+          if (!st) return;
+          s1.appendChild(svg('rect', { x: x(i) - bw / 2, y: y3 + H3 - 8 - rh(st.roe), width: bw, height: Math.max(1, rh(st.roe)), fill: '#2e5496', opacity: .85 }));
+          if (st.year !== lastYear) {                       // 每段阶梯起点标年份
+            lastYear = st.year;
+            const t = svg('text', { x: x(i), y: y3 + H3 + 2, 'text-anchor': 'middle', 'font-size': 9.5, fill: '#8a97a3' });
+            t.textContent = st.year; s1.appendChild(t);
+          }
+        });
+        const t3 = svg('text', { x: ML + 2, y: y3 + 11, 'font-size': 10, fill: '#8a97a3' });
+        t3.textContent = '年ROE'; s1.appendChild(t3);
+      }
 
-      // 月份刻度（每年 1 月标年份，末月标年月）
+      // 时间刻度（每年 1 月标年份，末根标完整日期）
       bars.forEach((b, i) => {
-        const [yy, mm] = b.month.split('-');
+        const parts = b.date.split('-');
+        const yy = parts[0], mm = parts[1];
         if (mm === '01' || i === n - 1) {
           const t = svg('text', { x: x(i), y: H - 4, 'text-anchor': 'middle', 'font-size': 9.5, fill: '#8a97a3' });
-          t.textContent = mm === '01' ? yy : b.month;
+          t.textContent = mm === '01' ? yy : b.date.slice(0, isMonth ? 7 : 10);
           s1.appendChild(t);
         }
       });
-      if (steps.length && steps[0].eff > firstShown) {    // 起点早于首个生效年报时，提示生效规则
+      if (isMonth && steps.length && steps[0].eff > firstShown) {    // 起点早于首个生效年报时，提示生效规则
         const t = svg('text', { x: ML + 2, y: y3 + H3 + 12, 'font-size': 10, fill: '#8a97a3' });
         t.textContent = `年报自「报告期 + 4 个月」起生效（首个生效：${steps[0].eff}）`;
         s1.appendChild(t);
@@ -238,12 +240,14 @@
         const i = Math.max(0, Math.min(n - 1, Math.floor((vx - ML) / step)));
         cross.setAttribute('x1', x(i)); cross.setAttribute('x2', x(i));
         cross.setAttribute('visibility', 'visible');
-        const b = bars[i], st = roeAt(b.month);
+        const b = bars[i], st = isMonth ? roeAt(b.date.slice(0, 7)) : null;
         tip.innerHTML =
-          `<div class="t-m">${b.month}${kAdj === 'hfq' ? '（后复权）' : ''}</div>` +
+          `<div class="t-m">${b.date}${data.note ? '（' + data.note + '）' : ''}</div>` +
           `<div class="t-row">开 <b>${b.o.toFixed(2)}</b>　高 <b>${b.h.toFixed(2)}</b>　低 <b>${b.l.toFixed(2)}</b>　收 <b>${b.c.toFixed(2)}</b></div>` +
           `<div class="t-macd">MACD　HIST ${md.hist[i] >= 0 ? '+' : ''}${md.hist[i].toFixed(2)}　DIF ${md.dif[i].toFixed(2)}　DEA ${md.dea[i].toFixed(2)}</div>` +
-          `<div class="t-roe">ROE ${st ? (st.roe * 100).toFixed(2) + '%（年报 ' + st.year + '-12-31）' : '—（生效前）'}</div>`;
+          (isMonth
+            ? `<div class="t-roe">ROE ${st ? (st.roe * 100).toFixed(2) + '%（年报 ' + st.year + '-12-31）' : '—（生效前）'}</div>`
+            : '');
         const px = x(i) / W * r.width;
         tip.style.display = 'block';
         tip.style.left = (px + 210 > r.width ? px - 216 : px + 14) + 'px';
@@ -379,20 +383,49 @@
       + `<tr><td><b>金字塔分</b></td><td colspan="2">clamp(Q+G, 0, 1000)</td><td><b>${F.score(self.score)}</b></td></tr></tbody></table>`;
   }
 
+  // ── 行情加载（前端按需取，失败静默降级）──
+  function setChartTitle(period) {
+    document.getElementById('k-title').textContent = period === 'month' ? '月K · MACD · 年ROE' : '日K · MACD';
+    document.getElementById('k-sub').textContent = period === 'month' ? 'Monthly Trend' : 'Daily Trend';
+  }
+
+  async function loadChart(host) {
+    const period = kPeriod;
+    setChartTitle(period);
+    if (!kCache.has(period)) {                       // null 也会缓存，避免反复重试打接口
+      host.innerHTML = '<div class="empty">行情加载中…</div>';
+      kCache.set(period, await PS.quote.kline(self.code, period));
+    }
+    const data = kCache.get(period);
+    if (!data) {
+      host.innerHTML = '<div class="empty">行情暂不可用（前端接口无响应或已变更）。<br/>本卡隐藏，不影响评分与财务数据。</div>';
+      return;
+    }
+    drawChart(host, data);
+  }
+
+  async function loadRealtime() {
+    const el = document.getElementById('k-rt');
+    if (!el) return;
+    const rt = await PS.quote.realtime(self.code);
+    if (!rt || !Number.isFinite(rt.price)) { el.textContent = ''; return; }
+    const up = (rt.change || 0) >= 0;
+    const col = up ? UP : DN;
+    const chg = Number.isFinite(rt.change) ? `${up ? '+' : ''}${rt.change.toFixed(2)}` : '—';
+    const pct = Number.isFinite(rt.changePct) ? `${up ? '+' : ''}${rt.changePct.toFixed(2)}%` : '';
+    el.innerHTML = `<span style="color:${col};font-weight:600">${rt.price.toFixed(2)}</span>`
+      + ` <span style="color:${col}">${chg} ${pct}</span>`
+      + ` <span style="color:#8a97a3;font-size:12px">截至 ${rtTime(rt.time)}</span>`;
+  }
+
   function bindKlineControls() {
-    const syncTg = (id, btn) => document.querySelectorAll('#' + id + ' button').forEach((x) => x.classList.toggle('on', x === btn));
-    document.querySelectorAll('#tg-range button').forEach((b) => {
-      b.onclick = () => { kRange = b.dataset.v; syncTg('tg-range', b); priceChart(document.getElementById('kline')); };
-    });
-    // 后复权可用性：产物 `kline.hfq` 缺省时禁用（长期高分红标的的前复权序列早期为负，
-    // 无法换算后复权 —— 契约 §3.4 里 hfq 是可选子对象）
-    const hasHfq = Boolean(self.kline && self.kline.hfq);
-    document.querySelectorAll('#tg-adj button').forEach((b) => {
-      if (b.dataset.v === 'hfq' && !hasHfq) {
-        b.disabled = true;
-        b.title = '该标的前复权序列早期为负值，无法换算后复权';
-      }
-      b.onclick = () => { kAdj = b.dataset.v; syncTg('tg-adj', b); priceChart(document.getElementById('kline')); };
+    document.querySelectorAll('#tg-period button').forEach((b) => {
+      b.onclick = () => {
+        if (b.classList.contains('on')) return;
+        kPeriod = b.dataset.v;
+        document.querySelectorAll('#tg-period button').forEach((x) => x.classList.toggle('on', x === b));
+        loadChart(document.getElementById('kline'));
+      };
     });
   }
 
@@ -401,7 +434,8 @@
     renderRadarAndPanel();
     renderTables();
     renderSubs();
-    priceChart(document.getElementById('kline'));
+    loadChart(document.getElementById('kline'));     // 行情异步取，不阻塞其余区块
+    loadRealtime();
     bindKlineControls();
   }
 
