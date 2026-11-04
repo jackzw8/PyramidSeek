@@ -175,17 +175,29 @@ async function api(path, opts) {
   return { ok: res.ok, status: res.status, body };
 }
 
+let sourcesSig = '';
+
 function fillSources(payload) {
   sources = payload.sources || {};
+  // 轮询每 2.5s 调一次；源列表没变就**绝不碰 DOM** ——
+  // 否则重建 <select> 会把用户手选的源打回“默认”
+  const sig = JSON.stringify(sources);
+  if (sig === sourcesSig) return;
+  sourcesSig = sig;
+
   for (const [sel, market] of [['sourceA','A'], ['sourceHk','HK']]) {
-    const el = $(sel); el.innerHTML = '';
+    const el = $(sel);
+    const keep = el.value; // 记住用户当前的选择（首次为空）
+    el.innerHTML = '';
     (sources[market] || []).forEach((s) => {
       const opt = document.createElement('option');
       opt.value = s.name;
       opt.textContent = s.label + (s.default ? '（默认）' : '');
-      if (s.default) opt.selected = true;
       el.appendChild(opt);
     });
+    const fallback = (sources[market] || []).find((s) => s.default);
+    if (keep) el.value = keep; // 重建后恢复；不在新列表里则下面回落默认
+    if (!el.value && fallback) el.value = fallback.name;
   }
 }
 
@@ -235,6 +247,8 @@ async function loadPending() {
 const LN_ERR = /\bERROR\b|Traceback|Exception\b/;
 const LN_WARN = /(^|\s)(WARNING|note)[:\s]|降级到|全链路失败|自检：/;
 
+let logSig = '';
+
 async function tailLog() {
   const { body } = await api('/api/log?tail=200');
   const lines = body.lines || [];
@@ -243,6 +257,12 @@ async function tailLog() {
     el.textContent = '（等待输出…）';
     return;
   }
+  const sig = lines.join('\n');
+  if (sig === logSig) return; // 内容没变就别重绘：否则会把正在往上翻的滚动位置拽回底部
+  logSig = sig;
+  // 只有原本就贴着底部时才自动跟随（用户往上翻看历史时不打扰）
+  const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+
   // 逐行着色：真错误才红，说明性提示（note / 降级 / 自检）黄，避免把预期提示看成报错
   el.innerHTML = '';
   lines.forEach((line) => {
@@ -254,7 +274,7 @@ async function tailLog() {
       div.className = 'ln-sum';
     el.appendChild(div);
   });
-  el.scrollTop = el.scrollHeight;
+  if (atBottom) el.scrollTop = el.scrollHeight;
 }
 
 let pkMode = 'dir';
