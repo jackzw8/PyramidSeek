@@ -72,8 +72,19 @@
       <div class="field" style="flex:1"><label>股票池：自定义 codes（逗号 / 空格分隔，如 SH600519, HK00700；留空 = 全市场）</label>
         <input type="text" id="codes" placeholder="SH600519, HK00700"></div>
       <div class="field"><label>或：选样清单文件（--codes-file）</label>
-        <input type="text" id="codesFile" placeholder="batch/industry_top_A.txt"></div>
+        <input type="text" id="codesFile" placeholder="batch/industry_l2_top_codes.txt"></div>
     </div>
+    <div class="row">
+      <div class="field"><label>行业选样层级</label>
+        <select id="selLevel">
+          <option value="l2">申万二级（默认，约 130 行业）</option>
+          <option value="l1">申万一级（约 31 行业）</option>
+        </select></div>
+      <div class="field"><label>每行业取前 N</label>
+        <input type="number" id="selPer" value="10" min="1" max="100"></div>
+      <button id="btnSelect">生成行业清单</button>
+    </div>
+    <div class="msg" id="selMsg"></div>
     <div class="row">
       <button class="primary" id="btnRun">启动跑批</button>
       <button class="danger" id="btnStop" disabled>停止</button>
@@ -211,6 +222,33 @@ async function tailLog() {
   });
   el.scrollTop = el.scrollHeight;
 }
+
+$('btnSelect').onclick = async () => {
+  const msg = $('selMsg');
+  msg.className = 'msg';
+  msg.textContent = '选样中…（行业映射首次约 1 分钟，之后秒回）';
+  $('btnSelect').disabled = true;
+  try {
+    const { ok, body } = await api('/api/select', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({level: $('selLevel').value, perIndustry: +$('selPer').value || 10}),
+    });
+    if (!ok) {
+      msg.textContent = body.error || '选样失败';
+      msg.className = 'msg err';
+      return;
+    }
+    $('codesFile').value = body.path;
+    msg.textContent = `已生成 ${body.count} 只 / ${body.groups.length} 个行业 → ${body.path}`
+      + '（已填进上面的清单框，直接点「启动跑批」）';
+  } catch (e) {
+    msg.textContent = '选样请求失败：' + e;
+    msg.className = 'msg err';
+  } finally {
+    $('btnSelect').disabled = false;
+  }
+};
 
 $('btnRun').onclick = async () => {
   const codes = $('codes').value.split(/[,\s，]+/).filter(Boolean);
