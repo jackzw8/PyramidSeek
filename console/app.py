@@ -18,6 +18,7 @@ API：
 from __future__ import annotations
 
 import argparse
+import atexit
 import json
 import subprocess
 import sys
@@ -42,6 +43,11 @@ from .select import LIST_SUFFIX, REPO_ROOT, resolve_dir, select  # noqa: E402
 
 app = Flask(__name__, static_folder="static", static_url_path="")
 PENDING_PATH = config.DATA_DIR / "_pending.json"
+
+# 进程退出（Ctrl+C / 关闭控制台窗口）时收掉跑批子进程 —— 它占着 DuckDB 与缓存目录，
+# 不收拾会导致「明明没任务在跑，却报独占」。强杀（任务管理器结束进程）时 atexit 不执行，
+# 那是操作系统层面的限制，只能靠下次启动时人工确认。
+atexit.register(runner.shutdown)
 
 
 def _sources_payload() -> dict:

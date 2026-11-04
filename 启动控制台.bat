@@ -50,7 +50,7 @@ if not errorlevel 1 (
 echo 解释器: %PY%
 echo 正在启动，浏览器约 3 秒后自动打开...
 echo.
-echo   提示: 关闭本窗口 = 停止控制台（正在跑的跑批也会中断）；
+echo   提示: 按 Ctrl+C 停止控制台（会一并结束正在跑的跑批；直接关窗口可能留下它）；
 echo         跑批过程中可以关掉浏览器，跑批不受影响。
 echo.
 start "" /min cmd /c "ping -n 4 127.0.0.1 >nul & start http://127.0.0.1:%PORT%"

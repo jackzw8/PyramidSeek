@@ -198,6 +198,28 @@ class Runner:
             self.status["phase"] = "stopping"
             return True
 
+    def shutdown(self) -> None:
+        """退出兜底：收掉还在跑的跑批子进程。
+
+        控制台被 Ctrl+C / 关窗口时，子进程**不会**自动退出（Windows 上父进程结束
+        不连带杀子进程），而它占着 DuckDB 与缓存目录 —— 下次启动会莫名报「独占」。
+        这里先 terminate，5 秒不退再 kill。
+        """
+        with self._lock:
+            proc = self._proc
+        if proc is None or proc.poll() is not None:
+            return
+        print(f"[console] 退出中，正在结束跑批子进程 pid={proc.pid}", flush=True)
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                pass
+
     def tail(self, lines: int = 200) -> list[str]:
         run_id = self.status.get("runId")
         if not run_id:
