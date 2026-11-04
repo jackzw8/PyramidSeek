@@ -418,9 +418,7 @@ def test_read_latest_report_periods(tmp_path) -> None:
                     financial_row(report_period="2025-09-30", report_type="q3"),
                 ],
                 "SH600004": [
-                    financial_row(
-                        code="SH600004", report_period="2025-06-30", report_type="h1"
-                    )
+                    financial_row(code="SH600004", report_period="2025-06-30", report_type="h1")
                 ],
             }
         ),

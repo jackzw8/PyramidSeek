@@ -41,7 +41,8 @@ def _target(level_file: str) -> int:
         path = BATCH_DIR / name
         if path.exists():
             codes = [
-                line for line in path.read_text(encoding="utf-8").splitlines()
+                line
+                for line in path.read_text(encoding="utf-8").splitlines()
                 if line.strip() and not line.lstrip().startswith("#")
             ]
             return len(codes) or DEFAULT_TARGET

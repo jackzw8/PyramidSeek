@@ -265,8 +265,10 @@ def main() -> int:
     selected, groups, stocks_by_code = _select_by_industry(args)
     if not selected:
         # 常见原因：--industries 传了另一层级的名字（如默认二级下传「银行」）→ 别写空清单
-        log(f"没选到任何标的（层级 {args.level}，--industries={args.industries}）。"
-            f"检查行业名是否属于{LEVEL_LABEL[args.level]}；清单未改动。")
+        log(
+            f"没选到任何标的（层级 {args.level}，--industries={args.industries}）。"
+            f"检查行业名是否属于{LEVEL_LABEL[args.level]}；清单未改动。"
+        )
         return 1
     out_file = _write_list(selected, stocks_by_code, args.per_industry, args.level)
 
@@ -276,8 +278,10 @@ def main() -> int:
         log(f"{_pad(name, 20)}{_pad(str(total), 8, right=True)}{_pad(str(picked), 8, right=True)}")
     hours = len(selected) * SECONDS_PER_STOCK / 3600
     log(f"\n合计 {len(groups)} 个{label}行业 / 入选 {len(selected)} 只 → {out_file}")
-    log(f"预计串行 ≈ {hours:.1f} 小时（{SECONDS_PER_STOCK}s/只：新浪主源三表 + 节流，不含行情）；"
-        f"中断后重跑同一条命令，已抓的走缓存秒过（cold 固定分区，跨天续传）")
+    log(
+        f"预计串行 ≈ {hours:.1f} 小时（{SECONDS_PER_STOCK}s/只：新浪主源三表 + 节流，不含行情）；"
+        f"中断后重跑同一条命令，已抓的走缓存秒过（cold 固定分区，跨天续传）"
+    )
 
     if args.run:
         stem = f"industry_{args.level}" if args.level != "l1" else "industry"
