@@ -3,16 +3,16 @@
   "contractVersion": "1.2",
   "entries": [
     {
+      "code": "HK00700",
+      "name": "腾讯控股",
+      "market": "HK",
+      "py": "txkg"
+    },
+    {
       "code": "SH600519",
       "name": "贵州茅台",
       "market": "A",
       "py": "gzmt"
-    },
-    {
-      "code": "SZ000858",
-      "name": "五粮液",
-      "market": "A",
-      "py": "wly"
     }
   ]
 }

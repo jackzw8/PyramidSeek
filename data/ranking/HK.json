@@ -22,6 +22,25 @@
     "debt_ratio",
     "isTop10pct"
   ],
-  "rows": [],
+  "rows": [
+    {
+      "rank": 1,
+      "code": "HK00700",
+      "name": "腾讯控股",
+      "market": "HK",
+      "l1": "软件服务",
+      "l2": "软件服务",
+      "group": "软件服务",
+      "level": "L1",
+      "score": 778.7,
+      "quality": 710.4,
+      "growth": 68.3,
+      "roe": 0.2153,
+      "gross_margin": 0.4884,
+      "cash_ratio": 0.0913,
+      "debt_ratio": 0.4835,
+      "isTop10pct": true
+    }
+  ],
   "excluded": []
 }

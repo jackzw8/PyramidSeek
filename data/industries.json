@@ -16,16 +16,27 @@
       ],
       "l2": [
         {
-          "code": "801123",
-          "name": "白酒",
+          "code": "801125",
+          "name": "白酒Ⅱ",
           "parent": "801120"
         }
       ]
     },
     {
       "market": "HK",
-      "l1": [],
-      "l2": []
+      "l1": [
+        {
+          "code": "软件服务",
+          "name": "软件服务"
+        }
+      ],
+      "l2": [
+        {
+          "code": "软件服务",
+          "name": "软件服务",
+          "parent": "软件服务"
+        }
+      ]
     }
   ],
   "counts": {
@@ -33,7 +44,14 @@
       "market": "A",
       "group": "食品饮料",
       "level": "L1",
-      "count": 2,
+      "count": 1,
+      "use_fallback": true
+    },
+    "HK:软件服务": {
+      "market": "HK",
+      "group": "软件服务",
+      "level": "L1",
+      "count": 1,
       "use_fallback": true
     }
   }
