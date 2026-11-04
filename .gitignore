@@ -11,11 +11,18 @@ venv/
 /data/*
 !/data/.gitkeep
 
-# 评分产物由 batch 生成（家法 R22），按 R21 提交到独立 data 分支，不进 main
+# 评分产物由 batch 生成（家法 R22）；按 R21（V1.3 / ADR-014）随前端一起
+# 由 publish 推到 **gh-pages** 快照分支，不进 main
 /public/data/*.json
 /public/data/ranking/
 /public/data/stock/
 !/public/data/.gitkeep
+
+# 发布构建物（M5-6 publish 生成，整目录推 gh-pages）
+/dist/
+
+# 跑批控制台运行记录（M5-4 运行时生成）
+/console/runs.db
 
 # 跑批辅助（batch/）：选样清单与跑批日志由脚本生成、每次重写 → 不入库
 # （清单确定性来自「按代码序取前 N」，随时可重新生成；脚本与 README 照常入库）
