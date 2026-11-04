@@ -25,6 +25,7 @@ import os
 import shutil
 import sys
 from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -196,6 +197,59 @@ def _prescreen_financials(
     return kept, len(codes) - len(kept)
 
 
+def _to_plain(value: Any) -> Any:
+    """duckdb 读回来的是 ``Decimal`` / ``date``，转成与 fetch 输出一致的 ``float`` / ``str``。
+
+    ``Decimal`` 不转，产物 ``json.dumps`` 会直接 TypeError；``date`` 转 ISO 字符串，
+    与 clean 产出的 ``report_period``（``"2026-09-30"``）同形。
+    """
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, datetime):
+        return value.strftime("%Y-%m-%dT%H:%M:%SZ")
+    if isinstance(value, date):
+        return value.isoformat()
+    return value
+
+
+def _merge_prescreened(outcome: Any, codes: list[str], db_path: Path | None = None) -> int:
+    """把预筛跳过的标的从标准层读回，仍参与本轮评分（D-52 缺口修补）。
+
+    预筛的语义是「**不用重抓**财报」，不是「不要这只票」。原实现只把待抓清单传给
+    ``fetch_universe``，被跳过的标的既没抓、也没读回 —— ``--codes SH600519 HK00700``
+    会静默只剩一只，用户还以为自己选错了。
+
+    :returns: 实际补进来的股票数
+    """
+    wanted = {str(code) for code in codes}
+
+    def _read(table: str) -> list[dict[str, Any]]:
+        return [
+            {key: _to_plain(val) for key, val in row.items()}
+            for row in store.read_table(table, db_path=db_path)
+            if str(row.get("code")) in wanted
+        ]
+
+    added = 0
+    have = {str(row.get("code")) for row in outcome.universe.stocks}
+    for row in _read("stock"):
+        if str(row.get("code")) in have:
+            continue
+        outcome.universe.stocks.append(row)
+        added += 1
+
+    known = set(outcome.universe.financials)
+    for row in _read("financial_report"):
+        code = str(row.get("code"))
+        if code in known:
+            continue
+        outcome.universe.financials.setdefault(code, []).append(row)
+
+    if added:
+        outcome.notes.append(f"预筛读回 {added} 只（标准层已有应到报告期，未重抓财报）")
+    return added
+
+
 def prepare_out_dir(out_dir: Path) -> None:
     """重置产物目录：删掉上一批的 ``ranking/`` 与 ``stock/``。
 
@@ -268,6 +322,7 @@ def run(args: argparse.Namespace) -> int:
 
     # D-52 预筛：只对 financials 模式 + 有明确清单 + 会落库时生效（retry/daily/cold 不预筛）；
     # PYRAMID_PRESCREEN=0 可整体关闭（回退到 D-37 的纯 TTL 行为）
+    skipped_codes: list[str] = []
     if (
         args.mode == "financials"
         and codes
@@ -276,11 +331,14 @@ def run(args: argparse.Namespace) -> int:
         and _prescreen_enabled()
     ):
         expected = common.expected_report_period(today_cn)
-        codes, skipped = _prescreen_financials(codes, expected_period=expected, db_path=args.db)
-        print(f"[batch] 预筛：应到报告期 {expected}｜跳过 {skipped} 只，待抓 {len(codes)} 只")
-        if skipped and not codes:
+        kept, skipped = _prescreen_financials(codes, expected_period=expected, db_path=args.db)
+        kept_set = set(kept)
+        skipped_codes = [code for code in codes if code not in kept_set]
+        # 注意：**codes 不缩减** —— stocks 仍要按原清单拉，行业名以本轮为准
+        # （申万会改名，例如「白酒」→「白酒Ⅱ」，用旧名会让行业分位池错位）
+        print(f"[batch] 预筛：应到报告期 {expected}｜跳过 {skipped} 只，待抓 {len(kept)} 只")
+        if skipped_codes and not kept:
             print("[batch] 预筛：全部标的已追平，本次不抓财报（从标准层读回）")
-            with_financials = False
 
     # 财报选源（M5-1 / ADR-015）：平权可选、按市场各选一个，失败不自动换源。
     # --offline 固定走 fixtures，不接受选源。
@@ -298,6 +356,7 @@ def run(args: argparse.Namespace) -> int:
         outcome = fetch.fetch_universe(
             markets=tuple(args.markets),
             codes=codes or None,
+            skip_financials=set(skipped_codes) or None,
             limit=args.limit,
             sources=selection,
             chain=fetch.default_chain(
@@ -322,6 +381,12 @@ def run(args: argparse.Namespace) -> int:
     except DataSourceError as exc:
         print(f"[batch][ERROR] 采集失败：{exc}", file=sys.stderr)
         return 2
+
+    # 预筛只决定「抓不抓」，不决定「要不要这只票」：跳过的从标准层读回，照常评分。
+    if skipped_codes:
+        restored = _merge_prescreened(outcome, skipped_codes, args.db)
+        if restored:
+            print(f"[batch] 预筛读回：{restored} 只来自标准层（未重抓财报，仍参与评分）")
 
     inputs = assemble_inputs(
         outcome, snapshot_version=snapshot_version, generated_at=generated_at, as_of=as_of
