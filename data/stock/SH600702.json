@@ -24,11 +24,13 @@
     "cash_ratio": 67.55,
     "asset_turnover": 35.83
   },
+  "filled": [],
+  "unfilled": [],
   "radar": {
     "roe": 71.23,
     "gross_margin": 61.28,
     "asset_turnover": 35.83,
-    "eps": 50.0,
+    "eps": 94.17,
     "cash_ratio": 67.55,
     "net_margin": 73.62
   },
@@ -69,11 +71,11 @@
       0.0505
     ],
     "eps": [
-      null,
-      null,
-      null,
-      null,
-      null
+      3.78,
+      5.1,
+      5.34,
+      1.05,
+      0.68
     ]
   },
   "structure": {
@@ -180,7 +182,7 @@
     {
       "code": "SH600519",
       "name": "贵州茅台",
-      "roe5y": 0.3299
+      "roe5y": 0.3295
     },
     {
       "code": "SH600779",

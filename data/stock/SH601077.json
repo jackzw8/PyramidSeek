@@ -9,8 +9,8 @@
   "level": "L1",
   "industryStd": "申万2021",
   "listedAt": "",
-  "score": 229.95,
-  "quality": 259.31,
+  "score": 233.09,
+  "quality": 262.45,
   "growth": -29.36,
   "growthDetail": {
     "netProfit": 30.64,
@@ -22,13 +22,18 @@
     "roa": 7.52,
     "gross_margin": 0.0,
     "cash_ratio": 0.0,
-    "asset_turnover": 44.29
+    "asset_turnover": 47.14
   },
+  "filled": [],
+  "unfilled": [
+    "gross_margin",
+    "cash_ratio"
+  ],
   "radar": {
     "roe": 44.76,
     "gross_margin": 0.0,
-    "asset_turnover": 44.29,
-    "eps": 50.0,
+    "asset_turnover": 47.14,
+    "eps": 44.29,
     "cash_ratio": 0.0,
     "net_margin": 100.0
   },
@@ -69,11 +74,11 @@
       0.4233
     ],
     "eps": [
-      null,
-      null,
-      null,
-      null,
-      null
+      0.84,
+      0.89,
+      0.94,
+      0.99,
+      1.05
     ]
   },
   "structure": {
@@ -255,7 +260,7 @@
     {
       "code": "SH601398",
       "name": "工商银行",
-      "roe5y": 0.0978
+      "roe5y": 0.0972
     },
     {
       "code": "SH601288",

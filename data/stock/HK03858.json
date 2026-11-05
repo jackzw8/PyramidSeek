@@ -24,11 +24,13 @@
     "cash_ratio": 87.99,
     "asset_turnover": 2.5
   },
+  "filled": [],
+  "unfilled": [],
   "radar": {
     "roe": 77.08,
     "gross_margin": 100.0,
     "asset_turnover": 2.5,
-    "eps": 50.0,
+    "eps": 57.5,
     "cash_ratio": 87.99,
     "net_margin": 97.38
   },
@@ -49,7 +51,7 @@
       0.2869
     ],
     "eps": [
-      null
+      0.82
     ]
   },
   "structure": {

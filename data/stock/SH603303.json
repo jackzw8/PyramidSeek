@@ -24,11 +24,13 @@
     "cash_ratio": 100.0,
     "asset_turnover": 62.5
   },
+  "filled": [],
+  "unfilled": [],
   "radar": {
     "roe": 49.82,
     "gross_margin": 18.41,
     "asset_turnover": 62.5,
-    "eps": 50.0,
+    "eps": 59.17,
     "cash_ratio": 100.0,
     "net_margin": 35.46
   },
@@ -69,11 +71,11 @@
       0.0611
     ],
     "eps": [
-      null,
-      null,
-      null,
-      null,
-      null
+      0.69,
+      0.71,
+      0.79,
+      0.74,
+      0.57
     ]
   },
   "structure": {
@@ -180,7 +182,7 @@
     {
       "code": "SZ000651",
       "name": "格力电器",
-      "roe5y": 0.2299
+      "roe5y": 0.2314
     },
     {
       "code": "SH603486",
@@ -203,14 +205,14 @@
       "roe5y": 0.2082
     },
     {
+      "code": "SZ000333",
+      "name": "美的集团",
+      "roe5y": 0.2035
+    },
+    {
       "code": "SZ001326",
       "name": "联域股份",
       "roe5y": 0.199
-    },
-    {
-      "code": "SZ000333",
-      "name": "美的集团",
-      "roe5y": 0.1947
     },
     {
       "code": "SH603075",

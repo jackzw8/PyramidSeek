@@ -212,13 +212,13 @@
       "l2": "白酒Ⅱ",
       "group": "食品饮料",
       "level": "L1",
-      "score": 937.43,
-      "quality": 883.34,
+      "score": 936.71,
+      "quality": 882.62,
       "growth": 54.09,
-      "roe": 0.3299,
-      "gross_margin": 0.8659,
-      "cash_ratio": 0.2283,
-      "debt_ratio": 0.2257,
+      "roe": 0.3295,
+      "gross_margin": 0.6824,
+      "cash_ratio": 0.2108,
+      "debt_ratio": 0.2211,
       "isTop10pct": true
     },
     {
@@ -529,24 +529,6 @@
     },
     {
       "rank": 29,
-      "code": "SZ000651",
-      "name": "格力电器",
-      "market": "A",
-      "l1": "家用电器",
-      "l2": "白色家电",
-      "group": "家用电器",
-      "level": "L1",
-      "score": 862.16,
-      "quality": 747.54,
-      "growth": 114.62,
-      "roe": 0.2299,
-      "gross_margin": 0.2393,
-      "cash_ratio": 0.4077,
-      "debt_ratio": 0.671,
-      "isTop10pct": true
-    },
-    {
-      "rank": 30,
       "code": "SZ002318",
       "name": "久立特材",
       "market": "A",
@@ -564,7 +546,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 31,
+      "rank": 30,
       "code": "SH603092",
       "name": "德力佳",
       "market": "A",
@@ -582,7 +564,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 32,
+      "rank": 31,
       "code": "SH600276",
       "name": "恒瑞医药",
       "market": "A",
@@ -600,7 +582,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 33,
+      "rank": 32,
       "code": "SH601123",
       "name": "马矿股份",
       "market": "A",
@@ -618,7 +600,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 34,
+      "rank": 33,
       "code": "SH603519",
       "name": "立霸股份",
       "market": "A",
@@ -636,7 +618,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 35,
+      "rank": 34,
       "code": "SZ002315",
       "name": "焦点科技",
       "market": "A",
@@ -654,25 +636,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 36,
-      "code": "SZ000333",
-      "name": "美的集团",
-      "market": "A",
-      "l1": "家用电器",
-      "l2": "白色家电",
-      "group": "家用电器",
-      "level": "L1",
-      "score": 846.06,
-      "quality": 722.19,
-      "growth": 123.87,
-      "roe": 0.1947,
-      "gross_margin": 0.2136,
-      "cash_ratio": 0.2174,
-      "debt_ratio": 0.6879,
-      "isTop10pct": true
-    },
-    {
-      "rank": 37,
+      "rank": 35,
       "code": "SH603355",
       "name": "莱克电气",
       "market": "A",
@@ -690,7 +654,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 38,
+      "rank": 36,
       "code": "SZ002555",
       "name": "三七互娱",
       "market": "A",
@@ -708,7 +672,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 39,
+      "rank": 37,
       "code": "SH600096",
       "name": "云天化",
       "market": "A",
@@ -726,7 +690,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 40,
+      "rank": 38,
       "code": "SZ002192",
       "name": "融捷股份",
       "market": "A",
@@ -744,7 +708,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 41,
+      "rank": 39,
       "code": "SH603486",
       "name": "科沃斯",
       "market": "A",
@@ -762,7 +726,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 42,
+      "rank": 40,
       "code": "SH605599",
       "name": "菜百股份",
       "market": "A",
@@ -780,7 +744,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 43,
+      "rank": 41,
       "code": "SH605118",
       "name": "力鼎光电",
       "market": "A",
@@ -798,7 +762,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 44,
+      "rank": 42,
       "code": "SH688093",
       "name": "世华科技",
       "market": "A",
@@ -816,25 +780,25 @@
       "isTop10pct": true
     },
     {
-      "rank": 45,
-      "code": "SH603198",
-      "name": "迎驾贡酒",
+      "rank": 43,
+      "code": "SZ000651",
+      "name": "格力电器",
       "market": "A",
-      "l1": "食品饮料",
-      "l2": "白酒Ⅱ",
-      "group": "食品饮料",
+      "l1": "家用电器",
+      "l2": "白色家电",
+      "group": "家用电器",
       "level": "L1",
-      "score": 821.51,
-      "quality": 801.6,
-      "growth": 19.91,
-      "roe": 0.2388,
-      "gross_margin": 0.4132,
-      "cash_ratio": 0.0997,
-      "debt_ratio": 0.2801,
+      "score": 823.99,
+      "quality": 722.56,
+      "growth": 101.43,
+      "roe": 0.2314,
+      "gross_margin": 0.1667,
+      "cash_ratio": 0.3477,
+      "debt_ratio": 0.6679,
       "isTop10pct": true
     },
     {
-      "rank": 46,
+      "rank": 44,
       "code": "SH603170",
       "name": "宝立食品",
       "market": "A",
@@ -852,7 +816,25 @@
       "isTop10pct": true
     },
     {
-      "rank": 47,
+      "rank": 45,
+      "code": "SH603198",
+      "name": "迎驾贡酒",
+      "market": "A",
+      "l1": "食品饮料",
+      "l2": "白酒Ⅱ",
+      "group": "食品饮料",
+      "level": "L1",
+      "score": 819.68,
+      "quality": 799.77,
+      "growth": 19.91,
+      "roe": 0.2388,
+      "gross_margin": 0.4132,
+      "cash_ratio": 0.0997,
+      "debt_ratio": 0.2801,
+      "isTop10pct": true
+    },
+    {
+      "rank": 46,
       "code": "SZ000975",
       "name": "山金国际",
       "market": "A",
@@ -870,7 +852,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 48,
+      "rank": 47,
       "code": "SH601958",
       "name": "金钼股份",
       "market": "A",
@@ -888,7 +870,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 49,
+      "rank": 48,
       "code": "SH600406",
       "name": "国电南瑞",
       "market": "A",
@@ -906,7 +888,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 50,
+      "rank": 49,
       "code": "SH600233",
       "name": "圆通速递",
       "market": "A",
@@ -924,7 +906,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 51,
+      "rank": 50,
       "code": "SH600066",
       "name": "宇通客车",
       "market": "A",
@@ -942,7 +924,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 52,
+      "rank": 51,
       "code": "SZ002867",
       "name": "周大生",
       "market": "A",
@@ -960,7 +942,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 53,
+      "rank": 52,
       "code": "SH600132",
       "name": "重庆啤酒",
       "market": "A",
@@ -978,7 +960,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 54,
+      "rank": 53,
       "code": "SH601100",
       "name": "恒立液压",
       "market": "A",
@@ -996,7 +978,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 55,
+      "rank": 54,
       "code": "SH603551",
       "name": "奥普科技",
       "market": "A",
@@ -1011,10 +993,10 @@
       "gross_margin": 0.1634,
       "cash_ratio": 0.4936,
       "debt_ratio": 0.3698,
-      "isTop10pct": false
+      "isTop10pct": true
     },
     {
-      "rank": 56,
+      "rank": 55,
       "code": "SH605183",
       "name": "确成股份",
       "market": "A",
@@ -1030,6 +1012,24 @@
       "cash_ratio": 0.1978,
       "debt_ratio": 0.1387,
       "isTop10pct": true
+    },
+    {
+      "rank": 56,
+      "code": "SZ000333",
+      "name": "美的集团",
+      "market": "A",
+      "l1": "家用电器",
+      "l2": "白色家电",
+      "group": "家用电器",
+      "level": "L1",
+      "score": 796.48,
+      "quality": 688.05,
+      "growth": 108.43,
+      "roe": 0.2035,
+      "gross_margin": 0.0999,
+      "cash_ratio": 0.1713,
+      "debt_ratio": 0.6559,
+      "isTop10pct": false
     },
     {
       "rank": 57,
@@ -8359,6 +8359,24 @@
     },
     {
       "rank": 464,
+      "code": "SH601398",
+      "name": "工商银行",
+      "market": "A",
+      "l1": "银行",
+      "l2": "国有大型银行Ⅱ",
+      "group": "银行",
+      "level": "L1",
+      "score": 465.55,
+      "quality": 382.13,
+      "growth": 83.42,
+      "roe": 0.0972,
+      "gross_margin": null,
+      "cash_ratio": null,
+      "debt_ratio": 0.9149,
+      "isTop10pct": false
+    },
+    {
+      "rank": 465,
       "code": "SH601998",
       "name": "中信银行",
       "market": "A",
@@ -8376,7 +8394,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 465,
+      "rank": 466,
       "code": "SH601021",
       "name": "春秋航空",
       "market": "A",
@@ -8394,7 +8412,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 466,
+      "rank": 467,
       "code": "SH688551",
       "name": "科威尔",
       "market": "A",
@@ -8412,7 +8430,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 467,
+      "rank": 468,
       "code": "SH600724",
       "name": "宁波富达",
       "market": "A",
@@ -8430,7 +8448,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 468,
+      "rank": 469,
+      "code": "SH601838",
+      "name": "成都银行",
+      "market": "A",
+      "l1": "银行",
+      "l2": "城商行Ⅱ",
+      "group": "银行",
+      "level": "L1",
+      "score": 461.0,
+      "quality": 331.78,
+      "growth": 129.22,
+      "roe": 0.1524,
+      "gross_margin": null,
+      "cash_ratio": null,
+      "debt_ratio": 0.9321,
+      "isTop10pct": false
+    },
+    {
+      "rank": 470,
       "code": "SH600455",
       "name": "博通股份",
       "market": "A",
@@ -8448,7 +8484,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 469,
+      "rank": 471,
       "code": "SZ000001",
       "name": "平安银行",
       "market": "A",
@@ -8466,7 +8502,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 470,
+      "rank": 472,
       "code": "SH600195",
       "name": "中牧股份",
       "market": "A",
@@ -8484,7 +8520,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 471,
+      "rank": 473,
       "code": "SH600438",
       "name": "通威股份",
       "market": "A",
@@ -8502,7 +8538,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 472,
+      "rank": 474,
       "code": "SZ000019",
       "name": "深粮控股",
       "market": "A",
@@ -8520,7 +8556,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 473,
+      "rank": 475,
       "code": "SZ300871",
       "name": "回盛生物",
       "market": "A",
@@ -8538,7 +8574,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 474,
+      "rank": 476,
       "code": "SH603678",
       "name": "火炬电子",
       "market": "A",
@@ -8556,7 +8592,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 475,
+      "rank": 477,
       "code": "SH600585",
       "name": "海螺水泥",
       "market": "A",
@@ -8574,25 +8610,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 476,
-      "code": "SH601838",
-      "name": "成都银行",
-      "market": "A",
-      "l1": "银行",
-      "l2": "城商行Ⅱ",
-      "group": "银行",
-      "level": "L1",
-      "score": 457.86,
-      "quality": 328.64,
-      "growth": 129.22,
-      "roe": 0.1524,
-      "gross_margin": null,
-      "cash_ratio": null,
-      "debt_ratio": 0.9321,
-      "isTop10pct": false
-    },
-    {
-      "rank": 477,
+      "rank": 478,
       "code": "SZ002047",
       "name": "宝鹰股份",
       "market": "A",
@@ -8610,7 +8628,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 478,
+      "rank": 479,
       "code": "SH600596",
       "name": "新安股份",
       "market": "A",
@@ -8625,24 +8643,6 @@
       "gross_margin": 0.0737,
       "cash_ratio": 0.147,
       "debt_ratio": 0.438,
-      "isTop10pct": false
-    },
-    {
-      "rank": 479,
-      "code": "SH601398",
-      "name": "工商银行",
-      "market": "A",
-      "l1": "银行",
-      "l2": "国有大型银行Ⅱ",
-      "group": "银行",
-      "level": "L1",
-      "score": 456.42,
-      "quality": 389.3,
-      "growth": 67.12,
-      "roe": 0.0978,
-      "gross_margin": null,
-      "cash_ratio": null,
-      "debt_ratio": 0.9154,
       "isTop10pct": false
     },
     {
@@ -9709,24 +9709,6 @@
     },
     {
       "rank": 539,
-      "code": "SH600011",
-      "name": "华能国际",
-      "market": "A",
-      "l1": "公用事业",
-      "l2": "电力",
-      "group": "公用事业",
-      "level": "L1",
-      "score": 425.04,
-      "quality": 282.61,
-      "growth": 142.43,
-      "roe": 0.0192,
-      "gross_margin": 0.1245,
-      "cash_ratio": 0.0361,
-      "debt_ratio": 0.806,
-      "isTop10pct": false
-    },
-    {
-      "rank": 540,
       "code": "SH603363",
       "name": "傲农生物",
       "market": "A",
@@ -9744,7 +9726,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 541,
+      "rank": 540,
       "code": "SH688009",
       "name": "中国通号",
       "market": "A",
@@ -9762,7 +9744,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 542,
+      "rank": 541,
       "code": "SH600587",
       "name": "新华医疗",
       "market": "A",
@@ -9780,7 +9762,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 543,
+      "rank": 542,
       "code": "SH600391",
       "name": "航发科技",
       "market": "A",
@@ -9798,7 +9780,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 544,
+      "rank": 543,
       "code": "SH688103",
       "name": "国力电子",
       "market": "A",
@@ -9816,7 +9798,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 545,
+      "rank": 544,
       "code": "SH603866",
       "name": "桃李面包",
       "market": "A",
@@ -9834,7 +9816,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 546,
+      "rank": 545,
       "code": "SH600320",
       "name": "振华重工",
       "market": "A",
@@ -9852,7 +9834,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 547,
+      "rank": 546,
       "code": "SH600877",
       "name": "电科芯片",
       "market": "A",
@@ -9870,7 +9852,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 548,
+      "rank": 547,
       "code": "SH601012",
       "name": "隆基绿能",
       "market": "A",
@@ -9888,7 +9870,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 549,
+      "rank": 548,
       "code": "SZ002511",
       "name": "中顺洁柔",
       "market": "A",
@@ -9906,7 +9888,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 550,
+      "rank": 549,
       "code": "SH600633",
       "name": "浙数文化",
       "market": "A",
@@ -9924,7 +9906,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 551,
+      "rank": 550,
       "code": "SH600884",
       "name": "杉杉股份",
       "market": "A",
@@ -9942,7 +9924,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 552,
+      "rank": 551,
       "code": "SH688719",
       "name": "爱科赛博",
       "market": "A",
@@ -9960,7 +9942,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 553,
+      "rank": 552,
       "code": "SH605376",
       "name": "博迁新材",
       "market": "A",
@@ -9978,7 +9960,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 554,
+      "rank": 553,
       "code": "SZ300192",
       "name": "科德教育",
       "market": "A",
@@ -9996,7 +9978,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 555,
+      "rank": 554,
       "code": "SH601886",
       "name": "江河集团",
       "market": "A",
@@ -10014,7 +9996,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 556,
+      "rank": 555,
       "code": "SZ000026",
       "name": "飞亚达",
       "market": "A",
@@ -10032,7 +10014,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 557,
+      "rank": 556,
       "code": "SH600269",
       "name": "赣粤高速",
       "market": "A",
@@ -10050,7 +10032,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 558,
+      "rank": 557,
       "code": "SH600123",
       "name": "兰花科创",
       "market": "A",
@@ -10068,7 +10050,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 559,
+      "rank": 558,
       "code": "SH600153",
       "name": "建发股份",
       "market": "A",
@@ -10086,7 +10068,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 560,
+      "rank": 559,
       "code": "SH600713",
       "name": "南京医药",
       "market": "A",
@@ -10104,7 +10086,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 561,
+      "rank": 560,
       "code": "SH600846",
       "name": "同济科技",
       "market": "A",
@@ -10122,7 +10104,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 562,
+      "rank": 561,
       "code": "SH601208",
       "name": "东材科技",
       "market": "A",
@@ -10140,7 +10122,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 563,
+      "rank": 562,
       "code": "SH600288",
       "name": "大恒科技",
       "market": "A",
@@ -10158,7 +10140,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 564,
+      "rank": 563,
       "code": "SH603059",
       "name": "XD倍加洁",
       "market": "A",
@@ -10176,7 +10158,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 565,
+      "rank": 564,
       "code": "SH601009",
       "name": "南京银行",
       "market": "A",
@@ -10194,7 +10176,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 566,
+      "rank": 565,
       "code": "SH601339",
       "name": "百隆东方",
       "market": "A",
@@ -10212,7 +10194,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 567,
+      "rank": 566,
       "code": "SH603787",
       "name": "新日股份",
       "market": "A",
@@ -10230,7 +10212,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 568,
+      "rank": 567,
       "code": "SH600035",
       "name": "楚天高速",
       "market": "A",
@@ -10248,7 +10230,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 569,
+      "rank": 568,
       "code": "SZ002761",
       "name": "浙江建投",
       "market": "A",
@@ -10266,7 +10248,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 570,
+      "rank": 569,
       "code": "SH600368",
       "name": "五洲交通",
       "market": "A",
@@ -10284,7 +10266,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 571,
+      "rank": 570,
       "code": "SH600050",
       "name": "中国联通",
       "market": "A",
@@ -10302,7 +10284,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 572,
+      "rank": 571,
       "code": "SH601233",
       "name": "桐昆股份",
       "market": "A",
@@ -10320,7 +10302,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 573,
+      "rank": 572,
       "code": "SH600173",
       "name": "卧龙新能",
       "market": "A",
@@ -10338,7 +10320,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 574,
+      "rank": 573,
       "code": "SZ000529",
       "name": "广弘控股",
       "market": "A",
@@ -10356,7 +10338,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 575,
+      "rank": 574,
       "code": "SH603002",
       "name": "宏昌电子",
       "market": "A",
@@ -10374,7 +10356,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 576,
+      "rank": 575,
       "code": "SH603273",
       "name": "天元智能",
       "market": "A",
@@ -10392,7 +10374,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 577,
+      "rank": 576,
       "code": "SH600962",
       "name": "国投中鲁",
       "market": "A",
@@ -10410,7 +10392,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 578,
+      "rank": 577,
       "code": "SH603022",
       "name": "新通联",
       "market": "A",
@@ -10428,7 +10410,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 579,
+      "rank": 578,
       "code": "SH688363",
       "name": "华熙生物",
       "market": "A",
@@ -10446,7 +10428,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 580,
+      "rank": 579,
       "code": "SH603018",
       "name": "华设集团",
       "market": "A",
@@ -10464,7 +10446,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 581,
+      "rank": 580,
       "code": "SH600967",
       "name": "内蒙一机",
       "market": "A",
@@ -10482,7 +10464,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 582,
+      "rank": 581,
       "code": "SH603052",
       "name": "可川科技",
       "market": "A",
@@ -10500,7 +10482,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 583,
+      "rank": 582,
       "code": "SH601121",
       "name": "宝地矿业",
       "market": "A",
@@ -10518,7 +10500,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 584,
+      "rank": 583,
       "code": "SH603098",
       "name": "森特股份",
       "market": "A",
@@ -10536,7 +10518,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 585,
+      "rank": 584,
       "code": "SH600372",
       "name": "中航机载",
       "market": "A",
@@ -10554,7 +10536,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 586,
+      "rank": 585,
       "code": "SZ000923",
       "name": "河钢资源",
       "market": "A",
@@ -10572,7 +10554,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 587,
+      "rank": 586,
       "code": "SH600261",
       "name": "阳光照明",
       "market": "A",
@@ -10590,7 +10572,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 588,
+      "rank": 587,
       "code": "SH600854",
       "name": "春兰股份",
       "market": "A",
@@ -10608,7 +10590,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 589,
+      "rank": 588,
       "code": "SZ002381",
       "name": "双箭股份",
       "market": "A",
@@ -10626,7 +10608,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 590,
+      "rank": 589,
       "code": "SH603218",
       "name": "日月股份",
       "market": "A",
@@ -10644,7 +10626,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 591,
+      "rank": 590,
       "code": "SH600048",
       "name": "保利发展",
       "market": "A",
@@ -10662,7 +10644,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 592,
+      "rank": 591,
       "code": "SH601665",
       "name": "齐鲁银行",
       "market": "A",
@@ -10680,7 +10662,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 593,
+      "rank": 592,
       "code": "SH600328",
       "name": "中盐化工",
       "market": "A",
@@ -10698,7 +10680,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 594,
+      "rank": 593,
       "code": "SH600478",
       "name": "科力远",
       "market": "A",
@@ -10716,7 +10698,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 595,
+      "rank": 594,
       "code": "SZ000526",
       "name": "学大教育",
       "market": "A",
@@ -10734,7 +10716,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 596,
+      "rank": 595,
       "code": "SH605298",
       "name": "必得科技",
       "market": "A",
@@ -10752,7 +10734,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 597,
+      "rank": 596,
       "code": "SH601328",
       "name": "交通银行",
       "market": "A",
@@ -10770,7 +10752,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 598,
+      "rank": 597,
       "code": "SH600871",
       "name": "石化油服",
       "market": "A",
@@ -10788,7 +10770,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 599,
+      "rank": 598,
       "code": "SZ000810",
       "name": "创维数字",
       "market": "A",
@@ -10806,7 +10788,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 600,
+      "rank": 599,
       "code": "SH600027",
       "name": "华电国际",
       "market": "A",
@@ -10824,7 +10806,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 601,
+      "rank": 600,
       "code": "SH603687",
       "name": "大胜达",
       "market": "A",
@@ -10842,7 +10824,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 602,
+      "rank": 601,
       "code": "SZ300755",
       "name": "华致酒行",
       "market": "A",
@@ -10860,7 +10842,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 603,
+      "rank": 602,
       "code": "SH600528",
       "name": "中铁工业",
       "market": "A",
@@ -10878,7 +10860,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 604,
+      "rank": 603,
       "code": "SH600446",
       "name": "金证股份",
       "market": "A",
@@ -10896,7 +10878,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 605,
+      "rank": 604,
       "code": "SH603496",
       "name": "恒为科技",
       "market": "A",
@@ -10914,7 +10896,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 606,
+      "rank": 605,
       "code": "SH601789",
       "name": "宁波建工",
       "market": "A",
@@ -10932,7 +10914,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 607,
+      "rank": 606,
       "code": "SH600493",
       "name": "凤竹纺织",
       "market": "A",
@@ -10950,7 +10932,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 608,
+      "rank": 607,
       "code": "SH600425",
       "name": "青松建化",
       "market": "A",
@@ -10965,6 +10947,24 @@
       "gross_margin": 0.1195,
       "cash_ratio": 0.1378,
       "debt_ratio": 0.3609,
+      "isTop10pct": false
+    },
+    {
+      "rank": 608,
+      "code": "SH600011",
+      "name": "华能国际",
+      "market": "A",
+      "l1": "公用事业",
+      "l2": "电力",
+      "group": "公用事业",
+      "level": "L1",
+      "score": 376.23,
+      "quality": 239.85,
+      "growth": 136.38,
+      "roe": 0.0152,
+      "gross_margin": 0.0193,
+      "cash_ratio": 0.0329,
+      "debt_ratio": 0.7715,
       "isTop10pct": false
     },
     {
@@ -13291,24 +13291,6 @@
     },
     {
       "rank": 738,
-      "code": "SH600419",
-      "name": "天润乳业",
-      "market": "A",
-      "l1": "食品饮料",
-      "l2": "饮料乳品",
-      "group": "食品饮料",
-      "level": "L1",
-      "score": 305.55,
-      "quality": 295.0,
-      "growth": 10.55,
-      "roe": 0.0494,
-      "gross_margin": 0.0663,
-      "cash_ratio": 0.1572,
-      "debt_ratio": 0.5097,
-      "isTop10pct": false
-    },
-    {
-      "rank": 739,
       "code": "SH600468",
       "name": "百利电气",
       "market": "A",
@@ -13326,7 +13308,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 740,
+      "rank": 739,
       "code": "SH600917",
       "name": "重庆燃气",
       "market": "A",
@@ -13341,6 +13323,24 @@
       "gross_margin": 0.0346,
       "cash_ratio": 0.115,
       "debt_ratio": 0.4867,
+      "isTop10pct": false
+    },
+    {
+      "rank": 740,
+      "code": "SH600419",
+      "name": "天润乳业",
+      "market": "A",
+      "l1": "食品饮料",
+      "l2": "饮料乳品",
+      "group": "食品饮料",
+      "level": "L1",
+      "score": 303.72,
+      "quality": 293.17,
+      "growth": 10.55,
+      "roe": 0.0494,
+      "gross_margin": 0.0663,
+      "cash_ratio": 0.1572,
+      "debt_ratio": 0.5097,
       "isTop10pct": false
     },
     {
@@ -15739,6 +15739,24 @@
     },
     {
       "rank": 874,
+      "code": "SH601077",
+      "name": "渝农商行",
+      "market": "A",
+      "l1": "银行",
+      "l2": "农商行Ⅱ",
+      "group": "银行",
+      "level": "L1",
+      "score": 233.09,
+      "quality": 262.45,
+      "growth": -29.36,
+      "roe": 0.0895,
+      "gross_margin": null,
+      "cash_ratio": null,
+      "debt_ratio": 0.916,
+      "isTop10pct": false
+    },
+    {
+      "rank": 875,
       "code": "SH601825",
       "name": "沪农商行",
       "market": "A",
@@ -15756,7 +15774,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 875,
+      "rank": 876,
       "code": "SZ000681",
       "name": "视觉中国",
       "market": "A",
@@ -15774,7 +15792,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 876,
+      "rank": 877,
       "code": "SH600202",
       "name": "哈空调",
       "market": "A",
@@ -15792,7 +15810,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 877,
+      "rank": 878,
       "code": "SH600749",
       "name": "西藏旅游",
       "market": "A",
@@ -15810,7 +15828,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 878,
+      "rank": 879,
       "code": "SH600629",
       "name": "华建集团",
       "market": "A",
@@ -15828,7 +15846,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 879,
+      "rank": 880,
       "code": "SH600637",
       "name": "东方明珠",
       "market": "A",
@@ -15843,24 +15861,6 @@
       "gross_margin": 0.0568,
       "cash_ratio": 0.1285,
       "debt_ratio": 0.3152,
-      "isTop10pct": false
-    },
-    {
-      "rank": 880,
-      "code": "SH601077",
-      "name": "渝农商行",
-      "market": "A",
-      "l1": "银行",
-      "l2": "农商行Ⅱ",
-      "group": "银行",
-      "level": "L1",
-      "score": 229.95,
-      "quality": 259.31,
-      "growth": -29.36,
-      "roe": 0.0895,
-      "gross_margin": null,
-      "cash_ratio": null,
-      "debt_ratio": 0.916,
       "isTop10pct": false
     },
     {

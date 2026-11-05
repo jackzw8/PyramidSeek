@@ -24,11 +24,13 @@
     "cash_ratio": 51.33,
     "asset_turnover": 62.5
   },
+  "filled": [],
+  "unfilled": [],
   "radar": {
     "roe": 25.8,
     "gross_margin": 1.84,
     "asset_turnover": 62.5,
-    "eps": 50.0,
+    "eps": 57.5,
     "cash_ratio": 51.33,
     "net_margin": 21.62
   },
@@ -69,11 +71,11 @@
       0.0946
     ],
     "eps": [
-      null,
-      null,
-      null,
-      null,
-      null
+      -0.06,
+      -0.14,
+      0.49,
+      0.58,
+      0.56
     ]
   },
   "structure": {
@@ -243,14 +245,14 @@
       "roe5y": 0.0242
     },
     {
-      "code": "SH600011",
-      "name": "华能国际",
-      "roe5y": 0.0192
-    },
-    {
       "code": "SH600635",
       "name": "大众公用",
       "roe5y": 0.0188
+    },
+    {
+      "code": "SH600011",
+      "name": "华能国际",
+      "roe5y": 0.0152
     },
     {
       "code": "SH600333",

@@ -24,11 +24,16 @@
     "cash_ratio": 0.0,
     "asset_turnover": 64.29
   },
+  "filled": [],
+  "unfilled": [
+    "gross_margin",
+    "cash_ratio"
+  ],
   "radar": {
     "roe": 38.15,
     "gross_margin": 0.0,
     "asset_turnover": 64.29,
-    "eps": 50.0,
+    "eps": 7.14,
     "cash_ratio": 0.0,
     "net_margin": 84.91
   },
@@ -69,11 +74,11 @@
       0.2068
     ],
     "eps": [
-      null,
-      null,
-      null,
-      null,
-      null
+      0.55,
+      0.53,
+      0.57,
+      0.52,
+      0.44
     ]
   },
   "structure": {
@@ -255,7 +260,7 @@
     {
       "code": "SH601398",
       "name": "工商银行",
-      "roe5y": 0.0978
+      "roe5y": 0.0972
     },
     {
       "code": "SH601288",

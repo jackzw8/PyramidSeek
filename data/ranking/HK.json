@@ -3967,6 +3967,24 @@
     },
     {
       "rank": 220,
+      "code": "HK03968",
+      "name": "招商银行",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 604.54,
+      "quality": 487.61,
+      "growth": 116.93,
+      "roe": 0.1322,
+      "gross_margin": null,
+      "cash_ratio": 0.0627,
+      "debt_ratio": 0.9036,
+      "isTop10pct": true
+    },
+    {
+      "rank": 221,
       "code": "HK03228",
       "name": "景旺电子",
       "market": "HK",
@@ -3984,7 +4002,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 221,
+      "rank": 222,
       "code": "HK01908",
       "name": "建发国际集团",
       "market": "HK",
@@ -4002,7 +4020,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 222,
+      "rank": 223,
       "code": "HK02590",
       "name": "极智嘉-W",
       "market": "HK",
@@ -4020,7 +4038,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 223,
+      "rank": 224,
       "code": "HK02714",
       "name": "牧原股份",
       "market": "HK",
@@ -4038,7 +4056,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 224,
+      "rank": 225,
       "code": "HK00179",
       "name": "德昌电机控股",
       "market": "HK",
@@ -4056,7 +4074,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 225,
+      "rank": 226,
       "code": "HK02656",
       "name": "健康160",
       "market": "HK",
@@ -4074,7 +4092,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 226,
+      "rank": 227,
       "code": "HK00638",
       "name": "广和通",
       "market": "HK",
@@ -4092,7 +4110,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 227,
+      "rank": 228,
       "code": "HK01044",
       "name": "恒安国际",
       "market": "HK",
@@ -4110,7 +4128,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 228,
+      "rank": 229,
       "code": "HK03330",
       "name": "灵宝黄金",
       "market": "HK",
@@ -4128,7 +4146,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 229,
+      "rank": 230,
       "code": "HK00728",
       "name": "中国电信",
       "market": "HK",
@@ -4146,7 +4164,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 230,
+      "rank": 231,
       "code": "HK00066",
       "name": "港铁公司",
       "market": "HK",
@@ -4164,7 +4182,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 231,
+      "rank": 232,
       "code": "HK02018",
       "name": "瑞声科技",
       "market": "HK",
@@ -4182,7 +4200,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 232,
+      "rank": 233,
       "code": "HK02869",
       "name": "绿城服务",
       "market": "HK",
@@ -4200,7 +4218,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 233,
+      "rank": 234,
       "code": "HK00512",
       "name": "远大医药",
       "market": "HK",
@@ -4218,7 +4236,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 234,
+      "rank": 235,
       "code": "HK02688",
       "name": "新奥能源",
       "market": "HK",
@@ -4236,7 +4254,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 235,
+      "rank": 236,
       "code": "HK02628",
       "name": "中国人寿",
       "market": "HK",
@@ -4254,7 +4272,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 236,
+      "rank": 237,
       "code": "HK01811",
       "name": "中广核新能源",
       "market": "HK",
@@ -4272,7 +4290,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 237,
+      "rank": 238,
       "code": "HK06090",
       "name": "不同集团",
       "market": "HK",
@@ -4290,7 +4308,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 238,
+      "rank": 239,
       "code": "HK09696",
       "name": "天齐锂业",
       "market": "HK",
@@ -4308,7 +4326,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 239,
+      "rank": 240,
       "code": "HK03311",
       "name": "中国建筑国际",
       "market": "HK",
@@ -4326,7 +4344,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 240,
+      "rank": 241,
       "code": "HK00177",
       "name": "江苏宁沪高速公路",
       "market": "HK",
@@ -4344,7 +4362,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 241,
+      "rank": 242,
       "code": "HK01171",
       "name": "兖矿能源",
       "market": "HK",
@@ -4362,7 +4380,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 242,
+      "rank": 243,
       "code": "HK02382",
       "name": "舜宇光学科技",
       "market": "HK",
@@ -4380,7 +4398,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 243,
+      "rank": 244,
       "code": "HK00142",
       "name": "第一太平",
       "market": "HK",
@@ -4398,7 +4416,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 244,
+      "rank": 245,
       "code": "HK06826",
       "name": "昊海生物科技",
       "market": "HK",
@@ -4416,7 +4434,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 245,
+      "rank": 246,
       "code": "HK01860",
       "name": "汇量科技",
       "market": "HK",
@@ -4434,7 +4452,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 246,
+      "rank": 247,
       "code": "HK00522",
       "name": "ASMPT",
       "market": "HK",
@@ -4452,7 +4470,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 247,
+      "rank": 248,
       "code": "HK00868",
       "name": "信义玻璃",
       "market": "HK",
@@ -4470,7 +4488,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 248,
+      "rank": 249,
       "code": "HK01766",
       "name": "中国中车",
       "market": "HK",
@@ -4488,7 +4506,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 249,
+      "rank": 250,
       "code": "HK02196",
       "name": "复星医药",
       "market": "HK",
@@ -4506,7 +4524,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 250,
+      "rank": 251,
       "code": "HK02607",
       "name": "上海医药",
       "market": "HK",
@@ -4524,7 +4542,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 251,
+      "rank": 252,
       "code": "HK09988",
       "name": "阿里巴巴-W",
       "market": "HK",
@@ -4542,7 +4560,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 252,
+      "rank": 253,
       "code": "HK01070",
       "name": "TCL电子",
       "market": "HK",
@@ -4560,7 +4578,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 253,
+      "rank": 254,
       "code": "HK00297",
       "name": "中化化肥",
       "market": "HK",
@@ -4578,7 +4596,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 254,
+      "rank": 255,
       "code": "HK00390",
       "name": "中国中铁",
       "market": "HK",
@@ -4596,7 +4614,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 255,
+      "rank": 256,
       "code": "HK03320",
       "name": "华润医药",
       "market": "HK",
@@ -4614,7 +4632,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 256,
+      "rank": 257,
       "code": "HK00470",
       "name": "先导智能",
       "market": "HK",
@@ -4632,7 +4650,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 257,
+      "rank": 258,
       "code": "HK01336",
       "name": "新华保险",
       "market": "HK",
@@ -4650,7 +4668,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 258,
+      "rank": 259,
       "code": "HK03738",
       "name": "阜博集团",
       "market": "HK",
@@ -4668,7 +4686,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 259,
+      "rank": 260,
       "code": "HK00586",
       "name": "海螺创业",
       "market": "HK",
@@ -4686,7 +4704,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 260,
+      "rank": 261,
       "code": "HK00002",
       "name": "中电控股",
       "market": "HK",
@@ -4704,7 +4722,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 261,
+      "rank": 262,
       "code": "HK01772",
       "name": "赣锋锂业",
       "market": "HK",
@@ -4722,7 +4740,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 262,
+      "rank": 263,
       "code": "HK00839",
       "name": "中教控股",
       "market": "HK",
@@ -4740,7 +4758,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 263,
+      "rank": 264,
       "code": "HK06078",
       "name": "海吉亚医疗",
       "market": "HK",
@@ -4758,7 +4776,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 264,
+      "rank": 265,
       "code": "HK00551",
       "name": "裕元集团",
       "market": "HK",
@@ -4776,7 +4794,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 265,
+      "rank": 266,
       "code": "HK09899",
       "name": "网易云音乐",
       "market": "HK",
@@ -4794,7 +4812,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 266,
+      "rank": 267,
       "code": "HK03918",
       "name": "金界控股",
       "market": "HK",
@@ -4812,7 +4830,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 267,
+      "rank": 268,
       "code": "HK01896",
       "name": "猫眼娱乐",
       "market": "HK",
@@ -4830,7 +4848,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 268,
+      "rank": 269,
       "code": "HK03877",
       "name": "中国船舶租赁",
       "market": "HK",
@@ -4848,7 +4866,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 269,
+      "rank": 270,
       "code": "HK06066",
       "name": "中信建投证券",
       "market": "HK",
@@ -4866,7 +4884,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 270,
+      "rank": 271,
       "code": "HK02228",
       "name": "晶泰控股",
       "market": "HK",
@@ -4884,7 +4902,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 271,
+      "rank": 272,
       "code": "HK01128",
       "name": "永利澳门",
       "market": "HK",
@@ -4902,7 +4920,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 272,
+      "rank": 273,
       "code": "HK01888",
       "name": "建滔积层板",
       "market": "HK",
@@ -4920,7 +4938,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 273,
+      "rank": 274,
       "code": "HK06869",
       "name": "长飞光纤光缆",
       "market": "HK",
@@ -4938,7 +4956,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 274,
+      "rank": 275,
       "code": "HK06099",
       "name": "招商证券",
       "market": "HK",
@@ -4956,7 +4974,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 275,
+      "rank": 276,
       "code": "HK02318",
       "name": "中国平安",
       "market": "HK",
@@ -4974,7 +4992,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 276,
+      "rank": 277,
       "code": "HK00270",
       "name": "粤海投资",
       "market": "HK",
@@ -4992,7 +5010,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 277,
+      "rank": 278,
       "code": "HK00699",
       "name": "均胜电子",
       "market": "HK",
@@ -5010,7 +5028,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 278,
+      "rank": 279,
       "code": "HK00590",
       "name": "六福集团",
       "market": "HK",
@@ -5028,7 +5046,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 279,
+      "rank": 280,
       "code": "HK01157",
       "name": "中联重科",
       "market": "HK",
@@ -5046,7 +5064,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 280,
+      "rank": 281,
       "code": "HK00763",
       "name": "中兴通讯",
       "market": "HK",
@@ -5064,7 +5082,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 281,
+      "rank": 282,
       "code": "HK01787",
       "name": "山东黄金",
       "market": "HK",
@@ -5082,7 +5100,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 282,
+      "rank": 283,
       "code": "HK00874",
       "name": "白云山",
       "market": "HK",
@@ -5100,7 +5118,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 283,
+      "rank": 284,
       "code": "HK02611",
       "name": "国泰海通",
       "market": "HK",
@@ -5118,7 +5136,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 284,
+      "rank": 285,
       "code": "HK03369",
       "name": "秦港股份",
       "market": "HK",
@@ -5136,7 +5154,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 285,
+      "rank": 286,
       "code": "HK06656",
       "name": "思格新能",
       "market": "HK",
@@ -5154,7 +5172,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 286,
+      "rank": 287,
       "code": "HK06069",
       "name": "盛业",
       "market": "HK",
@@ -5172,7 +5190,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 287,
+      "rank": 288,
       "code": "HK06969",
       "name": "思摩尔国际",
       "market": "HK",
@@ -5190,7 +5208,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 288,
+      "rank": 289,
       "code": "HK06865",
       "name": "福莱特玻璃",
       "market": "HK",
@@ -5208,7 +5226,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 289,
+      "rank": 290,
       "code": "HK01478",
       "name": "丘钛科技",
       "market": "HK",
@@ -5226,7 +5244,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 290,
+      "rank": 291,
       "code": "HK01065",
       "name": "天津创业环保股份",
       "market": "HK",
@@ -5244,7 +5262,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 291,
+      "rank": 292,
       "code": "HK01776",
       "name": "广发证券",
       "market": "HK",
@@ -5262,7 +5280,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 292,
+      "rank": 293,
       "code": "HK03360",
       "name": "远东宏信",
       "market": "HK",
@@ -5280,7 +5298,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 293,
+      "rank": 294,
       "code": "HK01114",
       "name": "华晨中国",
       "market": "HK",
@@ -5298,7 +5316,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 294,
+      "rank": 295,
       "code": "HK02186",
       "name": "绿叶制药",
       "market": "HK",
@@ -5316,7 +5334,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 295,
+      "rank": 296,
       "code": "HK02588",
       "name": "中银航空租赁",
       "market": "HK",
@@ -5334,7 +5352,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 296,
+      "rank": 297,
       "code": "HK00598",
       "name": "中国外运",
       "market": "HK",
@@ -5352,7 +5370,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 297,
+      "rank": 298,
       "code": "HK02579",
       "name": "中伟新材",
       "market": "HK",
@@ -5370,7 +5388,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 298,
+      "rank": 299,
       "code": "HK02099",
       "name": "中国黄金国际",
       "market": "HK",
@@ -5388,7 +5406,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 299,
+      "rank": 300,
       "code": "HK01883",
       "name": "中信国际电讯",
       "market": "HK",
@@ -5406,7 +5424,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 300,
+      "rank": 301,
       "code": "HK01675",
       "name": "亚信科技",
       "market": "HK",
@@ -5424,7 +5442,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 301,
+      "rank": 302,
       "code": "HK02883",
       "name": "中海油田服务",
       "market": "HK",
@@ -5442,7 +5460,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 302,
+      "rank": 303,
       "code": "HK01866",
       "name": "中国心连心化肥",
       "market": "HK",
@@ -5460,7 +5478,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 303,
+      "rank": 304,
       "code": "HK00345",
       "name": "VITASOYINT'L",
       "market": "HK",
@@ -5478,7 +5496,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 304,
+      "rank": 305,
       "code": "HK00990",
       "name": "至源控股",
       "market": "HK",
@@ -5496,7 +5514,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 305,
+      "rank": 306,
       "code": "HK00968",
       "name": "信义光能",
       "market": "HK",
@@ -5514,7 +5532,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 306,
+      "rank": 307,
       "code": "HK02672",
       "name": "白鸽在线",
       "market": "HK",
@@ -5532,7 +5550,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 307,
+      "rank": 308,
       "code": "HK06088",
       "name": "鸿腾精密",
       "market": "HK",
@@ -5550,7 +5568,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 308,
+      "rank": 309,
       "code": "HK06886",
       "name": "华泰证券",
       "market": "HK",
@@ -5568,7 +5586,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 309,
+      "rank": 310,
       "code": "HK03347",
       "name": "泰格医药",
       "market": "HK",
@@ -5586,7 +5604,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 310,
+      "rank": 311,
       "code": "HK03908",
       "name": "中金公司",
       "market": "HK",
@@ -5604,7 +5622,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 311,
+      "rank": 312,
       "code": "HK06030",
       "name": "中信证券",
       "market": "HK",
@@ -5622,7 +5640,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 312,
+      "rank": 313,
       "code": "HK01898",
       "name": "中煤能源",
       "market": "HK",
@@ -5640,7 +5658,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 313,
+      "rank": 314,
       "code": "HK01818",
       "name": "招金矿业",
       "market": "HK",
@@ -5658,7 +5676,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 314,
+      "rank": 315,
       "code": "HK02632",
       "name": "泽景股份",
       "market": "HK",
@@ -5676,7 +5694,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 315,
+      "rank": 316,
       "code": "HK01330",
       "name": "绿色动力环保",
       "market": "HK",
@@ -5694,7 +5712,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 316,
+      "rank": 317,
       "code": "HK03200",
       "name": "大族数控",
       "market": "HK",
@@ -5712,7 +5730,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 317,
+      "rank": 318,
       "code": "HK01302",
       "name": "先健科技",
       "market": "HK",
@@ -5730,7 +5748,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 318,
+      "rank": 319,
       "code": "HK03223",
       "name": "君正股份",
       "market": "HK",
@@ -5748,7 +5766,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 319,
+      "rank": 320,
       "code": "HK00016",
       "name": "新鸿基地产",
       "market": "HK",
@@ -5766,7 +5784,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 320,
+      "rank": 321,
       "code": "HK01186",
       "name": "中国铁建",
       "market": "HK",
@@ -5784,7 +5802,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 321,
+      "rank": 322,
       "code": "HK02319",
       "name": "蒙牛乳业",
       "market": "HK",
@@ -5802,7 +5820,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 322,
+      "rank": 323,
       "code": "HK00697",
       "name": "首程控股",
       "market": "HK",
@@ -5820,7 +5838,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 323,
+      "rank": 324,
       "code": "HK09611",
       "name": "龙旗科技",
       "market": "HK",
@@ -5838,7 +5856,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 324,
+      "rank": 325,
       "code": "HK01816",
       "name": "中广核电力",
       "market": "HK",
@@ -5856,7 +5874,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 325,
+      "rank": 326,
       "code": "HK02285",
       "name": "泉峰控股",
       "market": "HK",
@@ -5874,7 +5892,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 326,
+      "rank": 327,
       "code": "HK00267",
       "name": "中信股份",
       "market": "HK",
@@ -5892,7 +5910,7 @@
       "isTop10pct": true
     },
     {
-      "rank": 327,
+      "rank": 328,
       "code": "HK00636",
       "name": "KLN",
       "market": "HK",
@@ -5910,7 +5928,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 328,
+      "rank": 329,
       "code": "HK06881",
       "name": "中国银河",
       "market": "HK",
@@ -5928,7 +5946,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 329,
+      "rank": 330,
       "code": "HK00975",
       "name": "MONGOLMINING",
       "market": "HK",
@@ -5946,7 +5964,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 330,
+      "rank": 331,
       "code": "HK00762",
       "name": "中国联通",
       "market": "HK",
@@ -5964,7 +5982,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 331,
+      "rank": 332,
       "code": "HK06666",
       "name": "恒大物业",
       "market": "HK",
@@ -5982,7 +6000,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 332,
+      "rank": 333,
       "code": "HK00570",
       "name": "中国中药",
       "market": "HK",
@@ -6000,7 +6018,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 333,
+      "rank": 334,
       "code": "HK00358",
       "name": "江西铜业股份",
       "market": "HK",
@@ -6018,7 +6036,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 334,
+      "rank": 335,
       "code": "HK02696",
       "name": "复宏汉霖",
       "market": "HK",
@@ -6036,7 +6054,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 335,
+      "rank": 336,
       "code": "HK01038",
       "name": "长江基建集团",
       "market": "HK",
@@ -6054,7 +6072,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 336,
+      "rank": 337,
       "code": "HK00144",
       "name": "招商局港口",
       "market": "HK",
@@ -6072,7 +6090,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 337,
+      "rank": 338,
       "code": "HK00340",
       "name": "潼关黄金",
       "market": "HK",
@@ -6090,7 +6108,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 338,
+      "rank": 339,
       "code": "HK03996",
       "name": "中国能源建设",
       "market": "HK",
@@ -6108,7 +6126,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 339,
+      "rank": 340,
       "code": "HK03268",
       "name": "美格智能",
       "market": "HK",
@@ -6126,7 +6144,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 340,
+      "rank": 341,
       "code": "HK02517",
       "name": "锅圈",
       "market": "HK",
@@ -6144,7 +6162,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 341,
+      "rank": 342,
       "code": "HK00881",
       "name": "中升控股",
       "market": "HK",
@@ -6162,7 +6180,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 342,
+      "rank": 343,
       "code": "HK01375",
       "name": "中州证券",
       "market": "HK",
@@ -6180,7 +6198,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 343,
+      "rank": 344,
       "code": "HK02691",
       "name": "南华期货股份",
       "market": "HK",
@@ -6198,7 +6216,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 344,
+      "rank": 345,
       "code": "HK06806",
       "name": "申万宏源",
       "market": "HK",
@@ -6216,7 +6234,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 345,
+      "rank": 346,
       "code": "HK00013",
       "name": "和黄医药",
       "market": "HK",
@@ -6234,7 +6252,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 346,
+      "rank": 347,
       "code": "HK00934",
       "name": "中石化冠德",
       "market": "HK",
@@ -6252,7 +6270,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 347,
+      "rank": 348,
       "code": "HK01057",
       "name": "浙江世宝",
       "market": "HK",
@@ -6270,7 +6288,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 348,
+      "rank": 349,
       "code": "HK00467",
       "name": "联合能源集团",
       "market": "HK",
@@ -6288,7 +6306,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 349,
+      "rank": 350,
+      "code": "HK01658",
+      "name": "邮储银行",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 473.27,
+      "quality": 372.63,
+      "growth": 100.64,
+      "roe": 0.0898,
+      "gross_margin": null,
+      "cash_ratio": 0.0248,
+      "debt_ratio": 0.939,
+      "isTop10pct": true
+    },
+    {
+      "rank": 351,
       "code": "HK02343",
       "name": "太平洋航运",
       "market": "HK",
@@ -6306,7 +6342,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 350,
+      "rank": 352,
       "code": "HK02015",
       "name": "理想汽车-W",
       "market": "HK",
@@ -6324,7 +6360,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 351,
+      "rank": 353,
       "code": "HK00257",
       "name": "光大环境",
       "market": "HK",
@@ -6342,7 +6378,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 352,
+      "rank": 354,
       "code": "HK00003",
       "name": "香港中华煤气",
       "market": "HK",
@@ -6360,7 +6396,43 @@
       "isTop10pct": false
     },
     {
-      "rank": 353,
+      "rank": 355,
+      "code": "HK00998",
+      "name": "中信银行",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 465.56,
+      "quality": 375.53,
+      "growth": 90.03,
+      "roe": 0.0895,
+      "gross_margin": null,
+      "cash_ratio": 0.0311,
+      "debt_ratio": 0.9201,
+      "isTop10pct": true
+    },
+    {
+      "rank": 356,
+      "code": "HK00939",
+      "name": "建设银行",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 465.53,
+      "quality": 389.04,
+      "growth": 76.49,
+      "roe": 0.1059,
+      "gross_margin": null,
+      "cash_ratio": 0.0242,
+      "debt_ratio": 0.9175,
+      "isTop10pct": false
+    },
+    {
+      "rank": 357,
       "code": "HK00001",
       "name": "长和",
       "market": "HK",
@@ -6378,7 +6450,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 354,
+      "rank": 358,
       "code": "HK01164",
       "name": "中广核矿业",
       "market": "HK",
@@ -6396,7 +6468,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 355,
+      "rank": 359,
       "code": "HK02498",
       "name": "速腾聚创",
       "market": "HK",
@@ -6414,7 +6486,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 356,
+      "rank": 360,
+      "code": "HK01288",
+      "name": "农业银行",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 460.95,
+      "quality": 358.6,
+      "growth": 102.35,
+      "roe": 0.0943,
+      "gross_margin": null,
+      "cash_ratio": 0.0481,
+      "debt_ratio": 0.9256,
+      "isTop10pct": false
+    },
+    {
+      "rank": 361,
       "code": "HK02586",
       "name": "多点数智",
       "market": "HK",
@@ -6432,7 +6522,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 357,
+      "rank": 362,
       "code": "HK00902",
       "name": "华能国际电力股份",
       "market": "HK",
@@ -6450,7 +6540,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 358,
+      "rank": 363,
       "code": "HK00006",
       "name": "电能实业",
       "market": "HK",
@@ -6468,7 +6558,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 359,
+      "rank": 364,
+      "code": "HK01398",
+      "name": "工商银行",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 458.06,
+      "quality": 375.22,
+      "growth": 82.84,
+      "roe": 0.0972,
+      "gross_margin": null,
+      "cash_ratio": 0.0462,
+      "debt_ratio": 0.9149,
+      "isTop10pct": false
+    },
+    {
+      "rank": 365,
       "code": "HK06655",
       "name": "华新建材",
       "market": "HK",
@@ -6486,7 +6594,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 360,
+      "rank": 366,
       "code": "HK02386",
       "name": "中石化炼化工程",
       "market": "HK",
@@ -6504,7 +6612,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 361,
+      "rank": 367,
       "code": "HK00081",
       "name": "中国海外宏洋集团",
       "market": "HK",
@@ -6522,7 +6630,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 362,
+      "rank": 368,
       "code": "HK01928",
       "name": "金沙中国有限公司",
       "market": "HK",
@@ -6540,7 +6648,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 363,
+      "rank": 369,
       "code": "HK03969",
       "name": "中国通号",
       "market": "HK",
@@ -6558,7 +6666,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 364,
+      "rank": 370,
       "code": "HK06990",
       "name": "科伦博泰生物",
       "market": "HK",
@@ -6576,7 +6684,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 365,
+      "rank": 371,
       "code": "HK00956",
       "name": "新天绿色能源",
       "market": "HK",
@@ -6594,7 +6702,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 366,
+      "rank": 372,
       "code": "HK06178",
       "name": "光大证券",
       "market": "HK",
@@ -6612,7 +6720,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 367,
+      "rank": 373,
       "code": "HK09927",
       "name": "赛力斯",
       "market": "HK",
@@ -6630,7 +6738,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 368,
+      "rank": 374,
       "code": "HK01060",
       "name": "大麦娱乐",
       "market": "HK",
@@ -6648,7 +6756,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 369,
+      "rank": 375,
       "code": "HK09606",
       "name": "映恩生物-B",
       "market": "HK",
@@ -6666,7 +6774,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 370,
+      "rank": 376,
       "code": "HK00552",
       "name": "中国通信服务",
       "market": "HK",
@@ -6684,7 +6792,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 371,
+      "rank": 377,
       "code": "HK01112",
       "name": "H&H国际控股",
       "market": "HK",
@@ -6702,7 +6810,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 372,
+      "rank": 378,
       "code": "HK00916",
       "name": "龙源电力",
       "market": "HK",
@@ -6720,7 +6828,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 373,
+      "rank": 379,
       "code": "HK01193",
       "name": "华润燃气",
       "market": "HK",
@@ -6738,7 +6846,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 374,
+      "rank": 380,
       "code": "HK02726",
       "name": "瀚天天成",
       "market": "HK",
@@ -6756,7 +6864,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 375,
+      "rank": 381,
       "code": "HK01138",
       "name": "中远海能",
       "market": "HK",
@@ -6774,7 +6882,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 376,
+      "rank": 382,
       "code": "HK06160",
       "name": "百济神州",
       "market": "HK",
@@ -6792,7 +6900,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 377,
+      "rank": 383,
       "code": "HK02525",
       "name": "禾赛-W",
       "market": "HK",
@@ -6810,7 +6918,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 378,
+      "rank": 384,
       "code": "HK01548",
       "name": "金斯瑞生物科技",
       "market": "HK",
@@ -6828,7 +6936,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 379,
+      "rank": 385,
       "code": "HK02513",
       "name": "智谱",
       "market": "HK",
@@ -6846,7 +6954,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 380,
+      "rank": 386,
       "code": "HK01071",
       "name": "华电国际电力股份",
       "market": "HK",
@@ -6864,7 +6972,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 381,
+      "rank": 387,
       "code": "HK09678",
       "name": "云知声",
       "market": "HK",
@@ -6882,7 +6990,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 382,
+      "rank": 388,
       "code": "HK09688",
       "name": "再鼎医药",
       "market": "HK",
@@ -6900,7 +7008,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 383,
+      "rank": 389,
       "code": "HK00966",
       "name": "中国太平",
       "market": "HK",
@@ -6918,7 +7026,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 384,
+      "rank": 390,
       "code": "HK01779",
       "name": "天辰生物-B",
       "market": "HK",
@@ -6936,7 +7044,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 385,
+      "rank": 391,
       "code": "HK02335",
       "name": "麦科医药-B",
       "market": "HK",
@@ -6954,7 +7062,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 386,
+      "rank": 392,
       "code": "HK02565",
       "name": "派格生物医药-B",
       "market": "HK",
@@ -6972,7 +7080,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 387,
+      "rank": 393,
       "code": "HK06872",
       "name": "丹诺医药-B",
       "market": "HK",
@@ -6990,7 +7098,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 388,
+      "rank": 394,
       "code": "HK01405",
       "name": "达势股份",
       "market": "HK",
@@ -7008,7 +7116,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 389,
+      "rank": 395,
       "code": "HK02692",
       "name": "兆威机电",
       "market": "HK",
@@ -7026,7 +7134,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 390,
+      "rank": 396,
       "code": "HK01347",
       "name": "华虹宏力",
       "market": "HK",
@@ -7044,7 +7152,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 391,
+      "rank": 397,
       "code": "HK09989",
       "name": "海普瑞",
       "market": "HK",
@@ -7062,7 +7170,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 392,
+      "rank": 398,
+      "code": "HK02888",
+      "name": "渣打集团",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 428.02,
+      "quality": 275.73,
+      "growth": 152.29,
+      "roe": 0.0794,
+      "gross_margin": null,
+      "cash_ratio": 0.1158,
+      "debt_ratio": 0.947,
+      "isTop10pct": false
+    },
+    {
+      "rank": 399,
       "code": "HK06127",
       "name": "昭衍新药",
       "market": "HK",
@@ -7080,7 +7206,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 393,
+      "rank": 400,
       "code": "HK00917",
       "name": "趣致集团",
       "market": "HK",
@@ -7098,7 +7224,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 394,
+      "rank": 401,
       "code": "HK06600",
       "name": "卧安机器人",
       "market": "HK",
@@ -7116,7 +7242,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 395,
+      "rank": 402,
       "code": "HK01801",
       "name": "信达生物",
       "market": "HK",
@@ -7134,7 +7260,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 396,
+      "rank": 403,
       "code": "HK00354",
       "name": "中国软件国际",
       "market": "HK",
@@ -7152,7 +7278,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 397,
+      "rank": 404,
       "code": "HK02380",
       "name": "中国电力",
       "market": "HK",
@@ -7170,7 +7296,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 398,
+      "rank": 405,
       "code": "HK01800",
       "name": "中国交通建设",
       "market": "HK",
@@ -7188,7 +7314,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 399,
+      "rank": 406,
       "code": "HK00788",
       "name": "中国铁塔",
       "market": "HK",
@@ -7206,7 +7332,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 400,
+      "rank": 407,
       "code": "HK07630",
       "name": "英派药业-B",
       "market": "HK",
@@ -7224,7 +7350,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 401,
+      "rank": 408,
       "code": "HK00960",
       "name": "龙湖集团",
       "market": "HK",
@@ -7242,7 +7368,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 402,
+      "rank": 409,
       "code": "HK02858",
       "name": "易鑫集团",
       "market": "HK",
@@ -7260,7 +7386,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 403,
+      "rank": 410,
       "code": "HK00392",
       "name": "北京控股",
       "market": "HK",
@@ -7278,7 +7404,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 404,
+      "rank": 411,
       "code": "HK02423",
       "name": "贝壳-W",
       "market": "HK",
@@ -7296,7 +7422,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 405,
+      "rank": 412,
       "code": "HK02419",
       "name": "德康农牧",
       "market": "HK",
@@ -7314,7 +7440,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 406,
+      "rank": 413,
       "code": "HK02616",
       "name": "基石药业-B",
       "market": "HK",
@@ -7332,7 +7458,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 407,
+      "rank": 414,
       "code": "HK02602",
       "name": "万物云",
       "market": "HK",
@@ -7350,7 +7476,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 408,
+      "rank": 415,
       "code": "HK00019",
       "name": "太古股份公司A",
       "market": "HK",
@@ -7368,7 +7494,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 409,
+      "rank": 416,
       "code": "HK00087",
       "name": "太古股份公司B",
       "market": "HK",
@@ -7386,7 +7512,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 410,
+      "rank": 417,
       "code": "HK06683",
       "name": "巨星传奇",
       "market": "HK",
@@ -7404,7 +7530,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 411,
+      "rank": 418,
       "code": "HK02729",
       "name": "凯乐士科技",
       "market": "HK",
@@ -7422,7 +7548,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 412,
+      "rank": 419,
       "code": "HK00683",
       "name": "嘉里建设",
       "market": "HK",
@@ -7440,7 +7566,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 413,
+      "rank": 420,
       "code": "HK02171",
       "name": "科济药业-B",
       "market": "HK",
@@ -7458,7 +7584,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 414,
+      "rank": 421,
       "code": "HK01113",
       "name": "长实集团",
       "market": "HK",
@@ -7476,7 +7602,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 415,
+      "rank": 422,
       "code": "HK02142",
       "name": "和铂医药-B",
       "market": "HK",
@@ -7494,7 +7620,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 416,
+      "rank": 423,
       "code": "HK06963",
       "name": "阳光保险",
       "market": "HK",
@@ -7512,7 +7638,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 417,
+      "rank": 424,
       "code": "HK01392",
       "name": "海清智元",
       "market": "HK",
@@ -7530,7 +7656,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 418,
+      "rank": 425,
       "code": "HK01024",
       "name": "快手-W",
       "market": "HK",
@@ -7548,7 +7674,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 419,
+      "rank": 426,
       "code": "HK02889",
       "name": "博泰车联",
       "market": "HK",
@@ -7566,7 +7692,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 420,
+      "rank": 427,
       "code": "HK03868",
       "name": "信义能源",
       "market": "HK",
@@ -7584,7 +7710,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 421,
+      "rank": 428,
       "code": "HK06675",
       "name": "SENASIC",
       "market": "HK",
@@ -7602,7 +7728,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 422,
+      "rank": 429,
       "code": "HK02723",
       "name": "深演智能(新)",
       "market": "HK",
@@ -7620,7 +7746,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 423,
+      "rank": 430,
       "code": "HK02947",
       "name": "深演智能(旧)",
       "market": "HK",
@@ -7638,7 +7764,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 424,
+      "rank": 431,
       "code": "HK00688",
       "name": "中国海外发展",
       "market": "HK",
@@ -7656,7 +7782,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 425,
+      "rank": 432,
       "code": "HK00639",
       "name": "首钢资源",
       "market": "HK",
@@ -7674,7 +7800,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 426,
+      "rank": 433,
       "code": "HK00991",
       "name": "大唐发电",
       "market": "HK",
@@ -7692,7 +7818,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 427,
+      "rank": 434,
       "code": "HK06699",
       "name": "时代天使",
       "market": "HK",
@@ -7710,7 +7836,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 428,
+      "rank": 435,
       "code": "HK00107",
       "name": "四川成渝高速公路",
       "market": "HK",
@@ -7728,7 +7854,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 429,
+      "rank": 436,
       "code": "HK01519",
       "name": "极兔速递-W",
       "market": "HK",
@@ -7746,7 +7872,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 430,
+      "rank": 437,
       "code": "HK06166",
       "name": "剑桥科技",
       "market": "HK",
@@ -7764,7 +7890,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 431,
+      "rank": 438,
+      "code": "HK03866",
+      "name": "青岛银行",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 392.41,
+      "quality": 259.47,
+      "growth": 132.94,
+      "roe": 0.0938,
+      "gross_margin": null,
+      "cash_ratio": 0.0415,
+      "debt_ratio": 0.9363,
+      "isTop10pct": false
+    },
+    {
+      "rank": 439,
       "code": "HK02249",
       "name": "晶合集成",
       "market": "HK",
@@ -7782,7 +7926,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 432,
+      "rank": 440,
       "code": "HK00020",
       "name": "商汤-W",
       "market": "HK",
@@ -7800,7 +7944,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 433,
+      "rank": 441,
       "code": "HK06082",
       "name": "壁仞科技",
       "market": "HK",
@@ -7818,7 +7962,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 434,
+      "rank": 442,
       "code": "HK02315",
       "name": "百奥赛图-B",
       "market": "HK",
@@ -7836,7 +7980,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 435,
+      "rank": 443,
       "code": "HK03388",
       "name": "创想三维",
       "market": "HK",
@@ -7854,7 +7998,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 436,
+      "rank": 444,
       "code": "HK00914",
       "name": "海螺水泥",
       "market": "HK",
@@ -7872,7 +8016,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 437,
+      "rank": 445,
+      "code": "HK03698",
+      "name": "徽商银行",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 386.6,
+      "quality": 309.27,
+      "growth": 77.33,
+      "roe": 0.103,
+      "gross_margin": null,
+      "cash_ratio": 0.0229,
+      "debt_ratio": 0.9233,
+      "isTop10pct": false
+    },
+    {
+      "rank": 446,
       "code": "HK09888",
       "name": "百度集团-W",
       "market": "HK",
@@ -7890,7 +8052,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 438,
+      "rank": 447,
       "code": "HK02013",
       "name": "微盟集团",
       "market": "HK",
@@ -7908,7 +8070,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 439,
+      "rank": 448,
+      "code": "HK03988",
+      "name": "中国银行",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 380.56,
+      "quality": 370.54,
+      "growth": 10.02,
+      "roe": 0.0886,
+      "gross_margin": null,
+      "cash_ratio": 0.0703,
+      "debt_ratio": 0.9183,
+      "isTop10pct": false
+    },
+    {
+      "rank": 449,
       "code": "HK02533",
       "name": "黑芝麻智能",
       "market": "HK",
@@ -7926,7 +8106,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 440,
+      "rank": 450,
       "code": "HK06060",
       "name": "众安在线",
       "market": "HK",
@@ -7944,7 +8124,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 441,
+      "rank": 451,
+      "code": "HK03328",
+      "name": "交通银行",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 379.59,
+      "quality": 309.14,
+      "growth": 70.45,
+      "roe": 0.0846,
+      "gross_margin": null,
+      "cash_ratio": 0.0149,
+      "debt_ratio": 0.9205,
+      "isTop10pct": false
+    },
+    {
+      "rank": 452,
       "code": "HK09976",
       "name": "江波龙",
       "market": "HK",
@@ -7962,7 +8160,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 442,
+      "rank": 453,
       "code": "HK00853",
       "name": "微创医疗",
       "market": "HK",
@@ -7980,7 +8178,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 443,
+      "rank": 454,
       "code": "HK00981",
       "name": "中芯国际",
       "market": "HK",
@@ -7998,7 +8196,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 444,
+      "rank": 455,
+      "code": "HK00005",
+      "name": "汇丰控股",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 378.14,
+      "quality": 386.33,
+      "growth": -8.19,
+      "roe": 0.0988,
+      "gross_margin": null,
+      "cash_ratio": 0.1619,
+      "debt_ratio": 0.9372,
+      "isTop10pct": false
+    },
+    {
+      "rank": 456,
       "code": "HK02675",
       "name": "精锋医疗-B",
       "market": "HK",
@@ -8016,7 +8232,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 445,
+      "rank": 457,
       "code": "HK02583",
       "name": "西普尼",
       "market": "HK",
@@ -8034,7 +8250,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 446,
+      "rank": 458,
       "code": "HK01735",
       "name": "中环新能源",
       "market": "HK",
@@ -8052,7 +8268,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 447,
+      "rank": 459,
       "code": "HK02252",
       "name": "微创机器人-B",
       "market": "HK",
@@ -8070,7 +8286,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 448,
+      "rank": 460,
       "code": "HK00268",
       "name": "金蝶国际",
       "market": "HK",
@@ -8088,7 +8304,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 449,
+      "rank": 461,
       "code": "HK01952",
       "name": "云顶新耀",
       "market": "HK",
@@ -8106,7 +8322,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 450,
+      "rank": 462,
       "code": "HK01033",
       "name": "中石化油服",
       "market": "HK",
@@ -8124,7 +8340,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 451,
+      "rank": 463,
       "code": "HK00101",
       "name": "恒隆地产",
       "market": "HK",
@@ -8142,7 +8358,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 452,
+      "rank": 464,
       "code": "HK02314",
       "name": "理文造纸",
       "market": "HK",
@@ -8160,7 +8376,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 453,
+      "rank": 465,
       "code": "HK01956",
       "name": "中科闻歌",
       "market": "HK",
@@ -8178,7 +8394,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 454,
+      "rank": 466,
+      "code": "HK06818",
+      "name": "中国光大银行",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 370.48,
+      "quality": 324.85,
+      "growth": 45.63,
+      "roe": 0.0774,
+      "gross_margin": null,
+      "cash_ratio": 0.0259,
+      "debt_ratio": 0.9174,
+      "isTop10pct": false
+    },
+    {
+      "rank": 467,
       "code": "HK00386",
       "name": "中国石油化工股份",
       "market": "HK",
@@ -8196,7 +8430,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 455,
+      "rank": 468,
       "code": "HK01299",
       "name": "友邦保险",
       "market": "HK",
@@ -8214,7 +8448,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 456,
+      "rank": 469,
       "code": "HK00012",
       "name": "恒基地产",
       "market": "HK",
@@ -8232,7 +8466,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 457,
+      "rank": 470,
       "code": "HK02689",
       "name": "玖龙纸业",
       "market": "HK",
@@ -8250,7 +8484,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 458,
+      "rank": 471,
       "code": "HK02128",
       "name": "中国联塑",
       "market": "HK",
@@ -8268,7 +8502,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 459,
+      "rank": 472,
       "code": "HK01349",
       "name": "复旦张江",
       "market": "HK",
@@ -8286,7 +8520,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 460,
+      "rank": 473,
       "code": "HK02157",
       "name": "乐普生物",
       "market": "HK",
@@ -8304,7 +8538,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 461,
+      "rank": 474,
       "code": "HK02357",
       "name": "中航科工",
       "market": "HK",
@@ -8322,7 +8556,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 462,
+      "rank": 475,
       "code": "HK02378",
       "name": "保诚",
       "market": "HK",
@@ -8340,7 +8574,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 463,
+      "rank": 476,
       "code": "HK01316",
       "name": "耐世特",
       "market": "HK",
@@ -8358,7 +8592,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 464,
+      "rank": 477,
       "code": "HK00148",
       "name": "建滔集团",
       "market": "HK",
@@ -8376,7 +8610,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 465,
+      "rank": 478,
       "code": "HK09699",
       "name": "顺丰同城",
       "market": "HK",
@@ -8394,7 +8628,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 466,
+      "rank": 479,
       "code": "HK00548",
       "name": "深圳高速公路股份",
       "market": "HK",
@@ -8412,7 +8646,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 467,
+      "rank": 480,
+      "code": "HK02356",
+      "name": "大新银行集团",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 361.63,
+      "quality": 249.36,
+      "growth": 112.27,
+      "roe": 0.0596,
+      "gross_margin": null,
+      "cash_ratio": 0.0634,
+      "debt_ratio": 0.8738,
+      "isTop10pct": false
+    },
+    {
+      "rank": 481,
       "code": "HK02493",
       "name": "迈威生物-B",
       "market": "HK",
@@ -8430,7 +8682,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 468,
+      "rank": 482,
       "code": "HK03800",
       "name": "协鑫科技",
       "market": "HK",
@@ -8448,7 +8700,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 469,
+      "rank": 483,
       "code": "HK06727",
       "name": "星环科技",
       "market": "HK",
@@ -8466,7 +8718,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 470,
+      "rank": 484,
       "code": "HK02670",
       "name": "云迹",
       "market": "HK",
@@ -8484,7 +8736,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 471,
+      "rank": 485,
       "code": "HK00152",
       "name": "深圳国际",
       "market": "HK",
@@ -8502,7 +8754,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 472,
+      "rank": 486,
       "code": "HK03625",
       "name": "傅里叶",
       "market": "HK",
@@ -8520,7 +8772,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 473,
+      "rank": 487,
       "code": "HK06098",
       "name": "碧桂园服务",
       "market": "HK",
@@ -8538,7 +8790,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 474,
+      "rank": 488,
       "code": "HK02706",
       "name": "海致科技集团",
       "market": "HK",
@@ -8556,7 +8808,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 475,
+      "rank": 489,
       "code": "HK01511",
       "name": "驭势科技",
       "market": "HK",
@@ -8574,7 +8826,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 476,
+      "rank": 490,
       "code": "HK00123",
       "name": "越秀地产",
       "market": "HK",
@@ -8592,7 +8844,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 477,
+      "rank": 491,
       "code": "HK02473",
       "name": "喜相逢集团",
       "market": "HK",
@@ -8610,7 +8862,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 478,
+      "rank": 492,
       "code": "HK06979",
       "name": "珍酒李渡",
       "market": "HK",
@@ -8628,7 +8880,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 479,
+      "rank": 493,
       "code": "HK09626",
       "name": "哔哩哔哩-W",
       "market": "HK",
@@ -8646,7 +8898,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 480,
+      "rank": 494,
       "code": "HK03900",
       "name": "绿城中国",
       "market": "HK",
@@ -8664,7 +8916,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 481,
+      "rank": 495,
       "code": "HK01208",
       "name": "五矿资源",
       "market": "HK",
@@ -8682,7 +8934,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 482,
+      "rank": 496,
       "code": "HK01133",
       "name": "哈尔滨电气",
       "market": "HK",
@@ -8700,7 +8952,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 483,
+      "rank": 497,
       "code": "HK01199",
       "name": "中远海运港口",
       "market": "HK",
@@ -8718,7 +8970,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 484,
+      "rank": 498,
       "code": "HK03958",
       "name": "东方证券",
       "market": "HK",
@@ -8736,7 +8988,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 485,
+      "rank": 499,
       "code": "HK03931",
       "name": "中创新航",
       "market": "HK",
@@ -8754,7 +9006,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 486,
+      "rank": 500,
       "code": "HK01456",
       "name": "国联民生",
       "market": "HK",
@@ -8772,7 +9024,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 487,
+      "rank": 501,
+      "code": "HK00440",
+      "name": "大新金融",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 343.76,
+      "quality": 225.74,
+      "growth": 118.02,
+      "roe": 0.047,
+      "gross_margin": null,
+      "cash_ratio": 0.0655,
+      "debt_ratio": 0.8758,
+      "isTop10pct": false
+    },
+    {
+      "rank": 502,
       "code": "HK00800",
       "name": "文远知行-W",
       "market": "HK",
@@ -8790,7 +9060,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 488,
+      "rank": 503,
       "code": "HK02880",
       "name": "辽港股份",
       "market": "HK",
@@ -8808,7 +9078,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 489,
+      "rank": 504,
       "code": "HK00010",
       "name": "恒隆集团",
       "market": "HK",
@@ -8826,7 +9096,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 490,
+      "rank": 505,
+      "code": "HK02388",
+      "name": "中银香港",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 338.12,
+      "quality": 332.91,
+      "growth": 5.21,
+      "roe": 0.1014,
+      "gross_margin": null,
+      "cash_ratio": 0.1495,
+      "debt_ratio": 0.9185,
+      "isTop10pct": false
+    },
+    {
+      "rank": 506,
       "code": "HK02039",
       "name": "中集集团",
       "market": "HK",
@@ -8844,7 +9132,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 491,
+      "rank": 507,
       "code": "HK02618",
       "name": "京东物流",
       "market": "HK",
@@ -8862,7 +9150,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 492,
+      "rank": 508,
       "code": "HK01833",
       "name": "平安好医生",
       "market": "HK",
@@ -8880,7 +9168,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 493,
+      "rank": 509,
       "code": "HK00200",
       "name": "新濠国际发展",
       "market": "HK",
@@ -8898,7 +9186,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 494,
+      "rank": 510,
       "code": "HK00119",
       "name": "保利置业集团",
       "market": "HK",
@@ -8916,7 +9204,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 495,
+      "rank": 511,
       "code": "HK01876",
       "name": "百威亚太",
       "market": "HK",
@@ -8934,7 +9222,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 496,
+      "rank": 512,
       "code": "HK03888",
       "name": "金山软件",
       "market": "HK",
@@ -8952,7 +9240,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 497,
+      "rank": 513,
       "code": "HK00371",
       "name": "北控水务集团",
       "market": "HK",
@@ -8970,7 +9258,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 498,
+      "rank": 514,
+      "code": "HK02016",
+      "name": "浙商银行",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 331.25,
+      "quality": 279.75,
+      "growth": 51.5,
+      "roe": 0.0763,
+      "gross_margin": null,
+      "cash_ratio": 0.0427,
+      "debt_ratio": 0.9377,
+      "isTop10pct": false
+    },
+    {
+      "rank": 515,
       "code": "HK00525",
       "name": "广深铁路股份",
       "market": "HK",
@@ -8988,7 +9294,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 499,
+      "rank": 516,
       "code": "HK02652",
       "name": "长风药业",
       "market": "HK",
@@ -9006,7 +9312,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 500,
+      "rank": 517,
       "code": "HK00880",
       "name": "澳博控股",
       "market": "HK",
@@ -9024,7 +9330,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 501,
+      "rank": 518,
       "code": "HK01055",
       "name": "中国南方航空股份",
       "market": "HK",
@@ -9042,7 +9348,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 502,
+      "rank": 519,
       "code": "HK01907",
       "name": "中国旭阳集团",
       "market": "HK",
@@ -9060,7 +9366,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 503,
+      "rank": 520,
       "code": "HK02208",
       "name": "金风科技",
       "market": "HK",
@@ -9078,7 +9384,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 504,
+      "rank": 521,
       "code": "HK01879",
       "name": "曦智科技-P",
       "market": "HK",
@@ -9096,7 +9402,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 505,
+      "rank": 522,
       "code": "HK06636",
       "name": "极视角",
       "market": "HK",
@@ -9114,7 +9420,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 506,
+      "rank": 523,
       "code": "HK02506",
       "name": "讯飞医疗科技",
       "market": "HK",
@@ -9132,7 +9438,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 507,
+      "rank": 524,
       "code": "HK02595",
       "name": "劲方医药-B",
       "market": "HK",
@@ -9150,7 +9456,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 508,
+      "rank": 525,
       "code": "HK02609",
       "name": "佰泽医疗",
       "market": "HK",
@@ -9168,7 +9474,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 509,
+      "rank": 526,
       "code": "HK00537",
       "name": "普源精电",
       "market": "HK",
@@ -9186,7 +9492,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 510,
+      "rank": 527,
       "code": "HK00753",
       "name": "中国国航",
       "market": "HK",
@@ -9204,7 +9510,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 511,
+      "rank": 528,
       "code": "HK01083",
       "name": "港华智慧能源",
       "market": "HK",
@@ -9222,7 +9528,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 512,
+      "rank": 529,
       "code": "HK02866",
       "name": "中远海发",
       "market": "HK",
@@ -9240,7 +9546,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 513,
+      "rank": 530,
       "code": "HK02661",
       "name": "轻松健康",
       "market": "HK",
@@ -9258,7 +9564,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 514,
+      "rank": 531,
       "code": "HK00363",
       "name": "上海实业控股",
       "market": "HK",
@@ -9276,7 +9582,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 515,
+      "rank": 532,
       "code": "HK00384",
       "name": "中国燃气",
       "market": "HK",
@@ -9294,7 +9600,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 516,
+      "rank": 533,
       "code": "HK01635",
       "name": "大众公用",
       "market": "HK",
@@ -9312,7 +9618,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 517,
+      "rank": 534,
       "code": "HK00656",
       "name": "复星国际",
       "market": "HK",
@@ -9330,7 +9636,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 518,
+      "rank": 535,
       "code": "HK00083",
       "name": "信和置业",
       "market": "HK",
@@ -9348,7 +9654,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 519,
+      "rank": 536,
       "code": "HK03678",
       "name": "弘业期货",
       "market": "HK",
@@ -9366,7 +9672,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 520,
+      "rank": 537,
       "code": "HK06993",
       "name": "蓝月亮集团",
       "market": "HK",
@@ -9384,7 +9690,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 521,
+      "rank": 538,
+      "code": "HK01963",
+      "name": "重庆银行",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 306.74,
+      "quality": 222.72,
+      "growth": 84.02,
+      "roe": 0.0915,
+      "gross_margin": null,
+      "cash_ratio": 0.0239,
+      "debt_ratio": 0.9289,
+      "isTop10pct": false
+    },
+    {
+      "rank": 539,
       "code": "HK00670",
       "name": "中国东方航空股份",
       "market": "HK",
@@ -9402,7 +9726,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 522,
+      "rank": 540,
       "code": "HK00855",
       "name": "中国水务",
       "market": "HK",
@@ -9420,7 +9744,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 523,
+      "rank": 541,
       "code": "HK01021",
       "name": "华沿机器人",
       "market": "HK",
@@ -9438,7 +9762,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 524,
+      "rank": 542,
       "code": "HK00772",
       "name": "阅文集团",
       "market": "HK",
@@ -9456,7 +9780,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 525,
+      "rank": 543,
       "code": "HK07688",
       "name": "拓璞数控",
       "market": "HK",
@@ -9474,7 +9798,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 526,
+      "rank": 544,
       "code": "HK01052",
       "name": "越秀交通基建",
       "market": "HK",
@@ -9492,7 +9816,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 527,
+      "rank": 545,
       "code": "HK03696",
       "name": "英矽智能",
       "market": "HK",
@@ -9510,7 +9834,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 528,
+      "rank": 546,
       "code": "HK01972",
       "name": "太古地产",
       "market": "HK",
@@ -9528,7 +9852,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 529,
+      "rank": 547,
       "code": "HK03881",
       "name": "希迪智驾",
       "market": "HK",
@@ -9546,7 +9870,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 530,
+      "rank": 548,
       "code": "HK02556",
       "name": "迈富时",
       "market": "HK",
@@ -9564,7 +9888,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 531,
+      "rank": 549,
       "code": "HK01788",
       "name": "国泰君安国际",
       "market": "HK",
@@ -9582,7 +9906,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 532,
+      "rank": 550,
       "code": "HK06687",
       "name": "聚水潭",
       "market": "HK",
@@ -9600,7 +9924,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 533,
+      "rank": 551,
       "code": "HK01618",
       "name": "中国中冶",
       "market": "HK",
@@ -9618,7 +9942,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 534,
+      "rank": 552,
       "code": "HK01951",
       "name": "锦欣生殖",
       "market": "HK",
@@ -9636,7 +9960,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 535,
+      "rank": 553,
       "code": "HK00100",
       "name": "MINIMAX-W",
       "market": "HK",
@@ -9654,7 +9978,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 536,
+      "rank": 554,
       "code": "HK09926",
       "name": "康方生物",
       "market": "HK",
@@ -9672,7 +9996,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 537,
+      "rank": 555,
       "code": "HK00751",
       "name": "创维集团",
       "market": "HK",
@@ -9690,7 +10014,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 538,
+      "rank": 556,
       "code": "HK00600",
       "name": "爱芯元智",
       "market": "HK",
@@ -9708,7 +10032,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 539,
+      "rank": 557,
       "code": "HK06651",
       "name": "五一视界",
       "market": "HK",
@@ -9726,7 +10050,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 540,
+      "rank": 558,
       "code": "HK00826",
       "name": "天工国际",
       "market": "HK",
@@ -9744,7 +10068,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 541,
+      "rank": 559,
       "code": "HK09969",
       "name": "诺诚健华",
       "market": "HK",
@@ -9762,7 +10086,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 542,
+      "rank": 560,
       "code": "HK03896",
       "name": "金山云",
       "market": "HK",
@@ -9780,7 +10104,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 543,
+      "rank": 561,
       "code": "HK01877",
       "name": "君实生物",
       "market": "HK",
@@ -9798,7 +10122,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 544,
+      "rank": 562,
       "code": "HK02727",
       "name": "上海电气",
       "market": "HK",
@@ -9816,7 +10140,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 545,
+      "rank": 563,
       "code": "HK01921",
       "name": "达力普控股",
       "market": "HK",
@@ -9834,7 +10158,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 546,
+      "rank": 564,
       "code": "HK02233",
       "name": "西部水泥",
       "market": "HK",
@@ -9852,7 +10176,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 547,
+      "rank": 565,
       "code": "HK00659",
       "name": "周大福创建",
       "market": "HK",
@@ -9870,7 +10194,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 548,
+      "rank": 566,
       "code": "HK00317",
       "name": "中船防务",
       "market": "HK",
@@ -9888,7 +10212,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 549,
+      "rank": 567,
       "code": "HK09863",
       "name": "零跑汽车",
       "market": "HK",
@@ -9906,7 +10230,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 550,
+      "rank": 568,
       "code": "HK09995",
       "name": "荣昌生物",
       "market": "HK",
@@ -9924,7 +10248,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 551,
+      "rank": 569,
       "code": "HK06745",
       "name": "滨化股份",
       "market": "HK",
@@ -9942,7 +10266,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 552,
+      "rank": 570,
       "code": "HK02718",
       "name": "明略科技-W",
       "market": "HK",
@@ -9960,7 +10284,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 553,
+      "rank": 571,
       "code": "HK02591",
       "name": "银诺医药-B",
       "market": "HK",
@@ -9978,7 +10302,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 554,
+      "rank": 572,
       "code": "HK01384",
       "name": "滴普科技",
       "market": "HK",
@@ -9996,7 +10320,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 555,
+      "rank": 573,
       "code": "HK06106",
       "name": "仙工智能",
       "market": "HK",
@@ -10014,7 +10338,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 556,
+      "rank": 574,
       "code": "HK09868",
       "name": "小鹏集团-W",
       "market": "HK",
@@ -10032,7 +10356,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 557,
+      "rank": 575,
+      "code": "HK00023",
+      "name": "东亚银行",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 255.91,
+      "quality": 259.12,
+      "growth": -3.21,
+      "roe": 0.0437,
+      "gross_margin": null,
+      "cash_ratio": 0.1136,
+      "debt_ratio": 0.8873,
+      "isTop10pct": false
+    },
+    {
+      "rank": 576,
       "code": "HK02068",
       "name": "中铝国际",
       "market": "HK",
@@ -10050,7 +10392,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 558,
+      "rank": 577,
       "code": "HK00004",
       "name": "九龙仓集团",
       "market": "HK",
@@ -10068,7 +10410,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 559,
+      "rank": 578,
       "code": "HK02026",
       "name": "小马智行-W",
       "market": "HK",
@@ -10086,7 +10428,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 560,
+      "rank": 579,
       "code": "HK02799",
       "name": "中信金融资产",
       "market": "HK",
@@ -10104,7 +10446,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 561,
+      "rank": 580,
       "code": "HK03396",
       "name": "联想控股",
       "market": "HK",
@@ -10122,7 +10464,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 562,
+      "rank": 581,
       "code": "HK00666",
       "name": "瑞浦兰钧",
       "market": "HK",
@@ -10140,7 +10482,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 563,
+      "rank": 582,
       "code": "HK09660",
       "name": "地平线机器人-W",
       "market": "HK",
@@ -10158,7 +10500,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 564,
+      "rank": 583,
       "code": "HK02225",
       "name": "今海医疗科技",
       "market": "HK",
@@ -10176,7 +10518,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 565,
+      "rank": 584,
       "code": "HK02697",
       "name": "真健康医疗-B",
       "market": "HK",
@@ -10194,7 +10536,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 566,
+      "rank": 585,
+      "code": "HK03618",
+      "name": "重庆农村商业银行",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 236.37,
+      "quality": 266.4,
+      "growth": -30.03,
+      "roe": 0.0892,
+      "gross_margin": null,
+      "cash_ratio": 0.0279,
+      "debt_ratio": 0.9157,
+      "isTop10pct": false
+    },
+    {
+      "rank": 586,
       "code": "HK06681",
       "name": "脑动极光-B",
       "market": "HK",
@@ -10212,7 +10572,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 567,
+      "rank": 587,
       "code": "HK00568",
       "name": "山东墨龙",
       "market": "HK",
@@ -10230,7 +10590,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 568,
+      "rank": 588,
       "code": "HK03677",
       "name": "正力新能",
       "market": "HK",
@@ -10248,7 +10608,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 569,
+      "rank": 589,
       "code": "HK01359",
       "name": "中国信达",
       "market": "HK",
@@ -10266,7 +10626,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 570,
+      "rank": 590,
       "code": "HK03757",
       "name": "罗博特科",
       "market": "HK",
@@ -10284,7 +10644,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 571,
+      "rank": 591,
       "code": "HK01030",
       "name": "新城发展",
       "market": "HK",
@@ -10302,7 +10662,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 572,
+      "rank": 592,
       "code": "HK06067",
       "name": "星源材质",
       "market": "HK",
@@ -10320,7 +10680,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 573,
+      "rank": 593,
       "code": "HK02865",
       "name": "钧达股份",
       "market": "HK",
@@ -10338,7 +10698,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 574,
+      "rank": 594,
       "code": "HK03317",
       "name": "迅策",
       "market": "HK",
@@ -10356,7 +10716,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 575,
+      "rank": 595,
       "code": "HK02162",
       "name": "康诺亚-B",
       "market": "HK",
@@ -10374,7 +10734,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 576,
+      "rank": 596,
       "code": "HK01310",
       "name": "香港宽频",
       "market": "HK",
@@ -10392,7 +10752,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 577,
+      "rank": 597,
       "code": "HK00041",
       "name": "鹰君",
       "market": "HK",
@@ -10410,7 +10770,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 578,
+      "rank": 598,
       "code": "HK09880",
       "name": "优必选",
       "market": "HK",
@@ -10428,7 +10788,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 579,
+      "rank": 599,
       "code": "HK00604",
       "name": "深圳控股",
       "market": "HK",
@@ -10446,7 +10806,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 580,
+      "rank": 600,
       "code": "HK01783",
       "name": "晋景新能",
       "market": "HK",
@@ -10464,7 +10824,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 581,
+      "rank": 601,
       "code": "HK06808",
       "name": "高鑫零售",
       "market": "HK",
@@ -10482,7 +10842,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 582,
+      "rank": 602,
       "code": "HK00008",
       "name": "电讯盈科",
       "market": "HK",
@@ -10500,7 +10860,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 583,
+      "rank": 603,
       "code": "HK00187",
       "name": "京城机电股份",
       "market": "HK",
@@ -10518,7 +10878,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 584,
+      "rank": 604,
       "code": "HK02465",
       "name": "龙蟠科技",
       "market": "HK",
@@ -10536,7 +10896,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 585,
+      "rank": 605,
       "code": "HK00173",
       "name": "嘉华国际",
       "market": "HK",
@@ -10554,7 +10914,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 586,
+      "rank": 606,
       "code": "HK03323",
       "name": "中国建材",
       "market": "HK",
@@ -10572,7 +10932,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 587,
+      "rank": 607,
       "code": "HK00165",
       "name": "中国光大控股",
       "market": "HK",
@@ -10590,7 +10950,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 588,
+      "rank": 608,
       "code": "HK02526",
       "name": "德适-B",
       "market": "HK",
@@ -10608,7 +10968,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 589,
+      "rank": 609,
       "code": "HK02715",
       "name": "埃斯顿",
       "market": "HK",
@@ -10626,7 +10986,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 590,
+      "rank": 610,
+      "code": "HK06196",
+      "name": "郑州银行",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 185.58,
+      "quality": 184.79,
+      "growth": 0.79,
+      "roe": 0.0415,
+      "gross_margin": null,
+      "cash_ratio": 0.023,
+      "debt_ratio": 0.9152,
+      "isTop10pct": false
+    },
+    {
+      "rank": 611,
       "code": "HK02701",
       "name": "国民技术",
       "market": "HK",
@@ -10644,7 +11022,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 591,
+      "rank": 612,
       "code": "HK02631",
       "name": "天岳先进",
       "market": "HK",
@@ -10662,7 +11040,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 592,
+      "rank": 613,
       "code": "HK01918",
       "name": "融创中国",
       "market": "HK",
@@ -10680,7 +11058,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 593,
+      "rank": 614,
       "code": "HK03633",
       "name": "中裕能源",
       "market": "HK",
@@ -10698,7 +11076,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 594,
+      "rank": 615,
       "code": "HK02575",
       "name": "轩竹生物-B",
       "market": "HK",
@@ -10716,7 +11094,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 595,
+      "rank": 616,
       "code": "HK09858",
       "name": "优然牧业",
       "market": "HK",
@@ -10734,7 +11112,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 596,
+      "rank": 617,
       "code": "HK03310",
       "name": "云英谷科技",
       "market": "HK",
@@ -10752,7 +11130,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 597,
+      "rank": 618,
       "code": "HK02402",
       "name": "亿华通",
       "market": "HK",
@@ -10770,7 +11148,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 598,
+      "rank": 619,
       "code": "HK03690",
       "name": "美团-W",
       "market": "HK",
@@ -10788,7 +11166,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 599,
+      "rank": 620,
       "code": "HK01313",
       "name": "华润建材科技",
       "market": "HK",
@@ -10806,7 +11184,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 600,
+      "rank": 621,
       "code": "HK00460",
       "name": "四环医药",
       "market": "HK",
@@ -10824,7 +11202,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 601,
+      "rank": 622,
       "code": "HK01236",
       "name": "乐动机器人",
       "market": "HK",
@@ -10842,7 +11220,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 602,
+      "rank": 623,
       "code": "HK00308",
       "name": "香港中旅",
       "market": "HK",
@@ -10860,7 +11238,25 @@
       "isTop10pct": false
     },
     {
-      "rank": 603,
+      "rank": 624,
+      "code": "HK01988",
+      "name": "民生银行",
+      "market": "HK",
+      "l1": "银行",
+      "l2": "银行",
+      "group": "银行",
+      "level": "L1",
+      "score": 151.98,
+      "quality": 227.1,
+      "growth": -75.12,
+      "roe": 0.0541,
+      "gross_margin": null,
+      "cash_ratio": 0.0233,
+      "debt_ratio": 0.9166,
+      "isTop10pct": false
+    },
+    {
+      "rank": 625,
       "code": "HK02665",
       "name": "图达通",
       "market": "HK",
@@ -10878,7 +11274,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 604,
+      "rank": 626,
       "code": "HK02238",
       "name": "广汽集团",
       "market": "HK",
@@ -10896,7 +11292,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 605,
+      "rank": 627,
       "code": "HK02038",
       "name": "富智康集团",
       "market": "HK",
@@ -10914,7 +11310,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 606,
+      "rank": 628,
       "code": "HK06855",
       "name": "亚盛医药",
       "market": "HK",
@@ -10932,7 +11328,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 607,
+      "rank": 629,
       "code": "HK02676",
       "name": "纳芯微",
       "market": "HK",
@@ -10950,7 +11346,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 608,
+      "rank": 630,
       "code": "HK00290",
       "name": "国富量子",
       "market": "HK",
@@ -10968,7 +11364,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 609,
+      "rank": 631,
       "code": "HK00336",
       "name": "华宝国际",
       "market": "HK",
@@ -10986,7 +11382,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 610,
+      "rank": 632,
       "code": "HK02577",
       "name": "英诺赛科",
       "market": "HK",
@@ -11004,7 +11400,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 611,
+      "rank": 633,
       "code": "HK01828",
       "name": "富卫集团",
       "market": "HK",
@@ -11022,7 +11418,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 612,
+      "rank": 634,
       "code": "HK02659",
       "name": "宝济药业-B",
       "market": "HK",
@@ -11040,7 +11436,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 613,
+      "rank": 635,
       "code": "HK02650",
       "name": "挚达科技",
       "market": "HK",
@@ -11058,7 +11454,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 614,
+      "rank": 636,
       "code": "HK00376",
       "name": "云锋金融",
       "market": "HK",
@@ -11076,7 +11472,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 615,
+      "rank": 637,
       "code": "HK01333",
       "name": "博雷顿",
       "market": "HK",
@@ -11094,7 +11490,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 616,
+      "rank": 638,
       "code": "HK02432",
       "name": "越疆",
       "market": "HK",
@@ -11112,7 +11508,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 617,
+      "rank": 639,
       "code": "HK00817",
       "name": "中国金茂",
       "market": "HK",
@@ -11130,7 +11526,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 618,
+      "rank": 640,
       "code": "HK01440",
       "name": "应星控股",
       "market": "HK",
@@ -11148,7 +11544,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 619,
+      "rank": 641,
       "code": "HK09637",
       "name": "礼邦医药-B",
       "market": "HK",
@@ -11166,7 +11562,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 620,
+      "rank": 642,
       "code": "HK00553",
       "name": "南京熊猫电子股份",
       "market": "HK",
@@ -11184,7 +11580,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 621,
+      "rank": 643,
       "code": "HK09903",
       "name": "天数智芯",
       "market": "HK",
@@ -11202,7 +11598,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 622,
+      "rank": 644,
       "code": "HK00014",
       "name": "希慎兴业",
       "market": "HK",
@@ -11220,7 +11616,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 623,
+      "rank": 645,
       "code": "HK01997",
       "name": "九龙仓置业",
       "market": "HK",
@@ -11238,7 +11634,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 624,
+      "rank": 646,
       "code": "HK00017",
       "name": "新世界发展",
       "market": "HK",
@@ -11256,7 +11652,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 625,
+      "rank": 647,
       "code": "HK00338",
       "name": "上海石油化工股份",
       "market": "HK",
@@ -11274,7 +11670,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 626,
+      "rank": 648,
       "code": "HK01196",
       "name": "伟禄科技股份",
       "market": "HK",
@@ -11292,7 +11688,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 627,
+      "rank": 649,
       "code": "HK01528",
       "name": "红星美凯龙",
       "market": "HK",
@@ -11310,7 +11706,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 628,
+      "rank": 650,
       "code": "HK02617",
       "name": "药捷安康-B",
       "market": "HK",
@@ -11328,7 +11724,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 629,
+      "rank": 651,
       "code": "HK02553",
       "name": "首钢朗泽",
       "market": "HK",
@@ -11346,7 +11742,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 630,
+      "rank": 652,
       "code": "HK01117",
       "name": "现代牧业",
       "market": "HK",
@@ -11364,7 +11760,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 631,
+      "rank": 653,
       "code": "HK02202",
       "name": "万科企业",
       "market": "HK",
@@ -11382,7 +11778,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 632,
+      "rank": 654,
       "code": "HK02009",
       "name": "金隅集团",
       "market": "HK",
@@ -11400,7 +11796,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 633,
+      "rank": 655,
       "code": "HK00323",
       "name": "马鞍山钢铁股份",
       "market": "HK",
@@ -11418,7 +11814,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 634,
+      "rank": 656,
       "code": "HK00895",
       "name": "东江环保",
       "market": "HK",
@@ -11436,7 +11832,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 635,
+      "rank": 657,
       "code": "HK00588",
       "name": "北京北辰实业股份",
       "market": "HK",
@@ -11454,7 +11850,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 636,
+      "rank": 658,
       "code": "HK01672",
       "name": "歌礼制药-B",
       "market": "HK",
@@ -11472,7 +11868,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 637,
+      "rank": 659,
       "code": "HK01053",
       "name": "重庆钢铁股份",
       "market": "HK",
@@ -11490,7 +11886,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 638,
+      "rank": 660,
       "code": "HK06185",
       "name": "康希诺生物",
       "market": "HK",
@@ -11508,7 +11904,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 639,
+      "rank": 661,
       "code": "HK00347",
       "name": "鞍钢股份",
       "market": "HK",
@@ -11526,7 +11922,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 640,
+      "rank": 662,
       "code": "HK01191",
       "name": "海光芯正",
       "market": "HK",
@@ -11544,7 +11940,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 641,
+      "rank": 663,
       "code": "HK01108",
       "name": "凯盛新能",
       "market": "HK",
@@ -11562,7 +11958,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 642,
+      "rank": 664,
       "code": "HK01610",
       "name": "中粮家佳康",
       "market": "HK",
@@ -11580,7 +11976,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 643,
+      "rank": 665,
       "code": "HK02007",
       "name": "碧桂园",
       "market": "HK",
@@ -11598,7 +11994,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 644,
+      "rank": 666,
       "code": "HK03380",
       "name": "龙光集团",
       "market": "HK",
@@ -11616,7 +12012,7 @@
       "isTop10pct": false
     },
     {
-      "rank": 645,
+      "rank": 667,
       "code": "HK09993",
       "name": "金辉控股",
       "market": "HK",
@@ -11634,270 +12030,5 @@
       "isTop10pct": false
     }
   ],
-  "excluded": [
-    {
-      "code": "HK03968",
-      "name": "招商银行",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 604.54,
-      "quality": 487.61,
-      "growth": 116.93
-    },
-    {
-      "code": "HK01658",
-      "name": "邮储银行",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 473.27,
-      "quality": 372.63,
-      "growth": 100.64
-    },
-    {
-      "code": "HK00998",
-      "name": "中信银行",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 465.56,
-      "quality": 375.53,
-      "growth": 90.03
-    },
-    {
-      "code": "HK00939",
-      "name": "建设银行",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 465.53,
-      "quality": 389.04,
-      "growth": 76.49
-    },
-    {
-      "code": "HK01288",
-      "name": "农业银行",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 460.95,
-      "quality": 358.6,
-      "growth": 102.35
-    },
-    {
-      "code": "HK01398",
-      "name": "工商银行",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 458.06,
-      "quality": 375.22,
-      "growth": 82.84
-    },
-    {
-      "code": "HK02888",
-      "name": "渣打集团",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 428.02,
-      "quality": 275.73,
-      "growth": 152.29
-    },
-    {
-      "code": "HK03866",
-      "name": "青岛银行",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 392.41,
-      "quality": 259.47,
-      "growth": 132.94
-    },
-    {
-      "code": "HK03698",
-      "name": "徽商银行",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 386.6,
-      "quality": 309.27,
-      "growth": 77.33
-    },
-    {
-      "code": "HK03988",
-      "name": "中国银行",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 380.56,
-      "quality": 370.54,
-      "growth": 10.02
-    },
-    {
-      "code": "HK03328",
-      "name": "交通银行",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 379.59,
-      "quality": 309.14,
-      "growth": 70.45
-    },
-    {
-      "code": "HK00005",
-      "name": "汇丰控股",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 378.14,
-      "quality": 386.33,
-      "growth": -8.19
-    },
-    {
-      "code": "HK06818",
-      "name": "中国光大银行",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 370.48,
-      "quality": 324.85,
-      "growth": 45.63
-    },
-    {
-      "code": "HK02356",
-      "name": "大新银行集团",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 361.63,
-      "quality": 249.36,
-      "growth": 112.27
-    },
-    {
-      "code": "HK00440",
-      "name": "大新金融",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 343.76,
-      "quality": 225.74,
-      "growth": 118.02
-    },
-    {
-      "code": "HK02388",
-      "name": "中银香港",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 338.12,
-      "quality": 332.91,
-      "growth": 5.21
-    },
-    {
-      "code": "HK02016",
-      "name": "浙商银行",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 331.25,
-      "quality": 279.75,
-      "growth": 51.5
-    },
-    {
-      "code": "HK01963",
-      "name": "重庆银行",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 306.74,
-      "quality": 222.72,
-      "growth": 84.02
-    },
-    {
-      "code": "HK00023",
-      "name": "东亚银行",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 255.91,
-      "quality": 259.12,
-      "growth": -3.21
-    },
-    {
-      "code": "HK03618",
-      "name": "重庆农村商业银行",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 236.37,
-      "quality": 266.4,
-      "growth": -30.03
-    },
-    {
-      "code": "HK06196",
-      "name": "郑州银行",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 185.58,
-      "quality": 184.79,
-      "growth": 0.79
-    },
-    {
-      "code": "HK01988",
-      "name": "民生银行",
-      "market": "HK",
-      "l1": "银行",
-      "l2": "银行",
-      "status": "normal",
-      "reason": "关键指标缺失",
-      "score": 151.98,
-      "quality": 227.1,
-      "growth": -75.12
-    }
-  ]
+  "excluded": []
 }
