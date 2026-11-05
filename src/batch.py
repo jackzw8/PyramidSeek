@@ -348,6 +348,9 @@ def run(args: argparse.Namespace) -> int:
             codes=codes or None,
             skip_financials=set(skipped_codes) or None,
             sync_lists_to_cold=(args.mode == "daily" and not args.offline),
+            # D-62：daily 跑全量港股时不做行业/股本回填（666 只 ×1.2s ≈ 13 分钟），
+            # 带 --codes 的小样本才补；建仓类模式（financials/cold）照旧补全。
+            fill_hk_metadata=(args.mode != "daily" or bool(codes)),
             limit=args.limit,
             sources=selection,
             chain=fetch.default_chain(

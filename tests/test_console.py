@@ -74,7 +74,8 @@ def test_run_offline_end_to_end(client) -> None:
     """offline 小样本：启动 → 进度 → 完成 → 历史落库（M5-5 验收同款路径）。"""
     resp = client.post(
         "/api/run",
-        json={"mode": "offline", "markets": ["A"], "limit": 2},
+        # noStore：不写 DuckDB —— 否则会与用户正在跑的批抢锁，本用例因 exitCode=1 假失败
+        json={"mode": "offline", "markets": ["A"], "limit": 2, "noStore": True},
     )
     assert resp.status_code == 200
     assert resp.get_json()["status"]["running"] is True
