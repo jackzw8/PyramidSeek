@@ -58,7 +58,7 @@ python -m pip install -r requirements.txt -r requirements-dev.txt
 python -m src.batch --offline
 ```
 
-用仓库内置的 `fixtures/` 示例数据跑完整流程，产出到 `public/data/`，跑完自动做 schema 校验。
+用仓库内置的 `fixtures/` 示例数据跑完整流程，产出到 `assets/public/data/`，跑完自动做 schema 校验。
 
 ### ② 看效果
 
@@ -66,7 +66,7 @@ python -m src.batch --offline
 双击 预览站点.bat          # 起 http 服务并自动开浏览器（8000 端口）
 ```
 
-> ⚠️ 别直接双击 `public/index.html`。页面用 `fetch` 读数据，`file://` 协议下浏览器会拦截跨源请求，
+> ⚠️ 别直接双击 `assets/public/index.html`。页面用 `fetch` 读数据，`file://` 协议下浏览器会拦截跨源请求，
 > 结果是红条报「无法加载」、内容区空白 —— 必须走 http。
 
 ### ③ 联网跑真实数据
@@ -104,7 +104,10 @@ src/
   build/           产物生成与校验、发布器
   batch.py         总入口：一条命令跑完整链
 console/           本地跑批控制台（Flask + 子进程）
-public/            前端静态站点（原生 HTML/CSS/JS，零依赖）
+assets/            站点与运行时数据
+  public/          前端静态站点（原生 HTML/CSS/JS，零依赖；产物在 data/ 下）
+  dist/            发布快照（publish 生成）
+  data/            DuckDB / 缓存 / 选样清单 / 跑批日志
 schema/            产物 JSON Schema
 fixtures/          示例数据（离线回归用）
 tests/             单元 / 回归 / 契约测试
@@ -120,7 +123,7 @@ tests/             单元 / 回归 / 契约测试
 - **数据源平权可选**：A 股 新浪 / 东财 / 同花顺，港股 腾讯 / 东财；默认都走东财。选源是一次跑批的显式参数，**失败不自动换源**（避免同一批数据混了不同口径）。
 - **产物契约**：`meta` / `ranking` / `stock` / `search-index` 四类 JSON，带 `snapshotVersion`（数据快照）、`contractVersion`（结构）、`formulaVersion`（公式）三件套，改动必升版本。
 - **可复现**：依赖固定版本，离线模式只读 `fixtures/`，可固定时间戳重跑出逐字节一致的产物。
-- **发布**：`publish --build` 把 `public/` 全量复制成 `dist/` 并补发布时间戳，`publish --push` 再推到 `gh-pages` 分支，每次发布对应一个 `snap-*` tag，可回滚。
+- **发布**：`publish --build` 把 `assets/public/` 全量复制成 `assets/dist/` 并补发布时间戳，`publish --push` 再推到 `gh-pages` 分支，每次发布对应一个 `snap-*` tag，可回滚。
 
 ---
 
