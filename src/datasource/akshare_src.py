@@ -660,10 +660,22 @@ class AkShareSource:
             if row.get("code") and row.get("industry")
         }
 
+        todo = [
+            raw
+            for raw in dict.fromkeys(str(code) for code in codes)
+            if raw not in mapping and raw in ggt
+        ]
+        total = len(todo)
+        if total:
+            logger.info(
+                "港股行业：需补 %d 只（缓存已有 %d 只，每只约 %.1fs）",
+                total,
+                len(mapping),
+                config.HK_INDUSTRY_INTERVAL_SECONDS,
+            )
+
         fresh: list[dict[str, Any]] = []
-        for raw in dict.fromkeys(str(code) for code in codes):
-            if raw in mapping or raw not in ggt:
-                continue
+        for index, raw in enumerate(todo, 1):
             symbol = raw[2:] if raw.upper().startswith("HK") else raw
             try:
                 self._interval_sleep(config.HK_INDUSTRY_INTERVAL_SECONDS)
@@ -671,10 +683,15 @@ class AkShareSource:
                 industry = str(frame.iloc[0].get("所属行业") or "").strip()
             except Exception as exc:  # noqa: BLE001  单只失败不阻断整批
                 logger.warning("港股行业查询失败 %s：%s", raw, exc)
-                continue
+                industry = ""
             if industry:
                 mapping[raw] = industry
                 fresh.append({"code": raw, "industry": industry})
+            # 每 100 只落一次盘：中途停掉/崩溃不至于把已查的全丢（实测等过 13 分钟白跑）
+            if fresh and len(fresh) % 100 == 0:
+                self._save_cache("hk_industry", [*cached, *fresh])
+            if index % 50 == 0 or index == total:
+                logger.info("港股行业：%d/%d（新增 %d 只）", index, total, len(fresh))
 
         if fresh:
             self._save_cache("hk_industry", [*cached, *fresh])
