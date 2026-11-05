@@ -472,7 +472,12 @@ def fetch_universe(
         known = {str(row.get("code")) for row in outcome.universe.stocks}
         missing = sorted({code for code in codes} - known)
         if missing:
-            outcome.notes.append(f"指定标的中未进入清洗结果（必填缺失或被外键丢弃）：{missing}")
+            # 清单可能上千只（多份合并后更甚），全量塞进 note 会把产物 meta 撑大几十 KB
+            preview = "、".join(missing[:10])
+            more = f" 等 {len(missing)} 只" if len(missing) > 10 else ""
+            outcome.notes.append(
+                f"指定标的中未进入清洗结果：{preview}{more}（必填缺失或被外键丢弃）"
+            )
 
     if persist:
         outcome.stats = store.write_standard(
