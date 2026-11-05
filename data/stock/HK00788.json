@@ -1,0 +1,211 @@
+{
+  "code": "HK00788",
+  "name": "中国铁塔",
+  "market": "HK",
+  "exchange": "HKEX",
+  "l1": "电讯",
+  "l2": "电讯",
+  "group": "电讯",
+  "level": "L1",
+  "industryStd": "东财行业（港股通）",
+  "listedAt": "",
+  "score": 420.72,
+  "quality": 369.95,
+  "growth": 50.77,
+  "growthDetail": {
+    "netProfit": 60.3,
+    "opCashflow": -9.53
+  },
+  "qualitySubs": {
+    "roe": 24.41,
+    "net_profit_scale": 56.25,
+    "roa": 29.63,
+    "gross_margin": 100.0,
+    "cash_ratio": 9.33,
+    "asset_turnover": 6.25
+  },
+  "radar": {
+    "roe": 24.41,
+    "gross_margin": 100.0,
+    "asset_turnover": 6.25,
+    "eps": 50.0,
+    "cash_ratio": 9.33,
+    "net_margin": 50.56
+  },
+  "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "profitability": {
+    "roe": [
+      0.0387,
+      0.0454,
+      0.0493,
+      0.0537,
+      0.057
+    ],
+    "roa": [
+      0.0227,
+      0.0288,
+      0.0299,
+      0.0322,
+      0.0346
+    ],
+    "gross_margin": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "net_margin": [
+      0.0847,
+      0.0953,
+      0.1037,
+      0.1097,
+      0.1158
+    ],
+    "eps": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "structure": {
+    "cash_ratio": [
+      0.02,
+      0.0167,
+      0.0121,
+      0.0078,
+      0.0366
+    ],
+    "debt_ratio": [
+      0.4142,
+      0.3664,
+      0.3936,
+      0.3992,
+      0.3942
+    ]
+  },
+  "operation": {
+    "ar_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "ar_days": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "fa_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "asset_turnover": [
+      0.2678,
+      0.3016,
+      0.2884,
+      0.2938,
+      0.2983
+    ]
+  },
+  "cashflow": {
+    "cash": [
+      64.88,
+      51.14,
+      39.67,
+      25.97,
+      122.8
+    ],
+    "net_profit": [
+      73.48,
+      87.83,
+      97.81,
+      107.28,
+      116.0
+    ],
+    "ocf": [
+      606.57,
+      651.04,
+      329.44,
+      494.62,
+      559.72
+    ],
+    "icf": [
+      -315.95,
+      -276.45,
+      -320.06,
+      -279.76,
+      -292.32
+    ],
+    "fcf": [
+      -276.3,
+      -388.07,
+      -21.03,
+      -228.43,
+      -170.46
+    ],
+    "ncf": [
+      14.32,
+      -13.48,
+      -11.65,
+      -13.57,
+      96.94
+    ]
+  },
+  "peers": [
+    {
+      "code": "HK02477",
+      "name": "经纬天地",
+      "roe5y": 0.2136
+    },
+    {
+      "code": "HK01883",
+      "name": "中信国际电讯",
+      "roe5y": 0.1008
+    },
+    {
+      "code": "HK00941",
+      "name": "中国移动",
+      "roe5y": 0.0973
+    },
+    {
+      "code": "HK00728",
+      "name": "中国电信",
+      "roe5y": 0.0676
+    },
+    {
+      "code": "HK00762",
+      "name": "中国联通",
+      "roe5y": 0.0518
+    },
+    {
+      "code": "HK00788",
+      "name": "中国铁塔",
+      "roe5y": 0.0488
+    },
+    {
+      "code": "HK00008",
+      "name": "电讯盈科",
+      "roe5y": -0.0194
+    },
+    {
+      "code": "HK01310",
+      "name": "香港宽频",
+      "roe5y": -0.0342
+    }
+  ]
+}

@@ -1,0 +1,181 @@
+{
+  "code": "HK00667",
+  "name": "中国东方教育",
+  "market": "HK",
+  "exchange": "HKEX",
+  "l1": "支援服务",
+  "l2": "支援服务",
+  "group": "支援服务",
+  "level": "L1",
+  "industryStd": "东财行业（港股通）",
+  "listedAt": "",
+  "score": 661.27,
+  "quality": 522.41,
+  "growth": 138.86,
+  "growthDetail": {
+    "netProfit": 83.38,
+    "opCashflow": 55.48
+  },
+  "qualitySubs": {
+    "roe": 37.77,
+    "net_profit_scale": 25.0,
+    "roa": 45.49,
+    "gross_margin": 100.0,
+    "cash_ratio": 65.67,
+    "asset_turnover": 75.0
+  },
+  "radar": {
+    "roe": 37.77,
+    "gross_margin": 100.0,
+    "asset_turnover": 75.0,
+    "eps": 50.0,
+    "cash_ratio": 65.67,
+    "net_margin": 51.56
+  },
+  "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "profitability": {
+    "roe": [
+      0.0527,
+      0.0643,
+      0.0487,
+      0.0892,
+      0.1229
+    ],
+    "roa": [
+      0.0314,
+      0.0387,
+      0.0294,
+      0.0541,
+      0.0739
+    ],
+    "gross_margin": [
+      0.5101,
+      0.4952,
+      0.4796,
+      0.5136,
+      0.5528
+    ],
+    "net_margin": [
+      0.073,
+      0.0959,
+      0.0687,
+      0.1246,
+      0.1638
+    ],
+    "eps": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "structure": {
+    "cash_ratio": [
+      0.2296,
+      0.1515,
+      0.1631,
+      0.1547,
+      0.1929
+    ],
+    "debt_ratio": [
+      0.4045,
+      0.3985,
+      0.3965,
+      0.3938,
+      0.3982
+    ]
+  },
+  "operation": {
+    "ar_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "ar_days": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "fa_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "asset_turnover": [
+      0.4296,
+      0.4031,
+      0.4282,
+      0.434,
+      0.4515
+    ]
+  },
+  "cashflow": {
+    "cash": [
+      22.18,
+      14.35,
+      15.2,
+      14.67,
+      19.67
+    ],
+    "net_profit": [
+      3.03,
+      3.66,
+      2.74,
+      5.13,
+      7.54
+    ],
+    "ocf": [
+      9.8,
+      6.21,
+      10.28,
+      12.44,
+      15.52
+    ],
+    "icf": [
+      -6.3,
+      -6.38,
+      -1.88,
+      -5.52,
+      -3.05
+    ],
+    "fcf": [
+      -10.65,
+      -8.79,
+      -7.79,
+      -7.56,
+      -7.29
+    ],
+    "ncf": [
+      -7.15,
+      -8.96,
+      0.61,
+      -0.64,
+      5.18
+    ]
+  },
+  "peers": [
+    {
+      "code": "HK00839",
+      "name": "中教控股",
+      "roe5y": 0.0875
+    },
+    {
+      "code": "HK00667",
+      "name": "中国东方教育",
+      "roe5y": 0.0755
+    }
+  ]
+}

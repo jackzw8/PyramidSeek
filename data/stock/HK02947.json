@@ -1,0 +1,238 @@
+{
+  "code": "HK02947",
+  "name": "深演智能(旧)",
+  "market": "HK",
+  "exchange": "HKEX",
+  "l1": "媒体及娱乐",
+  "l2": "媒体及娱乐",
+  "group": "媒体及娱乐",
+  "level": "L1",
+  "industryStd": "东财行业（港股通）",
+  "listedAt": "",
+  "score": 400.25,
+  "quality": 558.96,
+  "growth": -158.71,
+  "growthDetail": {
+    "netProfit": -69.86,
+    "opCashflow": -88.85
+  },
+  "qualitySubs": {
+    "roe": 43.37,
+    "net_profit_scale": 35.29,
+    "roa": 59.31,
+    "gross_margin": 76.1,
+    "cash_ratio": 67.43,
+    "asset_turnover": 82.35
+  },
+  "radar": {
+    "roe": 43.37,
+    "gross_margin": 76.1,
+    "asset_turnover": 82.35,
+    "eps": 50.0,
+    "cash_ratio": 67.43,
+    "net_margin": 33.09
+  },
+  "years": [
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "profitability": {
+    "roe": [
+      0.1415,
+      0.1292,
+      0.0543,
+      0.0219
+    ],
+    "roa": [
+      0.1065,
+      0.0989,
+      0.0407,
+      0.016
+    ],
+    "gross_margin": [
+      0.3094,
+      0.3116,
+      0.2714,
+      0.2557
+    ],
+    "net_margin": [
+      0.1087,
+      0.0995,
+      0.0409,
+      0.0157
+    ],
+    "eps": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "structure": {
+    "cash_ratio": [
+      0.204,
+      0.1378,
+      0.1333,
+      0.2735
+    ],
+    "debt_ratio": [
+      0.2473,
+      0.235,
+      0.25,
+      0.27
+    ]
+  },
+  "operation": {
+    "ar_turnover": [
+      null,
+      null,
+      null,
+      null
+    ],
+    "ar_days": [
+      null,
+      null,
+      null,
+      null
+    ],
+    "fa_turnover": [
+      null,
+      null,
+      null,
+      null
+    ],
+    "asset_turnover": [
+      0.9801,
+      0.9935,
+      0.9963,
+      1.0213
+    ]
+  },
+  "cashflow": {
+    "cash": [
+      1.13,
+      0.85,
+      0.72,
+      1.54
+    ],
+    "net_profit": [
+      0.59,
+      0.61,
+      0.22,
+      0.09
+    ],
+    "ocf": [
+      0.75,
+      0.52,
+      0.42,
+      0.32
+    ],
+    "icf": [
+      -1.33,
+      -0.75,
+      0.31,
+      0.61
+    ],
+    "fcf": [
+      -0.14,
+      -0.07,
+      -0.87,
+      -0.1
+    ],
+    "ncf": [
+      -0.72,
+      -0.3,
+      -0.14,
+      0.83
+    ]
+  },
+  "peers": [
+    {
+      "code": "HK09911",
+      "name": "赤子城科技",
+      "roe5y": 0.1474
+    },
+    {
+      "code": "HK00811",
+      "name": "新华文轩",
+      "roe5y": 0.1115
+    },
+    {
+      "code": "HK01797",
+      "name": "东方甄选",
+      "roe5y": 0.093
+    },
+    {
+      "code": "HK00136",
+      "name": "中国儒意",
+      "roe5y": 0.0869
+    },
+    {
+      "code": "HK02723",
+      "name": "深演智能(新)",
+      "roe5y": 0.0867
+    },
+    {
+      "code": "HK02947",
+      "name": "深演智能(旧)",
+      "roe5y": 0.0867
+    },
+    {
+      "code": "HK01357",
+      "name": "美图公司",
+      "roe5y": 0.0734
+    },
+    {
+      "code": "HK01860",
+      "name": "汇量科技",
+      "roe5y": 0.0733
+    },
+    {
+      "code": "HK09888",
+      "name": "百度集团-W",
+      "roe5y": 0.0553
+    },
+    {
+      "code": "HK01896",
+      "name": "猫眼娱乐",
+      "roe5y": 0.0481
+    },
+    {
+      "code": "HK09899",
+      "name": "网易云音乐",
+      "roe5y": 0.0294
+    },
+    {
+      "code": "HK00772",
+      "name": "阅文集团",
+      "roe5y": 0.0256
+    },
+    {
+      "code": "HK01060",
+      "name": "大麦娱乐",
+      "roe5y": 0.0148
+    },
+    {
+      "code": "HK02661",
+      "name": "轻松健康",
+      "roe5y": -0.1115
+    },
+    {
+      "code": "HK00917",
+      "name": "趣致集团",
+      "roe5y": -0.1555
+    },
+    {
+      "code": "HK09626",
+      "name": "哔哩哔哩-W",
+      "roe5y": -0.2317
+    },
+    {
+      "code": "HK01024",
+      "name": "快手-W",
+      "roe5y": -0.2927
+    }
+  ]
+}

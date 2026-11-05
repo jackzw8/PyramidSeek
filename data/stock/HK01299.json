@@ -1,0 +1,241 @@
+{
+  "code": "HK01299",
+  "name": "友邦保险",
+  "market": "HK",
+  "exchange": "HKEX",
+  "l1": "保险",
+  "l2": "保险",
+  "group": "保险",
+  "level": "L1",
+  "industryStd": "东财行业（港股通）",
+  "listedAt": "",
+  "score": 369.44,
+  "quality": 322.45,
+  "growth": 46.99,
+  "growthDetail": {
+    "netProfit": -15.86,
+    "opCashflow": 62.85
+  },
+  "qualitySubs": {
+    "roe": 52.09,
+    "net_profit_scale": 39.29,
+    "roa": 15.27,
+    "gross_margin": 20.9,
+    "cash_ratio": 13.64,
+    "asset_turnover": 25.0
+  },
+  "radar": {
+    "roe": 52.09,
+    "gross_margin": 20.9,
+    "asset_turnover": 25.0,
+    "eps": 50.0,
+    "cash_ratio": 13.64,
+    "net_margin": 63.7
+  },
+  "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "profitability": {
+    "roe": [
+      0.1228,
+      0.0074,
+      0.0916,
+      0.1688,
+      0.1442
+    ],
+    "roa": [
+      0.0219,
+      0.0009,
+      0.0131,
+      0.0224,
+      0.018
+    ],
+    "gross_margin": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "net_margin": [
+      0.1563,
+      0.0148,
+      0.1873,
+      0.215,
+      0.155
+    ],
+    "eps": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "structure": {
+    "cash_ratio": [
+      0.0138,
+      0.0289,
+      0.04,
+      0.0261,
+      0.0275
+    ],
+    "debt_ratio": [
+      0.8221,
+      0.8743,
+      0.8564,
+      0.8674,
+      0.8748
+    ]
+  },
+  "operation": {
+    "ar_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "ar_days": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "fa_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "asset_turnover": [
+      0.1398,
+      0.0631,
+      0.0702,
+      0.1041,
+      0.1165
+    ]
+  },
+  "cashflow": {
+    "cash": [
+      46.94,
+      87.62,
+      114.44,
+      79.85,
+      95.0
+    ],
+    "net_profit": [
+      74.25,
+      2.82,
+      37.62,
+      68.38,
+      62.36
+    ],
+    "ocf": [
+      39.08,
+      98.63,
+      109.13,
+      32.64,
+      69.72
+    ],
+    "icf": [
+      -27.8,
+      -8.17,
+      -21.36,
+      -9.45,
+      -9.4
+    ],
+    "fcf": [
+      -16.61,
+      -47.84,
+      -60.66,
+      -56.9,
+      -47.16
+    ],
+    "ncf": [
+      -5.33,
+      42.62,
+      27.11,
+      -33.71,
+      13.16
+    ]
+  },
+  "peers": [
+    {
+      "code": "HK02672",
+      "name": "白鸽在线",
+      "roe5y": 4.2104
+    },
+    {
+      "code": "HK01336",
+      "name": "新华保险",
+      "roe5y": 0.1828
+    },
+    {
+      "code": "HK02628",
+      "name": "中国人寿",
+      "roe5y": 0.1491
+    },
+    {
+      "code": "HK02601",
+      "name": "中国太保",
+      "roe5y": 0.1333
+    },
+    {
+      "code": "HK02328",
+      "name": "中国财险",
+      "roe5y": 0.1219
+    },
+    {
+      "code": "HK01339",
+      "name": "中国人民保险集团",
+      "roe5y": 0.1213
+    },
+    {
+      "code": "HK02318",
+      "name": "中国平安",
+      "roe5y": 0.1178
+    },
+    {
+      "code": "HK01299",
+      "name": "友邦保险",
+      "roe5y": 0.107
+    },
+    {
+      "code": "HK00966",
+      "name": "中国太平",
+      "roe5y": 0.1056
+    },
+    {
+      "code": "HK06963",
+      "name": "阳光保险",
+      "roe5y": 0.088
+    },
+    {
+      "code": "HK02378",
+      "name": "保诚",
+      "roe5y": 0.0726
+    },
+    {
+      "code": "HK06060",
+      "name": "众安在线",
+      "roe5y": 0.0511
+    },
+    {
+      "code": "HK00376",
+      "name": "云锋金融",
+      "roe5y": 0.029
+    },
+    {
+      "code": "HK01828",
+      "name": "富卫集团",
+      "roe5y": -0.0252
+    }
+  ]
+}

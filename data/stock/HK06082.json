@@ -1,0 +1,278 @@
+{
+  "code": "HK06082",
+  "name": "壁仞科技",
+  "market": "HK",
+  "exchange": "HKEX",
+  "l1": "半导体",
+  "l2": "半导体",
+  "group": "半导体",
+  "level": "L1",
+  "industryStd": "东财行业（港股通）",
+  "listedAt": "",
+  "score": 388.82,
+  "quality": 533.14,
+  "growth": -144.32,
+  "growthDetail": {
+    "netProfit": -60.0,
+    "opCashflow": -84.32
+  },
+  "qualitySubs": {
+    "roe": 100.0,
+    "net_profit_scale": 0.0,
+    "roa": 0.0,
+    "gross_margin": 100.0,
+    "cash_ratio": 80.45,
+    "asset_turnover": 6.0
+  },
+  "radar": {
+    "roe": 100.0,
+    "gross_margin": 100.0,
+    "asset_turnover": 6.0,
+    "eps": 50.0,
+    "cash_ratio": 80.45,
+    "net_margin": 0.0
+  },
+  "years": [
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "profitability": {
+    "roe": [
+      0.3422,
+      0.292,
+      0.2072,
+      0.6917
+    ],
+    "roa": [
+      -0.4155,
+      -0.5132,
+      -0.5058,
+      -2.7867
+    ],
+    "gross_margin": [
+      null,
+      0.7581,
+      0.5341,
+      0.5378
+    ],
+    "net_margin": [
+      0.0,
+      -28.2097,
+      -4.5638,
+      -15.9399
+    ],
+    "eps": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "structure": {
+    "cash_ratio": [
+      0.2773,
+      0.1942,
+      0.3621,
+      0.1753
+    ],
+    "debt_ratio": [
+      2.2141,
+      2.7573,
+      3.441,
+      5.029
+    ]
+  },
+  "operation": {
+    "ar_turnover": [
+      null,
+      null,
+      null,
+      null
+    ],
+    "ar_days": [
+      null,
+      null,
+      null,
+      null
+    ],
+    "fa_turnover": [
+      null,
+      null,
+      null,
+      null
+    ],
+    "asset_turnover": [
+      0.0,
+      0.0182,
+      0.1108,
+      0.1748
+    ]
+  },
+  "cashflow": {
+    "cash": [
+      9.83,
+      6.62,
+      11.01,
+      10.35
+    ],
+    "net_profit": [
+      -14.73,
+      -17.49,
+      -15.38,
+      -164.5
+    ],
+    "ocf": [
+      -11.83,
+      -8.5,
+      -10.09,
+      -21.32
+    ],
+    "icf": [
+      2.91,
+      -3.06,
+      12.19,
+      -12.32
+    ],
+    "fcf": [
+      2.12,
+      8.15,
+      2.17,
+      33.21
+    ],
+    "ncf": [
+      -6.8,
+      -3.41,
+      4.27,
+      -0.43
+    ]
+  },
+  "peers": [
+    {
+      "code": "HK06082",
+      "name": "壁仞科技",
+      "roe5y": 0.3833
+    },
+    {
+      "code": "HK00600",
+      "name": "爱芯元智",
+      "roe5y": 0.3831
+    },
+    {
+      "code": "HK06675",
+      "name": "SENASIC",
+      "roe5y": 0.3425
+    },
+    {
+      "code": "HK01879",
+      "name": "曦智科技-P",
+      "roe5y": 0.2424
+    },
+    {
+      "code": "HK01385",
+      "name": "上海复旦",
+      "roe5y": 0.1345
+    },
+    {
+      "code": "HK03661",
+      "name": "圣邦股份",
+      "roe5y": 0.1342
+    },
+    {
+      "code": "HK06809",
+      "name": "澜起科技",
+      "roe5y": 0.1181
+    },
+    {
+      "code": "HK03277",
+      "name": "长光辰芯",
+      "roe5y": 0.1059
+    },
+    {
+      "code": "HK00522",
+      "name": "ASMPT",
+      "roe5y": 0.099
+    },
+    {
+      "code": "HK00501",
+      "name": "豪威集团",
+      "roe5y": 0.0903
+    },
+    {
+      "code": "HK02726",
+      "name": "瀚天天成",
+      "roe5y": 0.0889
+    },
+    {
+      "code": "HK02249",
+      "name": "晶合集成",
+      "roe5y": 0.075
+    },
+    {
+      "code": "HK03986",
+      "name": "兆易创新",
+      "roe5y": 0.0748
+    },
+    {
+      "code": "HK01304",
+      "name": "FORTIOR",
+      "roe5y": 0.0665
+    },
+    {
+      "code": "HK01347",
+      "name": "华虹宏力",
+      "roe5y": 0.0603
+    },
+    {
+      "code": "HK00981",
+      "name": "中芯国际",
+      "roe5y": 0.059
+    },
+    {
+      "code": "HK03223",
+      "name": "君正股份",
+      "roe5y": 0.0441
+    },
+    {
+      "code": "HK09976",
+      "name": "江波龙",
+      "roe5y": 0.033
+    },
+    {
+      "code": "HK02631",
+      "name": "天岳先进",
+      "roe5y": -0.0094
+    },
+    {
+      "code": "HK02676",
+      "name": "纳芯微",
+      "roe5y": -0.0271
+    },
+    {
+      "code": "HK02577",
+      "name": "英诺赛科",
+      "roe5y": -0.2067
+    },
+    {
+      "code": "HK02701",
+      "name": "国民技术",
+      "roe5y": -0.2177
+    },
+    {
+      "code": "HK03310",
+      "name": "云英谷科技",
+      "roe5y": -0.226
+    },
+    {
+      "code": "HK03625",
+      "name": "傅里叶",
+      "roe5y": -0.3895
+    },
+    {
+      "code": "HK09903",
+      "name": "天数智芯",
+      "roe5y": -0.843
+    }
+  ]
+}

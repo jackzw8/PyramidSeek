@@ -1,0 +1,226 @@
+{
+  "code": "HK06168",
+  "name": "周六福",
+  "market": "HK",
+  "exchange": "HKEX",
+  "l1": "专业零售",
+  "l2": "专业零售",
+  "group": "专业零售",
+  "level": "L1",
+  "industryStd": "东财行业（港股通）",
+  "listedAt": "",
+  "score": 760.06,
+  "quality": 753.49,
+  "growth": 6.57,
+  "growthDetail": {
+    "netProfit": 77.0,
+    "opCashflow": -70.43
+  },
+  "qualitySubs": {
+    "roe": 89.89,
+    "net_profit_scale": 40.91,
+    "roa": 100.0,
+    "gross_margin": 81.31,
+    "cash_ratio": 57.89,
+    "asset_turnover": 68.18
+  },
+  "radar": {
+    "roe": 89.89,
+    "gross_margin": 81.31,
+    "asset_turnover": 68.18,
+    "eps": 50.0,
+    "cash_ratio": 57.89,
+    "net_margin": 63.33
+  },
+  "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "profitability": {
+    "roe": [
+      0.3223,
+      0.302,
+      0.2915,
+      0.274,
+      0.1812
+    ],
+    "roa": [
+      0.2102,
+      0.2225,
+      0.2146,
+      0.1784,
+      0.1331
+    ],
+    "gross_margin": [
+      0.3502,
+      0.3868,
+      0.2623,
+      0.2587,
+      0.275
+    ],
+    "net_margin": [
+      0.153,
+      0.1855,
+      0.1281,
+      0.1235,
+      0.132
+    ],
+    "eps": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "structure": {
+    "cash_ratio": [
+      0.2078,
+      0.084,
+      0.0613,
+      0.142,
+      0.2023
+    ],
+    "debt_ratio": [
+      0.3476,
+      0.2632,
+      0.2639,
+      0.3487,
+      0.2651
+    ]
+  },
+  "operation": {
+    "ar_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "ar_days": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "fa_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "asset_turnover": [
+      1.3737,
+      1.1997,
+      1.6746,
+      1.445,
+      1.0088
+    ]
+  },
+  "cashflow": {
+    "cash": [
+      4.22,
+      2.17,
+      1.89,
+      5.62,
+      11.67
+    ],
+    "net_profit": [
+      4.27,
+      5.75,
+      6.62,
+      7.06,
+      7.68
+    ],
+    "ocf": [
+      4.92,
+      1.39,
+      4.05,
+      3.9,
+      0.37
+    ],
+    "icf": [
+      -0.22,
+      -3.29,
+      -1.94,
+      -5.06,
+      1.07
+    ],
+    "fcf": [
+      -3.22,
+      -0.24,
+      -2.42,
+      1.12,
+      6.55
+    ],
+    "ncf": [
+      1.48,
+      -2.14,
+      -0.31,
+      -0.04,
+      7.99
+    ]
+  },
+  "peers": [
+    {
+      "code": "HK09690",
+      "name": "途虎-W",
+      "roe5y": 0.4356
+    },
+    {
+      "code": "HK06168",
+      "name": "周六福",
+      "roe5y": 0.2742
+    },
+    {
+      "code": "HK01929",
+      "name": "周大福",
+      "roe5y": 0.2266
+    },
+    {
+      "code": "HK06110",
+      "name": "滔搏",
+      "roe5y": 0.1863
+    },
+    {
+      "code": "HK00590",
+      "name": "六福集团",
+      "roe5y": 0.1154
+    },
+    {
+      "code": "HK02603",
+      "name": "吉宏股份",
+      "roe5y": 0.1091
+    },
+    {
+      "code": "HK09896",
+      "name": "名创优品",
+      "roe5y": 0.1036
+    },
+    {
+      "code": "HK00881",
+      "name": "中升控股",
+      "roe5y": 0.0998
+    },
+    {
+      "code": "HK09988",
+      "name": "阿里巴巴-W",
+      "roe5y": 0.0894
+    },
+    {
+      "code": "HK02685",
+      "name": "量化派",
+      "roe5y": 0.0469
+    },
+    {
+      "code": "HK03690",
+      "name": "美团-W",
+      "roe5y": -0.0191
+    }
+  ]
+}

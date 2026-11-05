@@ -1,0 +1,241 @@
+{
+  "code": "HK01828",
+  "name": "富卫集团",
+  "market": "HK",
+  "exchange": "HKEX",
+  "l1": "保险",
+  "l2": "保险",
+  "group": "保险",
+  "level": "L1",
+  "industryStd": "东财行业（港股通）",
+  "listedAt": "",
+  "score": 99.71,
+  "quality": 58.65,
+  "growth": 41.06,
+  "growthDetail": {
+    "netProfit": -18.94,
+    "opCashflow": 60.0
+  },
+  "qualitySubs": {
+    "roe": 0.0,
+    "net_profit_scale": 0.0,
+    "roa": 0.0,
+    "gross_margin": 20.9,
+    "cash_ratio": 16.42,
+    "asset_turnover": 10.71
+  },
+  "radar": {
+    "roe": 0.0,
+    "gross_margin": 20.9,
+    "asset_turnover": 10.71,
+    "eps": 50.0,
+    "cash_ratio": 16.42,
+    "net_margin": 0.0
+  },
+  "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "profitability": {
+    "roe": [
+      0.0239,
+      -0.0446,
+      -0.109,
+      -0.0115,
+      0.0153
+    ],
+    "roa": [
+      0.0021,
+      -0.006,
+      -0.0157,
+      -0.0015,
+      0.0017
+    ],
+    "gross_margin": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "net_margin": [
+      0.0115,
+      -0.1212,
+      -0.3784,
+      -0.026,
+      0.0212
+    ],
+    "eps": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "structure": {
+    "cash_ratio": [
+      0.0417,
+      0.0291,
+      0.0381,
+      0.0314,
+      0.0238
+    ],
+    "debt_ratio": [
+      0.9113,
+      0.8662,
+      0.8561,
+      0.8743,
+      0.8907
+    ]
+  },
+  "operation": {
+    "ar_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "ar_days": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "fa_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "asset_turnover": [
+      0.1838,
+      0.0493,
+      0.0415,
+      0.0559,
+      0.0786
+    ]
+  },
+  "cashflow": {
+    "cash": [
+      26.53,
+      14.73,
+      20.07,
+      16.88,
+      14.87
+    ],
+    "net_profit": [
+      1.35,
+      -3.02,
+      -8.26,
+      -0.78,
+      1.04
+    ],
+    "ocf": [
+      -8.68,
+      -3.91,
+      6.29,
+      5.26,
+      2.47
+    ],
+    "icf": [
+      -0.94,
+      -5.53,
+      -0.97,
+      -1.1,
+      -0.84
+    ],
+    "fcf": [
+      9.48,
+      -1.9,
+      0.25,
+      -7.05,
+      -3.93
+    ],
+    "ncf": [
+      -0.14,
+      -11.34,
+      5.57,
+      -2.89,
+      -2.3
+    ]
+  },
+  "peers": [
+    {
+      "code": "HK02672",
+      "name": "白鸽在线",
+      "roe5y": 4.2104
+    },
+    {
+      "code": "HK01336",
+      "name": "新华保险",
+      "roe5y": 0.1828
+    },
+    {
+      "code": "HK02628",
+      "name": "中国人寿",
+      "roe5y": 0.1491
+    },
+    {
+      "code": "HK02601",
+      "name": "中国太保",
+      "roe5y": 0.1333
+    },
+    {
+      "code": "HK02328",
+      "name": "中国财险",
+      "roe5y": 0.1219
+    },
+    {
+      "code": "HK01339",
+      "name": "中国人民保险集团",
+      "roe5y": 0.1213
+    },
+    {
+      "code": "HK02318",
+      "name": "中国平安",
+      "roe5y": 0.1178
+    },
+    {
+      "code": "HK01299",
+      "name": "友邦保险",
+      "roe5y": 0.107
+    },
+    {
+      "code": "HK00966",
+      "name": "中国太平",
+      "roe5y": 0.1056
+    },
+    {
+      "code": "HK06963",
+      "name": "阳光保险",
+      "roe5y": 0.088
+    },
+    {
+      "code": "HK02378",
+      "name": "保诚",
+      "roe5y": 0.0726
+    },
+    {
+      "code": "HK06060",
+      "name": "众安在线",
+      "roe5y": 0.0511
+    },
+    {
+      "code": "HK00376",
+      "name": "云锋金融",
+      "roe5y": 0.029
+    },
+    {
+      "code": "HK01828",
+      "name": "富卫集团",
+      "roe5y": -0.0252
+    }
+  ]
+}

@@ -1,0 +1,226 @@
+{
+  "code": "HK02883",
+  "name": "中海油田服务",
+  "market": "HK",
+  "exchange": "HKEX",
+  "l1": "石油及天然气",
+  "l2": "石油及天然气",
+  "group": "石油及天然气",
+  "level": "L1",
+  "industryStd": "东财行业（港股通）",
+  "listedAt": "",
+  "score": 526.42,
+  "quality": 397.16,
+  "growth": 129.26,
+  "growthDetail": {
+    "netProfit": 78.29,
+    "opCashflow": 50.97
+  },
+  "qualitySubs": {
+    "roe": 29.46,
+    "net_profit_scale": 68.18,
+    "roa": 30.85,
+    "gross_margin": 46.85,
+    "cash_ratio": 34.0,
+    "asset_turnover": 31.82
+  },
+  "radar": {
+    "roe": 29.46,
+    "gross_margin": 46.85,
+    "asset_turnover": 31.82,
+    "eps": 50.0,
+    "cash_ratio": 34.0,
+    "net_margin": 28.64
+  },
+  "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "profitability": {
+    "roe": [
+      0.0082,
+      0.0598,
+      0.0724,
+      0.0716,
+      0.0825
+    ],
+    "roa": [
+      0.0043,
+      0.0305,
+      0.0362,
+      0.0378,
+      0.0455
+    ],
+    "gross_margin": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "net_margin": [
+      0.0107,
+      0.066,
+      0.0683,
+      0.065,
+      0.0764
+    ],
+    "eps": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "structure": {
+    "cash_ratio": [
+      0.0683,
+      0.0461,
+      0.0718,
+      0.0654,
+      0.0884
+    ],
+    "debt_ratio": [
+      0.4812,
+      0.4904,
+      0.4998,
+      0.472,
+      0.4486
+    ]
+  },
+  "operation": {
+    "ar_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "ar_days": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "fa_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "asset_turnover": [
+      0.3983,
+      0.462,
+      0.5299,
+      0.5823,
+      0.5953
+    ]
+  },
+  "cashflow": {
+    "cash": [
+      50.19,
+      35.6,
+      59.96,
+      54.23,
+      74.44
+    ],
+    "net_profit": [
+      3.14,
+      23.52,
+      30.23,
+      31.37,
+      38.32
+    ],
+    "ocf": [
+      74.37,
+      68.96,
+      131.34,
+      109.83,
+      112.27
+    ],
+    "icf": [
+      -47.39,
+      -37.31,
+      -74.81,
+      -50.44,
+      -51.19
+    ],
+    "fcf": [
+      -42.07,
+      -48.66,
+      -32.95,
+      -64.64,
+      -40.34
+    ],
+    "ncf": [
+      -15.09,
+      -17.01,
+      23.58,
+      -5.25,
+      20.74
+    ]
+  },
+  "peers": [
+    {
+      "code": "HK00883",
+      "name": "中国海洋石油",
+      "roe5y": 0.1812
+    },
+    {
+      "code": "HK03899",
+      "name": "中集安瑞科",
+      "roe5y": 0.1021
+    },
+    {
+      "code": "HK00857",
+      "name": "中国石油股份",
+      "roe5y": 0.1003
+    },
+    {
+      "code": "HK00467",
+      "name": "联合能源集团",
+      "roe5y": 0.0748
+    },
+    {
+      "code": "HK02386",
+      "name": "中石化炼化工程",
+      "roe5y": 0.0719
+    },
+    {
+      "code": "HK00386",
+      "name": "中国石油化工股份",
+      "roe5y": 0.0698
+    },
+    {
+      "code": "HK00934",
+      "name": "中石化冠德",
+      "roe5y": 0.0635
+    },
+    {
+      "code": "HK01033",
+      "name": "中石化油服",
+      "roe5y": 0.0632
+    },
+    {
+      "code": "HK02883",
+      "name": "中海油田服务",
+      "roe5y": 0.0589
+    },
+    {
+      "code": "HK01921",
+      "name": "达力普控股",
+      "roe5y": 0.0428
+    },
+    {
+      "code": "HK00568",
+      "name": "山东墨龙",
+      "roe5y": -0.4217
+    }
+  ]
+}

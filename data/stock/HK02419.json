@@ -1,0 +1,186 @@
+{
+  "code": "HK02419",
+  "name": "德康农牧",
+  "market": "HK",
+  "exchange": "HKEX",
+  "l1": "农业产品",
+  "l2": "农业产品",
+  "group": "农业产品",
+  "level": "L1",
+  "industryStd": "东财行业（港股通）",
+  "listedAt": "",
+  "score": 415.01,
+  "quality": 295.01,
+  "growth": 120.0,
+  "growthDetail": {
+    "netProfit": 60.0,
+    "opCashflow": 60.0
+  },
+  "qualitySubs": {
+    "roe": 0.0,
+    "net_profit_scale": 50.0,
+    "roa": 1.32,
+    "gross_margin": 28.81,
+    "cash_ratio": 61.48,
+    "asset_turnover": 83.33
+  },
+  "radar": {
+    "roe": 0.0,
+    "gross_margin": 28.81,
+    "asset_turnover": 83.33,
+    "eps": 50.0,
+    "cash_ratio": 61.48,
+    "net_margin": 0.0
+  },
+  "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "profitability": {
+    "roe": [
+      -0.7545,
+      0.1997,
+      -0.4492,
+      0.4838,
+      0.1619
+    ],
+    "roa": [
+      -0.1901,
+      0.0514,
+      -0.0938,
+      0.1779,
+      0.0611
+    ],
+    "gross_margin": [
+      0.0772,
+      0.1376,
+      0.0074,
+      0.2166,
+      0.1374
+    ],
+    "net_margin": [
+      -0.3027,
+      0.066,
+      -0.1099,
+      0.1826,
+      0.0619
+    ],
+    "eps": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "structure": {
+    "cash_ratio": [
+      0.1147,
+      0.1473,
+      0.1344,
+      0.1949,
+      0.1956
+    ],
+    "debt_ratio": [
+      0.7481,
+      0.7425,
+      0.7913,
+      0.6323,
+      0.6225
+    ]
+  },
+  "operation": {
+    "ar_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "ar_days": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "fa_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "asset_turnover": [
+      0.6279,
+      0.7791,
+      0.8532,
+      0.9743,
+      0.9874
+    ]
+  },
+  "cashflow": {
+    "cash": [
+      18.14,
+      28.42,
+      25.53,
+      44.92,
+      45.77
+    ],
+    "net_profit": [
+      -30.05,
+      9.92,
+      -17.81,
+      41.01,
+      14.3
+    ],
+    "ocf": [
+      4.07,
+      21.91,
+      7.44,
+      53.61,
+      25.24
+    ],
+    "icf": [
+      -17.65,
+      -12.46,
+      -6.95,
+      -15.57,
+      -9.64
+    ],
+    "fcf": [
+      14.55,
+      0.89,
+      -3.46,
+      -18.65,
+      -17.17
+    ],
+    "ncf": [
+      0.97,
+      10.34,
+      -2.97,
+      19.39,
+      -1.57
+    ]
+  },
+  "peers": [
+    {
+      "code": "HK02714",
+      "name": "牧原股份",
+      "roe5y": 0.1411
+    },
+    {
+      "code": "HK01610",
+      "name": "中粮家佳康",
+      "roe5y": -0.0109
+    },
+    {
+      "code": "HK02419",
+      "name": "德康农牧",
+      "roe5y": -0.0716
+    }
+  ]
+}

@@ -1,0 +1,280 @@
+{
+  "code": "HK02675",
+  "name": "精锋医疗-B",
+  "market": "HK",
+  "exchange": "HKEX",
+  "l1": "其他医疗保健",
+  "l2": "其他医疗保健",
+  "group": "其他医疗保健",
+  "level": "L1",
+  "industryStd": "东财行业（港股通）",
+  "listedAt": "",
+  "score": 377.96,
+  "quality": 196.88,
+  "growth": 181.08,
+  "growthDetail": {
+    "netProfit": 86.73,
+    "opCashflow": 94.35
+  },
+  "qualitySubs": {
+    "roe": 0.0,
+    "net_profit_scale": 0.0,
+    "roa": 0.0,
+    "gross_margin": 100.0,
+    "cash_ratio": 41.5,
+    "asset_turnover": 15.52
+  },
+  "radar": {
+    "roe": 0.0,
+    "gross_margin": 100.0,
+    "asset_turnover": 15.52,
+    "eps": 50.0,
+    "cash_ratio": 41.5,
+    "net_margin": 0.0
+  },
+  "years": [
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "profitability": {
+    "roe": [
+      -0.1483,
+      -0.1738,
+      -0.0736
+    ],
+    "roa": [
+      -0.1371,
+      -0.161,
+      -0.0637
+    ],
+    "gross_margin": [
+      0.5833,
+      0.6125,
+      0.6593
+    ],
+    "net_margin": [
+      -4.4583,
+      -1.3687,
+      -0.1934
+    ],
+    "eps": [
+      null,
+      null,
+      null
+    ]
+  },
+  "structure": {
+    "cash_ratio": [
+      0.0993,
+      0.0875,
+      0.0622
+    ],
+    "debt_ratio": [
+      0.0756,
+      0.0735,
+      0.1353
+    ]
+  },
+  "operation": {
+    "ar_turnover": [
+      null,
+      null,
+      null
+    ],
+    "ar_days": [
+      null,
+      null,
+      null
+    ],
+    "fa_turnover": [
+      null,
+      null,
+      null
+    ],
+    "asset_turnover": [
+      0.0307,
+      0.1176,
+      0.3292
+    ]
+  },
+  "cashflow": {
+    "cash": [
+      1.55,
+      1.19,
+      0.86
+    ],
+    "net_profit": [
+      -2.14,
+      -2.19,
+      -0.88
+    ],
+    "ocf": [
+      -3.21,
+      -2.25,
+      -1.94
+    ],
+    "icf": [
+      3.85,
+      1.96,
+      1.7
+    ],
+    "fcf": [
+      -0.09,
+      -0.07,
+      -0.09
+    ],
+    "ncf": [
+      0.55,
+      -0.36,
+      -0.33
+    ]
+  },
+  "peers": [
+    {
+      "code": "HK02367",
+      "name": "巨子生物",
+      "roe5y": 0.3967
+    },
+    {
+      "code": "HK01318",
+      "name": "毛戈平",
+      "roe5y": 0.3344
+    },
+    {
+      "code": "HK02145",
+      "name": "上美股份",
+      "roe5y": 0.2854
+    },
+    {
+      "code": "HK02276",
+      "name": "康耐特光学",
+      "roe5y": 0.224
+    },
+    {
+      "code": "HK01609",
+      "name": "天星医疗",
+      "roe5y": 0.1801
+    },
+    {
+      "code": "HK02666",
+      "name": "环球医疗",
+      "roe5y": 0.1269
+    },
+    {
+      "code": "HK01066",
+      "name": "威高股份",
+      "roe5y": 0.0971
+    },
+    {
+      "code": "HK01858",
+      "name": "春立医疗",
+      "roe5y": 0.0952
+    },
+    {
+      "code": "HK01789",
+      "name": "爱康医疗",
+      "roe5y": 0.0866
+    },
+    {
+      "code": "HK06078",
+      "name": "海吉亚医疗",
+      "roe5y": 0.0839
+    },
+    {
+      "code": "HK01302",
+      "name": "先健科技",
+      "roe5y": 0.0825
+    },
+    {
+      "code": "HK01187",
+      "name": "可孚医疗",
+      "roe5y": 0.0633
+    },
+    {
+      "code": "HK01112",
+      "name": "H&H国际控股",
+      "roe5y": 0.0604
+    },
+    {
+      "code": "HK06826",
+      "name": "昊海生物科技",
+      "roe5y": 0.0579
+    },
+    {
+      "code": "HK06699",
+      "name": "时代天使",
+      "roe5y": 0.0486
+    },
+    {
+      "code": "HK02192",
+      "name": "医脉通",
+      "roe5y": 0.0448
+    },
+    {
+      "code": "HK02172",
+      "name": "微创脑科学",
+      "roe5y": 0.0376
+    },
+    {
+      "code": "HK02273",
+      "name": "固生堂",
+      "roe5y": 0.036
+    },
+    {
+      "code": "HK02526",
+      "name": "德适-B",
+      "roe5y": -0.0007
+    },
+    {
+      "code": "HK01833",
+      "name": "平安好医生",
+      "roe5y": -0.0236
+    },
+    {
+      "code": "HK02609",
+      "name": "佰泽医疗",
+      "roe5y": -0.0296
+    },
+    {
+      "code": "HK06681",
+      "name": "脑动极光-B",
+      "roe5y": -0.0498
+    },
+    {
+      "code": "HK02675",
+      "name": "精锋医疗-B",
+      "roe5y": -0.1319
+    },
+    {
+      "code": "HK03774",
+      "name": "亮晴控股",
+      "roe5y": -0.1634
+    },
+    {
+      "code": "HK02225",
+      "name": "今海医疗科技",
+      "roe5y": -0.1954
+    },
+    {
+      "code": "HK02506",
+      "name": "讯飞医疗科技",
+      "roe5y": -0.2507
+    },
+    {
+      "code": "HK00853",
+      "name": "微创医疗",
+      "roe5y": -0.3008
+    },
+    {
+      "code": "HK02697",
+      "name": "真健康医疗-B",
+      "roe5y": -0.5939
+    },
+    {
+      "code": "HK02252",
+      "name": "微创机器人-B",
+      "roe5y": -1.1831
+    }
+  ]
+}

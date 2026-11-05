@@ -1,0 +1,346 @@
+{
+  "code": "SH601528",
+  "name": "瑞丰银行",
+  "market": "A",
+  "exchange": "SSE",
+  "l1": "银行",
+  "l2": "农商行Ⅱ",
+  "group": "银行",
+  "level": "L1",
+  "industryStd": "申万2021",
+  "listedAt": "",
+  "score": 352.92,
+  "quality": 235.44,
+  "growth": 117.48,
+  "growthDetail": {
+    "netProfit": 57.48,
+    "opCashflow": 60.0
+  },
+  "qualitySubs": {
+    "roe": 50.07,
+    "net_profit_scale": 7.14,
+    "roa": 8.9,
+    "gross_margin": 0.0,
+    "cash_ratio": 0.0,
+    "asset_turnover": 52.86
+  },
+  "radar": {
+    "roe": 50.07,
+    "gross_margin": 0.0,
+    "asset_turnover": 52.86,
+    "eps": 50.0,
+    "cash_ratio": 0.0,
+    "net_margin": 100.0
+  },
+  "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "profitability": {
+    "roe": [
+      0.0936,
+      0.1024,
+      0.1039,
+      0.1013,
+      0.0998
+    ],
+    "roa": [
+      0.0093,
+      0.0096,
+      0.0088,
+      0.0087,
+      0.0081
+    ],
+    "gross_margin": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "net_margin": [
+      0.384,
+      0.4335,
+      0.454,
+      0.4383,
+      0.446
+    ],
+    "eps": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "structure": {
+    "cash_ratio": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "debt_ratio": [
+      0.9008,
+      0.9066,
+      0.9155,
+      0.914,
+      0.9185
+    ]
+  },
+  "operation": {
+    "ar_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "ar_days": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "fa_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "asset_turnover": [
+      0.0242,
+      0.0221,
+      0.0193,
+      0.0199,
+      0.0183
+    ]
+  },
+  "cashflow": {
+    "cash": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "net_profit": [
+      12.71,
+      15.28,
+      17.27,
+      19.22,
+      19.66
+    ],
+    "ocf": [
+      -1.87,
+      31.61,
+      263.27,
+      -6.1,
+      45.46
+    ],
+    "icf": [
+      -4.97,
+      -65.2,
+      -206.87,
+      -57.81,
+      -20.35
+    ],
+    "fcf": [
+      -20.01,
+      -5.54,
+      -7.11,
+      11.7,
+      -14.38
+    ],
+    "ncf": [
+      -26.85,
+      -39.13,
+      49.29,
+      -52.21,
+      10.73
+    ]
+  },
+  "peers": [
+    {
+      "code": "SH601838",
+      "name": "成都银行",
+      "roe5y": 0.1524
+    },
+    {
+      "code": "SH600036",
+      "name": "招商银行",
+      "roe5y": 0.1322
+    },
+    {
+      "code": "SH601128",
+      "name": "常熟银行",
+      "roe5y": 0.1258
+    },
+    {
+      "code": "SH600926",
+      "name": "杭州银行",
+      "roe5y": 0.1184
+    },
+    {
+      "code": "SH601009",
+      "name": "南京银行",
+      "roe5y": 0.1141
+    },
+    {
+      "code": "SH600919",
+      "name": "江苏银行",
+      "roe5y": 0.1092
+    },
+    {
+      "code": "SZ002807",
+      "name": "江阴银行",
+      "roe5y": 0.1089
+    },
+    {
+      "code": "SH601577",
+      "name": "长沙银行",
+      "roe5y": 0.1084
+    },
+    {
+      "code": "SH601939",
+      "name": "建设银行",
+      "roe5y": 0.1059
+    },
+    {
+      "code": "SH603323",
+      "name": "苏农银行",
+      "roe5y": 0.1041
+    },
+    {
+      "code": "SH601825",
+      "name": "沪农商行",
+      "roe5y": 0.1029
+    },
+    {
+      "code": "SH601166",
+      "name": "兴业银行",
+      "roe5y": 0.1027
+    },
+    {
+      "code": "SH601665",
+      "name": "齐鲁银行",
+      "roe5y": 0.1015
+    },
+    {
+      "code": "SH600908",
+      "name": "无锡银行",
+      "roe5y": 0.1011
+    },
+    {
+      "code": "SH601528",
+      "name": "瑞丰银行",
+      "roe5y": 0.1002
+    },
+    {
+      "code": "SZ002839",
+      "name": "张家港行",
+      "roe5y": 0.099
+    },
+    {
+      "code": "SH601229",
+      "name": "上海银行",
+      "roe5y": 0.098
+    },
+    {
+      "code": "SH601398",
+      "name": "工商银行",
+      "roe5y": 0.0978
+    },
+    {
+      "code": "SH601288",
+      "name": "农业银行",
+      "roe5y": 0.0943
+    },
+    {
+      "code": "SZ000001",
+      "name": "平安银行",
+      "roe5y": 0.0924
+    },
+    {
+      "code": "SH601187",
+      "name": "厦门银行",
+      "roe5y": 0.0898
+    },
+    {
+      "code": "SH601658",
+      "name": "邮储银行",
+      "roe5y": 0.0898
+    },
+    {
+      "code": "SH601077",
+      "name": "渝农商行",
+      "roe5y": 0.0895
+    },
+    {
+      "code": "SH601998",
+      "name": "中信银行",
+      "roe5y": 0.0895
+    },
+    {
+      "code": "SH601988",
+      "name": "中国银行",
+      "roe5y": 0.0885
+    },
+    {
+      "code": "SH601328",
+      "name": "交通银行",
+      "roe5y": 0.0847
+    },
+    {
+      "code": "SH601860",
+      "name": "紫金银行",
+      "roe5y": 0.0837
+    },
+    {
+      "code": "SH600928",
+      "name": "西安银行",
+      "roe5y": 0.0815
+    },
+    {
+      "code": "SH601818",
+      "name": "光大银行",
+      "roe5y": 0.0774
+    },
+    {
+      "code": "SH600015",
+      "name": "华夏银行",
+      "roe5y": 0.077
+    },
+    {
+      "code": "SH601916",
+      "name": "浙商银行",
+      "roe5y": 0.0763
+    },
+    {
+      "code": "SH601169",
+      "name": "北京银行",
+      "roe5y": 0.0723
+    },
+    {
+      "code": "SZ002958",
+      "name": "青农商行",
+      "roe5y": 0.0723
+    },
+    {
+      "code": "SH600000",
+      "name": "浦发银行",
+      "roe5y": 0.0652
+    },
+    {
+      "code": "SH600016",
+      "name": "民生银行",
+      "roe5y": 0.0541
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "snapshotVersion": "2026-11-04",
+  "snapshotVersion": "2026-11-05",
   "contractVersion": "1.2",
   "markets": [
     "A",
@@ -10,15 +10,785 @@
       "market": "A",
       "l1": [
         {
+          "code": "801010",
+          "name": "农林牧渔"
+        },
+        {
+          "code": "801030",
+          "name": "基础化工"
+        },
+        {
+          "code": "801040",
+          "name": "钢铁"
+        },
+        {
+          "code": "801050",
+          "name": "有色金属"
+        },
+        {
+          "code": "801080",
+          "name": "电子"
+        },
+        {
+          "code": "801110",
+          "name": "家用电器"
+        },
+        {
           "code": "801120",
           "name": "食品饮料"
+        },
+        {
+          "code": "801130",
+          "name": "纺织服饰"
+        },
+        {
+          "code": "801140",
+          "name": "轻工制造"
+        },
+        {
+          "code": "801150",
+          "name": "医药生物"
+        },
+        {
+          "code": "801160",
+          "name": "公用事业"
+        },
+        {
+          "code": "801170",
+          "name": "交通运输"
+        },
+        {
+          "code": "801180",
+          "name": "房地产"
+        },
+        {
+          "code": "801200",
+          "name": "商贸零售"
+        },
+        {
+          "code": "801210",
+          "name": "社会服务"
+        },
+        {
+          "code": "801230",
+          "name": "综合"
+        },
+        {
+          "code": "801710",
+          "name": "建筑材料"
+        },
+        {
+          "code": "801720",
+          "name": "建筑装饰"
+        },
+        {
+          "code": "801730",
+          "name": "电力设备"
+        },
+        {
+          "code": "801740",
+          "name": "国防军工"
+        },
+        {
+          "code": "801750",
+          "name": "计算机"
+        },
+        {
+          "code": "801760",
+          "name": "传媒"
+        },
+        {
+          "code": "801770",
+          "name": "通信"
+        },
+        {
+          "code": "801780",
+          "name": "银行"
+        },
+        {
+          "code": "801790",
+          "name": "非银金融"
+        },
+        {
+          "code": "801880",
+          "name": "汽车"
+        },
+        {
+          "code": "801890",
+          "name": "机械设备"
+        },
+        {
+          "code": "801950",
+          "name": "煤炭"
+        },
+        {
+          "code": "801960",
+          "name": "石油石化"
+        },
+        {
+          "code": "801970",
+          "name": "环保"
+        },
+        {
+          "code": "801980",
+          "name": "美容护理"
         }
       ],
       "l2": [
         {
+          "code": "801011",
+          "name": "林业Ⅱ",
+          "parent": "801010"
+        },
+        {
+          "code": "801012",
+          "name": "农产品加工",
+          "parent": "801010"
+        },
+        {
+          "code": "801014",
+          "name": "饲料",
+          "parent": "801010"
+        },
+        {
+          "code": "801015",
+          "name": "渔业",
+          "parent": "801010"
+        },
+        {
+          "code": "801016",
+          "name": "种植业",
+          "parent": "801010"
+        },
+        {
+          "code": "801017",
+          "name": "养殖业",
+          "parent": "801010"
+        },
+        {
+          "code": "801018",
+          "name": "动物保健Ⅱ",
+          "parent": "801010"
+        },
+        {
+          "code": "801019",
+          "name": "农业综合Ⅱ",
+          "parent": "801010"
+        },
+        {
+          "code": "801032",
+          "name": "化学纤维",
+          "parent": "801030"
+        },
+        {
+          "code": "801033",
+          "name": "化学原料",
+          "parent": "801030"
+        },
+        {
+          "code": "801034",
+          "name": "化学制品",
+          "parent": "801030"
+        },
+        {
+          "code": "801036",
+          "name": "塑料",
+          "parent": "801030"
+        },
+        {
+          "code": "801037",
+          "name": "橡胶",
+          "parent": "801030"
+        },
+        {
+          "code": "801038",
+          "name": "农化制品",
+          "parent": "801030"
+        },
+        {
+          "code": "801039",
+          "name": "非金属材料Ⅱ",
+          "parent": "801030"
+        },
+        {
+          "code": "801043",
+          "name": "冶钢原料",
+          "parent": "801040"
+        },
+        {
+          "code": "801044",
+          "name": "普钢",
+          "parent": "801040"
+        },
+        {
+          "code": "801045",
+          "name": "特钢Ⅱ",
+          "parent": "801040"
+        },
+        {
+          "code": "801051",
+          "name": "金属新材料",
+          "parent": "801050"
+        },
+        {
+          "code": "801053",
+          "name": "贵金属",
+          "parent": "801050"
+        },
+        {
+          "code": "801054",
+          "name": "小金属",
+          "parent": "801050"
+        },
+        {
+          "code": "801055",
+          "name": "工业金属",
+          "parent": "801050"
+        },
+        {
+          "code": "801056",
+          "name": "能源金属",
+          "parent": "801050"
+        },
+        {
+          "code": "801072",
+          "name": "通用设备",
+          "parent": "801890"
+        },
+        {
+          "code": "801074",
+          "name": "专用设备",
+          "parent": "801890"
+        },
+        {
+          "code": "801076",
+          "name": "轨交设备Ⅱ",
+          "parent": "801890"
+        },
+        {
+          "code": "801077",
+          "name": "工程机械",
+          "parent": "801890"
+        },
+        {
+          "code": "801078",
+          "name": "自动化设备",
+          "parent": "801890"
+        },
+        {
+          "code": "801081",
+          "name": "半导体",
+          "parent": "801080"
+        },
+        {
+          "code": "801082",
+          "name": "其他电子Ⅱ",
+          "parent": "801080"
+        },
+        {
+          "code": "801083",
+          "name": "元件",
+          "parent": "801080"
+        },
+        {
+          "code": "801084",
+          "name": "光学光电子",
+          "parent": "801080"
+        },
+        {
+          "code": "801085",
+          "name": "消费电子",
+          "parent": "801080"
+        },
+        {
+          "code": "801086",
+          "name": "电子化学品Ⅱ",
+          "parent": "801080"
+        },
+        {
+          "code": "801092",
+          "name": "汽车服务",
+          "parent": "801880"
+        },
+        {
+          "code": "801093",
+          "name": "汽车零部件",
+          "parent": "801880"
+        },
+        {
+          "code": "801095",
+          "name": "乘用车",
+          "parent": "801880"
+        },
+        {
+          "code": "801096",
+          "name": "商用车",
+          "parent": "801880"
+        },
+        {
+          "code": "801101",
+          "name": "计算机设备",
+          "parent": "801750"
+        },
+        {
+          "code": "801102",
+          "name": "通信设备",
+          "parent": "801770"
+        },
+        {
+          "code": "801103",
+          "name": "IT服务Ⅱ",
+          "parent": "801750"
+        },
+        {
+          "code": "801104",
+          "name": "软件开发",
+          "parent": "801750"
+        },
+        {
+          "code": "801111",
+          "name": "白色家电",
+          "parent": "801110"
+        },
+        {
+          "code": "801112",
+          "name": "黑色家电",
+          "parent": "801110"
+        },
+        {
+          "code": "801113",
+          "name": "小家电",
+          "parent": "801110"
+        },
+        {
+          "code": "801114",
+          "name": "厨卫电器",
+          "parent": "801110"
+        },
+        {
+          "code": "801115",
+          "name": "照明设备Ⅱ",
+          "parent": "801110"
+        },
+        {
+          "code": "801116",
+          "name": "家电零部件Ⅱ",
+          "parent": "801110"
+        },
+        {
+          "code": "801117",
+          "name": "其他家电Ⅱ",
+          "parent": "801110"
+        },
+        {
+          "code": "801124",
+          "name": "食品加工",
+          "parent": "801120"
+        },
+        {
           "code": "801125",
           "name": "白酒Ⅱ",
           "parent": "801120"
+        },
+        {
+          "code": "801126",
+          "name": "非白酒",
+          "parent": "801120"
+        },
+        {
+          "code": "801127",
+          "name": "饮料乳品",
+          "parent": "801120"
+        },
+        {
+          "code": "801128",
+          "name": "休闲食品",
+          "parent": "801120"
+        },
+        {
+          "code": "801129",
+          "name": "调味发酵品Ⅱ",
+          "parent": "801120"
+        },
+        {
+          "code": "801131",
+          "name": "纺织制造",
+          "parent": "801130"
+        },
+        {
+          "code": "801132",
+          "name": "服装家纺",
+          "parent": "801130"
+        },
+        {
+          "code": "801133",
+          "name": "饰品",
+          "parent": "801130"
+        },
+        {
+          "code": "801141",
+          "name": "包装印刷",
+          "parent": "801140"
+        },
+        {
+          "code": "801142",
+          "name": "家居用品",
+          "parent": "801140"
+        },
+        {
+          "code": "801143",
+          "name": "造纸",
+          "parent": "801140"
+        },
+        {
+          "code": "801145",
+          "name": "文娱用品",
+          "parent": "801140"
+        },
+        {
+          "code": "801151",
+          "name": "化学制药",
+          "parent": "801150"
+        },
+        {
+          "code": "801152",
+          "name": "生物制品",
+          "parent": "801150"
+        },
+        {
+          "code": "801153",
+          "name": "医疗器械",
+          "parent": "801150"
+        },
+        {
+          "code": "801154",
+          "name": "医药商业",
+          "parent": "801150"
+        },
+        {
+          "code": "801155",
+          "name": "中药Ⅱ",
+          "parent": "801150"
+        },
+        {
+          "code": "801156",
+          "name": "医疗服务",
+          "parent": "801150"
+        },
+        {
+          "code": "801161",
+          "name": "电力",
+          "parent": "801160"
+        },
+        {
+          "code": "801163",
+          "name": "燃气Ⅱ",
+          "parent": "801160"
+        },
+        {
+          "code": "801178",
+          "name": "物流",
+          "parent": "801170"
+        },
+        {
+          "code": "801179",
+          "name": "铁路公路",
+          "parent": "801170"
+        },
+        {
+          "code": "801181",
+          "name": "房地产开发",
+          "parent": "801180"
+        },
+        {
+          "code": "801183",
+          "name": "房地产服务",
+          "parent": "801180"
+        },
+        {
+          "code": "801191",
+          "name": "多元金融",
+          "parent": "801790"
+        },
+        {
+          "code": "801193",
+          "name": "证券Ⅱ",
+          "parent": "801790"
+        },
+        {
+          "code": "801194",
+          "name": "保险Ⅱ",
+          "parent": "801790"
+        },
+        {
+          "code": "801202",
+          "name": "贸易Ⅱ",
+          "parent": "801200"
+        },
+        {
+          "code": "801203",
+          "name": "一般零售",
+          "parent": "801200"
+        },
+        {
+          "code": "801204",
+          "name": "专业连锁Ⅱ",
+          "parent": "801200"
+        },
+        {
+          "code": "801206",
+          "name": "互联网电商",
+          "parent": "801200"
+        },
+        {
+          "code": "801207",
+          "name": "旅游零售Ⅱ",
+          "parent": "801200"
+        },
+        {
+          "code": "801216",
+          "name": "体育Ⅱ",
+          "parent": "801210"
+        },
+        {
+          "code": "801218",
+          "name": "专业服务",
+          "parent": "801210"
+        },
+        {
+          "code": "801219",
+          "name": "酒店餐饮",
+          "parent": "801210"
+        },
+        {
+          "code": "801223",
+          "name": "通信服务",
+          "parent": "801770"
+        },
+        {
+          "code": "801231",
+          "name": "综合Ⅱ",
+          "parent": "801230"
+        },
+        {
+          "code": "801711",
+          "name": "水泥",
+          "parent": "801710"
+        },
+        {
+          "code": "801712",
+          "name": "玻璃玻纤",
+          "parent": "801710"
+        },
+        {
+          "code": "801713",
+          "name": "装修建材",
+          "parent": "801710"
+        },
+        {
+          "code": "801721",
+          "name": "房屋建设Ⅱ",
+          "parent": "801720"
+        },
+        {
+          "code": "801722",
+          "name": "装修装饰Ⅱ",
+          "parent": "801720"
+        },
+        {
+          "code": "801723",
+          "name": "基础建设",
+          "parent": "801720"
+        },
+        {
+          "code": "801724",
+          "name": "专业工程",
+          "parent": "801720"
+        },
+        {
+          "code": "801726",
+          "name": "工程咨询服务Ⅱ",
+          "parent": "801720"
+        },
+        {
+          "code": "801731",
+          "name": "电机Ⅱ",
+          "parent": "801730"
+        },
+        {
+          "code": "801733",
+          "name": "其他电源设备Ⅱ",
+          "parent": "801730"
+        },
+        {
+          "code": "801735",
+          "name": "光伏设备",
+          "parent": "801730"
+        },
+        {
+          "code": "801736",
+          "name": "风电设备",
+          "parent": "801730"
+        },
+        {
+          "code": "801737",
+          "name": "电池",
+          "parent": "801730"
+        },
+        {
+          "code": "801738",
+          "name": "电网设备",
+          "parent": "801730"
+        },
+        {
+          "code": "801741",
+          "name": "航天装备Ⅱ",
+          "parent": "801740"
+        },
+        {
+          "code": "801742",
+          "name": "航空装备Ⅱ",
+          "parent": "801740"
+        },
+        {
+          "code": "801743",
+          "name": "地面兵装Ⅱ",
+          "parent": "801740"
+        },
+        {
+          "code": "801744",
+          "name": "航海装备Ⅱ",
+          "parent": "801740"
+        },
+        {
+          "code": "801745",
+          "name": "军工电子Ⅱ",
+          "parent": "801740"
+        },
+        {
+          "code": "801764",
+          "name": "游戏Ⅱ",
+          "parent": "801760"
+        },
+        {
+          "code": "801765",
+          "name": "广告营销",
+          "parent": "801760"
+        },
+        {
+          "code": "801766",
+          "name": "影视院线",
+          "parent": "801760"
+        },
+        {
+          "code": "801767",
+          "name": "数字媒体",
+          "parent": "801760"
+        },
+        {
+          "code": "801769",
+          "name": "出版",
+          "parent": "801760"
+        },
+        {
+          "code": "801782",
+          "name": "国有大型银行Ⅱ",
+          "parent": "801780"
+        },
+        {
+          "code": "801783",
+          "name": "股份制银行Ⅱ",
+          "parent": "801780"
+        },
+        {
+          "code": "801784",
+          "name": "城商行Ⅱ",
+          "parent": "801780"
+        },
+        {
+          "code": "801785",
+          "name": "农商行Ⅱ",
+          "parent": "801780"
+        },
+        {
+          "code": "801881",
+          "name": "摩托车及其他",
+          "parent": "801880"
+        },
+        {
+          "code": "801951",
+          "name": "煤炭开采",
+          "parent": "801950"
+        },
+        {
+          "code": "801952",
+          "name": "焦炭Ⅱ",
+          "parent": "801950"
+        },
+        {
+          "code": "801961",
+          "name": "油气开采Ⅱ",
+          "parent": "801960"
+        },
+        {
+          "code": "801962",
+          "name": "油服工程",
+          "parent": "801960"
+        },
+        {
+          "code": "801963",
+          "name": "炼化及贸易",
+          "parent": "801960"
+        },
+        {
+          "code": "801971",
+          "name": "环境治理",
+          "parent": "801970"
+        },
+        {
+          "code": "801972",
+          "name": "环保设备Ⅱ",
+          "parent": "801970"
+        },
+        {
+          "code": "801981",
+          "name": "个护用品",
+          "parent": "801980"
+        },
+        {
+          "code": "801982",
+          "name": "化妆品",
+          "parent": "801980"
+        },
+        {
+          "code": "801983",
+          "name": "医疗美容",
+          "parent": "801980"
+        },
+        {
+          "code": "801991",
+          "name": "航空机场",
+          "parent": "801170"
+        },
+        {
+          "code": "801992",
+          "name": "航运港口",
+          "parent": "801170"
+        },
+        {
+          "code": "801993",
+          "name": "旅游及景区",
+          "parent": "801210"
+        },
+        {
+          "code": "801994",
+          "name": "教育",
+          "parent": "801210"
+        },
+        {
+          "code": "801995",
+          "name": "电视广播Ⅱ",
+          "parent": "801760"
         }
       ]
     },
@@ -26,32 +796,722 @@
       "market": "HK",
       "l1": [
         {
+          "code": "一般金属及矿石",
+          "name": "一般金属及矿石"
+        },
+        {
+          "code": "专业零售",
+          "name": "专业零售"
+        },
+        {
+          "code": "保险",
+          "name": "保险"
+        },
+        {
+          "code": "公用事业",
+          "name": "公用事业"
+        },
+        {
+          "code": "其他医疗保健",
+          "name": "其他医疗保健"
+        },
+        {
+          "code": "其他金融",
+          "name": "其他金融"
+        },
+        {
+          "code": "农业产品",
+          "name": "农业产品"
+        },
+        {
+          "code": "半导体",
+          "name": "半导体"
+        },
+        {
+          "code": "原材料",
+          "name": "原材料"
+        },
+        {
+          "code": "地产",
+          "name": "地产"
+        },
+        {
+          "code": "媒体及娱乐",
+          "name": "媒体及娱乐"
+        },
+        {
+          "code": "家庭电器及用品",
+          "name": "家庭电器及用品"
+        },
+        {
+          "code": "工业工程",
+          "name": "工业工程"
+        },
+        {
+          "code": "工用支援",
+          "name": "工用支援"
+        },
+        {
+          "code": "工用运输",
+          "name": "工用运输"
+        },
+        {
+          "code": "建筑",
+          "name": "建筑"
+        },
+        {
+          "code": "支援服务",
+          "name": "支援服务"
+        },
+        {
+          "code": "旅游及消闲设施",
+          "name": "旅游及消闲设施"
+        },
+        {
+          "code": "汽车",
+          "name": "汽车"
+        },
+        {
+          "code": "消费者主要零售商",
+          "name": "消费者主要零售商"
+        },
+        {
+          "code": "煤炭",
+          "name": "煤炭"
+        },
+        {
+          "code": "电讯",
+          "name": "电讯"
+        },
+        {
+          "code": "石油及天然气",
+          "name": "石油及天然气"
+        },
+        {
+          "code": "纺织及服饰",
+          "name": "纺织及服饰"
+        },
+        {
+          "code": "综合企业",
+          "name": "综合企业"
+        },
+        {
+          "code": "药品及生物科技",
+          "name": "药品及生物科技"
+        },
+        {
+          "code": "资讯科技器材",
+          "name": "资讯科技器材"
+        },
+        {
           "code": "软件服务",
           "name": "软件服务"
+        },
+        {
+          "code": "银行",
+          "name": "银行"
+        },
+        {
+          "code": "食物饮品",
+          "name": "食物饮品"
+        },
+        {
+          "code": "黄金及贵金属",
+          "name": "黄金及贵金属"
         }
       ],
       "l2": [
         {
+          "code": "一般金属及矿石",
+          "name": "一般金属及矿石",
+          "parent": "一般金属及矿石"
+        },
+        {
+          "code": "专业零售",
+          "name": "专业零售",
+          "parent": "专业零售"
+        },
+        {
+          "code": "保险",
+          "name": "保险",
+          "parent": "保险"
+        },
+        {
+          "code": "公用事业",
+          "name": "公用事业",
+          "parent": "公用事业"
+        },
+        {
+          "code": "其他医疗保健",
+          "name": "其他医疗保健",
+          "parent": "其他医疗保健"
+        },
+        {
+          "code": "其他金融",
+          "name": "其他金融",
+          "parent": "其他金融"
+        },
+        {
+          "code": "农业产品",
+          "name": "农业产品",
+          "parent": "农业产品"
+        },
+        {
+          "code": "半导体",
+          "name": "半导体",
+          "parent": "半导体"
+        },
+        {
+          "code": "原材料",
+          "name": "原材料",
+          "parent": "原材料"
+        },
+        {
+          "code": "地产",
+          "name": "地产",
+          "parent": "地产"
+        },
+        {
+          "code": "媒体及娱乐",
+          "name": "媒体及娱乐",
+          "parent": "媒体及娱乐"
+        },
+        {
+          "code": "家庭电器及用品",
+          "name": "家庭电器及用品",
+          "parent": "家庭电器及用品"
+        },
+        {
+          "code": "工业工程",
+          "name": "工业工程",
+          "parent": "工业工程"
+        },
+        {
+          "code": "工用支援",
+          "name": "工用支援",
+          "parent": "工用支援"
+        },
+        {
+          "code": "工用运输",
+          "name": "工用运输",
+          "parent": "工用运输"
+        },
+        {
+          "code": "建筑",
+          "name": "建筑",
+          "parent": "建筑"
+        },
+        {
+          "code": "支援服务",
+          "name": "支援服务",
+          "parent": "支援服务"
+        },
+        {
+          "code": "旅游及消闲设施",
+          "name": "旅游及消闲设施",
+          "parent": "旅游及消闲设施"
+        },
+        {
+          "code": "汽车",
+          "name": "汽车",
+          "parent": "汽车"
+        },
+        {
+          "code": "消费者主要零售商",
+          "name": "消费者主要零售商",
+          "parent": "消费者主要零售商"
+        },
+        {
+          "code": "煤炭",
+          "name": "煤炭",
+          "parent": "煤炭"
+        },
+        {
+          "code": "电讯",
+          "name": "电讯",
+          "parent": "电讯"
+        },
+        {
+          "code": "石油及天然气",
+          "name": "石油及天然气",
+          "parent": "石油及天然气"
+        },
+        {
+          "code": "纺织及服饰",
+          "name": "纺织及服饰",
+          "parent": "纺织及服饰"
+        },
+        {
+          "code": "综合企业",
+          "name": "综合企业",
+          "parent": "综合企业"
+        },
+        {
+          "code": "药品及生物科技",
+          "name": "药品及生物科技",
+          "parent": "药品及生物科技"
+        },
+        {
+          "code": "资讯科技器材",
+          "name": "资讯科技器材",
+          "parent": "资讯科技器材"
+        },
+        {
           "code": "软件服务",
           "name": "软件服务",
           "parent": "软件服务"
+        },
+        {
+          "code": "银行",
+          "name": "银行",
+          "parent": "银行"
+        },
+        {
+          "code": "食物饮品",
+          "name": "食物饮品",
+          "parent": "食物饮品"
+        },
+        {
+          "code": "黄金及贵金属",
+          "name": "黄金及贵金属",
+          "parent": "黄金及贵金属"
         }
       ]
     }
   ],
   "counts": {
+    "A:交通运输": {
+      "market": "A",
+      "group": "交通运输",
+      "level": "L1",
+      "count": 40,
+      "use_fallback": true
+    },
+    "A:传媒": {
+      "market": "A",
+      "group": "传媒",
+      "level": "L1",
+      "count": 60,
+      "use_fallback": true
+    },
+    "A:公用事业": {
+      "market": "A",
+      "group": "公用事业",
+      "level": "L1",
+      "count": 20,
+      "use_fallback": true
+    },
+    "A:农林牧渔": {
+      "market": "A",
+      "group": "农林牧渔",
+      "level": "L1",
+      "count": 60,
+      "use_fallback": true
+    },
+    "A:医药生物": {
+      "market": "A",
+      "group": "医药生物",
+      "level": "L1",
+      "count": 60,
+      "use_fallback": true
+    },
+    "A:商贸零售": {
+      "market": "A",
+      "group": "商贸零售",
+      "level": "L1",
+      "count": 39,
+      "use_fallback": true
+    },
+    "A:国防军工": {
+      "market": "A",
+      "group": "国防军工",
+      "level": "L1",
+      "count": 49,
+      "use_fallback": true
+    },
+    "A:基础化工": {
+      "market": "A",
+      "group": "基础化工",
+      "level": "L1",
+      "count": 68,
+      "use_fallback": true
+    },
+    "A:家用电器": {
+      "market": "A",
+      "group": "家用电器",
+      "level": "L1",
+      "count": 60,
+      "use_fallback": true
+    },
+    "A:建筑材料": {
+      "market": "A",
+      "group": "建筑材料",
+      "level": "L1",
+      "count": 30,
+      "use_fallback": true
+    },
+    "A:建筑装饰": {
+      "market": "A",
+      "group": "建筑装饰",
+      "level": "L1",
+      "count": 47,
+      "use_fallback": true
+    },
+    "A:房地产": {
+      "market": "A",
+      "group": "房地产",
+      "level": "L1",
+      "count": 20,
+      "use_fallback": true
+    },
+    "A:有色金属": {
+      "market": "A",
+      "group": "有色金属",
+      "level": "L1",
+      "count": 50,
+      "use_fallback": true
+    },
+    "A:机械设备": {
+      "market": "A",
+      "group": "机械设备",
+      "level": "L1",
+      "count": 50,
+      "use_fallback": true
+    },
+    "A:汽车": {
+      "market": "A",
+      "group": "汽车",
+      "level": "L1",
+      "count": 47,
+      "use_fallback": true
+    },
+    "A:煤炭": {
+      "market": "A",
+      "group": "煤炭",
+      "level": "L1",
+      "count": 17,
+      "use_fallback": true
+    },
+    "A:环保": {
+      "market": "A",
+      "group": "环保",
+      "level": "L1",
+      "count": 20,
+      "use_fallback": true
+    },
+    "A:电力设备": {
+      "market": "A",
+      "group": "电力设备",
+      "level": "L1",
+      "count": 60,
+      "use_fallback": true
+    },
+    "A:电子": {
+      "market": "A",
+      "group": "电子",
+      "level": "L1",
+      "count": 60,
+      "use_fallback": true
+    },
+    "A:石油石化": {
+      "market": "A",
+      "group": "石油石化",
+      "level": "L1",
+      "count": 23,
+      "use_fallback": true
+    },
+    "A:社会服务": {
+      "market": "A",
+      "group": "社会服务",
+      "level": "L1",
+      "count": 40,
+      "use_fallback": true
+    },
+    "A:纺织服饰": {
+      "market": "A",
+      "group": "纺织服饰",
+      "level": "L1",
+      "count": 30,
+      "use_fallback": true
+    },
+    "A:综合": {
+      "market": "A",
+      "group": "综合",
+      "level": "L1",
+      "count": 10,
+      "use_fallback": true
+    },
+    "A:美容护理": {
+      "market": "A",
+      "group": "美容护理",
+      "level": "L1",
+      "count": 22,
+      "use_fallback": true
+    },
+    "A:计算机": {
+      "market": "A",
+      "group": "计算机",
+      "level": "L1",
+      "count": 30,
+      "use_fallback": true
+    },
+    "A:轻工制造": {
+      "market": "A",
+      "group": "轻工制造",
+      "level": "L1",
+      "count": 40,
+      "use_fallback": true
+    },
+    "A:通信": {
+      "market": "A",
+      "group": "通信",
+      "level": "L1",
+      "count": 20,
+      "use_fallback": true
+    },
+    "A:钢铁": {
+      "market": "A",
+      "group": "钢铁",
+      "level": "L1",
+      "count": 30,
+      "use_fallback": true
+    },
+    "A:银行": {
+      "market": "A",
+      "group": "银行",
+      "level": "L1",
+      "count": 35,
+      "use_fallback": true
+    },
+    "A:非银金融": {
+      "market": "A",
+      "group": "非银金融",
+      "level": "L1",
+      "count": 25,
+      "use_fallback": true
+    },
     "A:食品饮料": {
       "market": "A",
       "group": "食品饮料",
       "level": "L1",
-      "count": 1,
+      "count": 60,
       "use_fallback": true
+    },
+    "HK:一般金属及矿石": {
+      "market": "HK",
+      "group": "一般金属及矿石",
+      "level": "L1",
+      "count": 20,
+      "use_fallback": true
+    },
+    "HK:专业零售": {
+      "market": "HK",
+      "group": "专业零售",
+      "level": "L1",
+      "count": 11,
+      "use_fallback": true
+    },
+    "HK:保险": {
+      "market": "HK",
+      "group": "保险",
+      "level": "L1",
+      "count": 14,
+      "use_fallback": true
+    },
+    "HK:公用事业": {
+      "market": "HK",
+      "group": "公用事业",
+      "level": "L1",
+      "count": 27,
+      "use_fallback": true
+    },
+    "HK:其他医疗保健": {
+      "market": "HK",
+      "group": "其他医疗保健",
+      "level": "L1",
+      "count": 29,
+      "use_fallback": true
+    },
+    "HK:其他金融": {
+      "market": "HK",
+      "group": "其他金融",
+      "level": "L1",
+      "count": 26,
+      "use_fallback": true
+    },
+    "HK:农业产品": {
+      "market": "HK",
+      "group": "农业产品",
+      "level": "L1",
+      "count": 3,
+      "use_fallback": true
+    },
+    "HK:半导体": {
+      "market": "HK",
+      "group": "半导体",
+      "level": "L1",
+      "count": 25,
+      "use_fallback": true
+    },
+    "HK:原材料": {
+      "market": "HK",
+      "group": "原材料",
+      "level": "L1",
+      "count": 12,
+      "use_fallback": true
+    },
+    "HK:地产": {
+      "market": "HK",
+      "group": "地产",
+      "level": "L2",
+      "count": 40,
+      "use_fallback": false
+    },
+    "HK:媒体及娱乐": {
+      "market": "HK",
+      "group": "媒体及娱乐",
+      "level": "L1",
+      "count": 17,
+      "use_fallback": true
+    },
+    "HK:家庭电器及用品": {
+      "market": "HK",
+      "group": "家庭电器及用品",
+      "level": "L1",
+      "count": 15,
+      "use_fallback": true
+    },
+    "HK:工业工程": {
+      "market": "HK",
+      "group": "工业工程",
+      "level": "L2",
+      "count": 68,
+      "use_fallback": false
+    },
+    "HK:工用支援": {
+      "market": "HK",
+      "group": "工用支援",
+      "level": "L1",
+      "count": 2,
+      "use_fallback": true
+    },
+    "HK:工用运输": {
+      "market": "HK",
+      "group": "工用运输",
+      "level": "L1",
+      "count": 27,
+      "use_fallback": true
+    },
+    "HK:建筑": {
+      "market": "HK",
+      "group": "建筑",
+      "level": "L1",
+      "count": 14,
+      "use_fallback": true
+    },
+    "HK:支援服务": {
+      "market": "HK",
+      "group": "支援服务",
+      "level": "L1",
+      "count": 2,
+      "use_fallback": true
+    },
+    "HK:旅游及消闲设施": {
+      "market": "HK",
+      "group": "旅游及消闲设施",
+      "level": "L1",
+      "count": 23,
+      "use_fallback": true
+    },
+    "HK:汽车": {
+      "market": "HK",
+      "group": "汽车",
+      "level": "L1",
+      "count": 21,
+      "use_fallback": true
+    },
+    "HK:消费者主要零售商": {
+      "market": "HK",
+      "group": "消费者主要零售商",
+      "level": "L1",
+      "count": 4,
+      "use_fallback": true
+    },
+    "HK:煤炭": {
+      "market": "HK",
+      "group": "煤炭",
+      "level": "L1",
+      "count": 7,
+      "use_fallback": true
+    },
+    "HK:电讯": {
+      "market": "HK",
+      "group": "电讯",
+      "level": "L1",
+      "count": 8,
+      "use_fallback": true
+    },
+    "HK:石油及天然气": {
+      "market": "HK",
+      "group": "石油及天然气",
+      "level": "L1",
+      "count": 11,
+      "use_fallback": true
+    },
+    "HK:纺织及服饰": {
+      "market": "HK",
+      "group": "纺织及服饰",
+      "level": "L1",
+      "count": 14,
+      "use_fallback": true
+    },
+    "HK:综合企业": {
+      "market": "HK",
+      "group": "综合企业",
+      "level": "L1",
+      "count": 7,
+      "use_fallback": true
+    },
+    "HK:药品及生物科技": {
+      "market": "HK",
+      "group": "药品及生物科技",
+      "level": "L2",
+      "count": 77,
+      "use_fallback": false
+    },
+    "HK:资讯科技器材": {
+      "market": "HK",
+      "group": "资讯科技器材",
+      "level": "L2",
+      "count": 33,
+      "use_fallback": false
     },
     "HK:软件服务": {
       "market": "HK",
       "group": "软件服务",
+      "level": "L2",
+      "count": 46,
+      "use_fallback": false
+    },
+    "HK:银行": {
+      "market": "HK",
+      "group": "银行",
       "level": "L1",
-      "count": 1,
+      "count": 22,
+      "use_fallback": true
+    },
+    "HK:食物饮品": {
+      "market": "HK",
+      "group": "食物饮品",
+      "level": "L2",
+      "count": 34,
+      "use_fallback": false
+    },
+    "HK:黄金及贵金属": {
+      "market": "HK",
+      "group": "黄金及贵金属",
+      "level": "L1",
+      "count": 8,
       "use_fallback": true
     }
   }

@@ -1,0 +1,301 @@
+{
+  "code": "HK06069",
+  "name": "盛业",
+  "market": "HK",
+  "exchange": "HKEX",
+  "l1": "其他金融",
+  "l2": "其他金融",
+  "group": "其他金融",
+  "level": "L1",
+  "industryStd": "东财行业（港股通）",
+  "listedAt": "",
+  "score": 543.91,
+  "quality": 466.72,
+  "growth": 77.19,
+  "growthDetail": {
+    "netProfit": 17.19,
+    "opCashflow": 60.0
+  },
+  "qualitySubs": {
+    "roe": 43.65,
+    "net_profit_scale": 21.15,
+    "roa": 33.18,
+    "gross_margin": 96.35,
+    "cash_ratio": 30.73,
+    "asset_turnover": 75.0
+  },
+  "radar": {
+    "roe": 43.65,
+    "gross_margin": 96.35,
+    "asset_turnover": 75.0,
+    "eps": 50.0,
+    "cash_ratio": 30.73,
+    "net_margin": 100.0
+  },
+  "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "profitability": {
+    "roe": [
+      0.109,
+      0.0562,
+      0.0683,
+      0.0936,
+      0.1094
+    ],
+    "roa": [
+      0.0467,
+      0.0193,
+      0.0227,
+      0.036,
+      0.0412
+    ],
+    "gross_margin": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "net_margin": [
+      0.714,
+      0.275,
+      0.2785,
+      0.4146,
+      0.5294
+    ],
+    "eps": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "structure": {
+    "cash_ratio": [
+      0.0909,
+      0.0507,
+      0.0557,
+      0.0487,
+      0.0614
+    ],
+    "debt_ratio": [
+      0.5717,
+      0.6559,
+      0.6678,
+      0.6159,
+      0.6231
+    ]
+  },
+  "operation": {
+    "ar_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "ar_days": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "fa_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "asset_turnover": [
+      0.0654,
+      0.0703,
+      0.0815,
+      0.0867,
+      0.0779
+    ]
+  },
+  "cashflow": {
+    "cash": [
+      8.02,
+      5.77,
+      6.6,
+      5.16,
+      7.1
+    ],
+    "net_profit": [
+      4.12,
+      2.2,
+      2.69,
+      3.81,
+      4.77
+    ],
+    "ocf": [
+      -0.96,
+      -7.69,
+      16.87,
+      27.59,
+      21.98
+    ],
+    "icf": [
+      -2.21,
+      -6.19,
+      -9.01,
+      -3.11,
+      -9.38
+    ],
+    "fcf": [
+      7.77,
+      12.12,
+      -7.08,
+      -25.85,
+      -10.56
+    ],
+    "ncf": [
+      4.6,
+      -1.76,
+      0.78,
+      -1.37,
+      2.04
+    ]
+  },
+  "peers": [
+    {
+      "code": "HK01428",
+      "name": "耀才证券金融",
+      "roe5y": 0.3385
+    },
+    {
+      "code": "HK00388",
+      "name": "香港交易所",
+      "roe5y": 0.2468
+    },
+    {
+      "code": "HK03360",
+      "name": "远东宏信",
+      "roe5y": 0.1091
+    },
+    {
+      "code": "HK06069",
+      "name": "盛业",
+      "roe5y": 0.0873
+    },
+    {
+      "code": "HK06030",
+      "name": "中信证券",
+      "roe5y": 0.0872
+    },
+    {
+      "code": "HK06066",
+      "name": "中信建投证券",
+      "roe5y": 0.0856
+    },
+    {
+      "code": "HK06099",
+      "name": "招商证券",
+      "roe5y": 0.0829
+    },
+    {
+      "code": "HK06881",
+      "name": "中国银河",
+      "roe5y": 0.0795
+    },
+    {
+      "code": "HK03908",
+      "name": "中金公司",
+      "roe5y": 0.0785
+    },
+    {
+      "code": "HK02611",
+      "name": "国泰海通",
+      "roe5y": 0.0783
+    },
+    {
+      "code": "HK06886",
+      "name": "华泰证券",
+      "roe5y": 0.0775
+    },
+    {
+      "code": "HK01776",
+      "name": "广发证券",
+      "roe5y": 0.0745
+    },
+    {
+      "code": "HK06178",
+      "name": "光大证券",
+      "roe5y": 0.054
+    },
+    {
+      "code": "HK03958",
+      "name": "东方证券",
+      "roe5y": 0.0534
+    },
+    {
+      "code": "HK01788",
+      "name": "国泰君安国际",
+      "roe5y": 0.0397
+    },
+    {
+      "code": "HK01456",
+      "name": "国联民生",
+      "roe5y": 0.0395
+    },
+    {
+      "code": "HK02858",
+      "name": "易鑫集团",
+      "roe5y": 0.0362
+    },
+    {
+      "code": "HK01359",
+      "name": "中国信达",
+      "roe5y": 0.033
+    },
+    {
+      "code": "HK00697",
+      "name": "首程控股",
+      "roe5y": 0.0194
+    },
+    {
+      "code": "HK03678",
+      "name": "弘业期货",
+      "roe5y": 0.0153
+    },
+    {
+      "code": "HK02799",
+      "name": "中信金融资产",
+      "roe5y": -0.039
+    },
+    {
+      "code": "HK00165",
+      "name": "中国光大控股",
+      "roe5y": -0.0721
+    },
+    {
+      "code": "HK00290",
+      "name": "国富量子",
+      "roe5y": -0.173
+    },
+    {
+      "code": "HK01375",
+      "name": "中州证券",
+      "roe5y": null
+    },
+    {
+      "code": "HK02691",
+      "name": "南华期货股份",
+      "roe5y": null
+    },
+    {
+      "code": "HK06806",
+      "name": "申万宏源",
+      "roe5y": null
+    }
+  ]
+}

@@ -1,0 +1,181 @@
+{
+  "code": "HK07618",
+  "name": "京东工业",
+  "market": "HK",
+  "exchange": "HKEX",
+  "l1": "工用支援",
+  "l2": "工用支援",
+  "group": "工用支援",
+  "level": "L1",
+  "industryStd": "东财行业（港股通）",
+  "listedAt": "",
+  "score": 670.86,
+  "quality": 609.4,
+  "growth": 61.46,
+  "growthDetail": {
+    "netProfit": 60.0,
+    "opCashflow": 1.46
+  },
+  "qualitySubs": {
+    "roe": 91.52,
+    "net_profit_scale": 75.0,
+    "roa": 0.0,
+    "gross_margin": 43.19,
+    "cash_ratio": 96.83,
+    "asset_turnover": 25.0
+  },
+  "radar": {
+    "roe": 91.52,
+    "gross_margin": 43.19,
+    "asset_turnover": 25.0,
+    "eps": 50.0,
+    "cash_ratio": 96.83,
+    "net_margin": 0.0
+  },
+  "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "profitability": {
+    "roe": [
+      -2.1037,
+      1.781,
+      -0.0145,
+      1.5626,
+      0.2064
+    ],
+    "roa": [
+      -0.1623,
+      -0.1607,
+      0.0004,
+      0.0519,
+      0.1202
+    ],
+    "gross_margin": [
+      0.1862,
+      0.1798,
+      0.1614,
+      0.1624,
+      0.174
+    ],
+    "net_margin": [
+      -0.1193,
+      -0.0944,
+      0.0003,
+      0.0373,
+      0.0966
+    ],
+    "eps": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "structure": {
+    "cash_ratio": [
+      0.321,
+      0.0014,
+      0.4543,
+      0.5712,
+      0.3229
+    ],
+    "debt_ratio": [
+      0.9229,
+      1.0902,
+      1.0284,
+      0.9668,
+      0.4178
+    ]
+  },
+  "operation": {
+    "ar_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "ar_days": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "fa_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "asset_turnover": [
+      1.3605,
+      1.7017,
+      1.4349,
+      1.3916,
+      1.2441
+    ]
+  },
+  "cashflow": {
+    "cash": [
+      24.47,
+      0.12,
+      55.06,
+      83.71,
+      62.01
+    ],
+    "net_profit": [
+      -12.37,
+      -13.34,
+      0.05,
+      7.61,
+      23.08
+    ],
+    "ocf": [
+      20.59,
+      19.74,
+      13.84,
+      12.96,
+      20.84
+    ],
+    "icf": [
+      -21.39,
+      -44.54,
+      26.55,
+      15.61,
+      -63.14
+    ],
+    "fcf": [
+      1.88,
+      -0.07,
+      14.35,
+      -0.16,
+      21.27
+    ],
+    "ncf": [
+      1.08,
+      -24.87,
+      54.74,
+      28.41,
+      -21.03
+    ]
+  },
+  "peers": [
+    {
+      "code": "HK07618",
+      "name": "京东工业",
+      "roe5y": 0.2864
+    },
+    {
+      "code": "HK02618",
+      "name": "京东物流",
+      "roe5y": -0.0402
+    }
+  ]
+}

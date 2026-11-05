@@ -1,0 +1,206 @@
+{
+  "code": "HK01277",
+  "name": "力量发展",
+  "market": "HK",
+  "exchange": "HKEX",
+  "l1": "煤炭",
+  "l2": "煤炭",
+  "group": "煤炭",
+  "level": "L1",
+  "industryStd": "东财行业（港股通）",
+  "listedAt": "",
+  "score": 625.73,
+  "quality": 803.01,
+  "growth": -177.28,
+  "growthDetail": {
+    "netProfit": -89.92,
+    "opCashflow": -87.36
+  },
+  "qualitySubs": {
+    "roe": 96.23,
+    "net_profit_scale": 50.0,
+    "roa": 100.0,
+    "gross_margin": 100.0,
+    "cash_ratio": 52.99,
+    "asset_turnover": 64.29
+  },
+  "radar": {
+    "roe": 96.23,
+    "gross_margin": 100.0,
+    "asset_turnover": 64.29,
+    "eps": 50.0,
+    "cash_ratio": 52.99,
+    "net_margin": 100.0
+  },
+  "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "profitability": {
+    "roe": [
+      0.5395,
+      0.421,
+      0.2821,
+      0.2564,
+      0.1099
+    ],
+    "roa": [
+      0.4086,
+      0.2807,
+      0.19,
+      0.1624,
+      0.0659
+    ],
+    "gross_margin": [
+      0.6459,
+      0.6537,
+      0.5908,
+      0.5523,
+      0.3834
+    ],
+    "net_margin": [
+      0.4424,
+      0.4328,
+      0.438,
+      0.3729,
+      0.1694
+    ],
+    "eps": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "structure": {
+    "cash_ratio": [
+      0.3951,
+      0.0582,
+      0.0671,
+      0.0485,
+      0.006
+    ],
+    "debt_ratio": [
+      0.2425,
+      0.3333,
+      0.3264,
+      0.3666,
+      0.4004
+    ]
+  },
+  "operation": {
+    "ar_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "ar_days": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "fa_turnover": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "asset_turnover": [
+      0.9237,
+      0.6485,
+      0.4338,
+      0.4354,
+      0.3889
+    ]
+  },
+  "cashflow": {
+    "cash": [
+      23.93,
+      5.52,
+      7.36,
+      6.3,
+      0.81
+    ],
+    "net_profit": [
+      24.75,
+      26.63,
+      20.85,
+      21.09,
+      8.94
+    ],
+    "ocf": [
+      30.38,
+      30.93,
+      17.17,
+      23.49,
+      11.01
+    ],
+    "icf": [
+      -8.76,
+      -42.73,
+      -9.06,
+      -8.19,
+      -6.39
+    ],
+    "fcf": [
+      -6.43,
+      -6.5,
+      -6.23,
+      -16.3,
+      -9.96
+    ],
+    "ncf": [
+      15.19,
+      -18.3,
+      1.88,
+      -1.0,
+      -5.34
+    ]
+  },
+  "peers": [
+    {
+      "code": "HK01277",
+      "name": "力量发展",
+      "roe5y": 0.3217
+    },
+    {
+      "code": "HK01171",
+      "name": "兖矿能源",
+      "roe5y": 0.2363
+    },
+    {
+      "code": "HK03668",
+      "name": "兖煤澳大利亚",
+      "roe5y": 0.1941
+    },
+    {
+      "code": "HK01088",
+      "name": "中国神华",
+      "roe5y": 0.1506
+    },
+    {
+      "code": "HK01898",
+      "name": "中煤能源",
+      "roe5y": 0.1262
+    },
+    {
+      "code": "HK00639",
+      "name": "首钢资源",
+      "roe5y": 0.1107
+    },
+    {
+      "code": "HK00975",
+      "name": "MONGOLMINING",
+      "roe5y": 0.0832
+    }
+  ]
+}

@@ -1,0 +1,213 @@
+{
+  "code": "HK02768",
+  "name": "国恩科技",
+  "market": "HK",
+  "exchange": "HKEX",
+  "l1": "原材料",
+  "l2": "原材料",
+  "group": "原材料",
+  "level": "L1",
+  "industryStd": "东财行业（港股通）",
+  "listedAt": "",
+  "score": 633.47,
+  "quality": 508.72,
+  "growth": 124.75,
+  "growthDetail": {
+    "netProfit": 41.73,
+    "opCashflow": 83.02
+  },
+  "qualitySubs": {
+    "roe": 61.65,
+    "net_profit_scale": 37.5,
+    "roa": 40.93,
+    "gross_margin": 24.78,
+    "cash_ratio": 51.94,
+    "asset_turnover": 87.5
+  },
+  "radar": {
+    "roe": 61.65,
+    "gross_margin": 24.78,
+    "asset_turnover": 87.5,
+    "eps": 50.0,
+    "cash_ratio": 51.94,
+    "net_margin": 19.04
+  },
+  "years": [
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "profitability": {
+    "roe": [
+      0.1629,
+      0.1054,
+      0.138,
+      0.1489
+    ],
+    "roa": [
+      0.052,
+      0.0313,
+      0.0373,
+      0.0431
+    ],
+    "gross_margin": [
+      0.1178,
+      0.0918,
+      0.0829,
+      0.104
+    ],
+    "net_margin": [
+      0.0495,
+      0.027,
+      0.0357,
+      0.0401
+    ],
+    "eps": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "structure": {
+    "cash_ratio": [
+      0.1017,
+      0.1159,
+      0.1098,
+      0.1113
+    ],
+    "debt_ratio": [
+      0.681,
+      0.7029,
+      0.7295,
+      0.7108
+    ]
+  },
+  "operation": {
+    "ar_turnover": [
+      null,
+      null,
+      null,
+      null
+    ],
+    "ar_days": [
+      null,
+      null,
+      null,
+      null
+    ],
+    "fa_turnover": [
+      null,
+      null,
+      null,
+      null
+    ],
+    "asset_turnover": [
+      1.0506,
+      1.1585,
+      1.0456,
+      1.0739
+    ]
+  },
+  "cashflow": {
+    "cash": [
+      12.97,
+      17.5,
+      20.15,
+      21.97
+    ],
+    "net_profit": [
+      6.63,
+      4.73,
+      6.85,
+      8.5
+    ],
+    "ocf": [
+      2.9,
+      4.87,
+      5.07,
+      8.99
+    ],
+    "icf": [
+      -7.9,
+      -7.47,
+      -8.09,
+      -7.14
+    ],
+    "fcf": [
+      9.38,
+      7.07,
+      5.7,
+      0.09
+    ],
+    "ncf": [
+      4.38,
+      4.47,
+      2.68,
+      1.94
+    ]
+  },
+  "peers": [
+    {
+      "code": "HK01866",
+      "name": "中国心连心化肥",
+      "roe5y": 0.1666
+    },
+    {
+      "code": "HK02768",
+      "name": "国恩科技",
+      "roe5y": 0.1388
+    },
+    {
+      "code": "HK09607",
+      "name": "彤程新材",
+      "roe5y": 0.1359
+    },
+    {
+      "code": "HK00189",
+      "name": "东岳集团",
+      "roe5y": 0.1254
+    },
+    {
+      "code": "HK00297",
+      "name": "中化化肥",
+      "roe5y": 0.099
+    },
+    {
+      "code": "HK01907",
+      "name": "中国旭阳集团",
+      "roe5y": 0.0928
+    },
+    {
+      "code": "HK02579",
+      "name": "中伟新材",
+      "roe5y": 0.0825
+    },
+    {
+      "code": "HK02314",
+      "name": "理文造纸",
+      "roe5y": 0.0591
+    },
+    {
+      "code": "HK06745",
+      "name": "滨化股份",
+      "roe5y": 0.0443
+    },
+    {
+      "code": "HK02689",
+      "name": "玖龙纸业",
+      "roe5y": 0.0283
+    },
+    {
+      "code": "HK00338",
+      "name": "上海石油化工股份",
+      "roe5y": -0.0303
+    },
+    {
+      "code": "HK02553",
+      "name": "首钢朗泽",
+      "roe5y": -0.1336
+    }
+  ]
+}

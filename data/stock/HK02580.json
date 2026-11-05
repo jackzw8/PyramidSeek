@@ -1,0 +1,228 @@
+{
+  "code": "HK02580",
+  "name": "奥克斯电气",
+  "market": "HK",
+  "exchange": "HKEX",
+  "l1": "家庭电器及用品",
+  "l2": "家庭电器及用品",
+  "group": "家庭电器及用品",
+  "level": "L1",
+  "industryStd": "东财行业（港股通）",
+  "listedAt": "",
+  "score": 797.02,
+  "quality": 772.03,
+  "growth": 24.99,
+  "growthDetail": {
+    "netProfit": 73.75,
+    "opCashflow": -48.76
+  },
+  "qualitySubs": {
+    "roe": 100.0,
+    "net_profit_scale": 63.33,
+    "roa": 81.41,
+    "gross_margin": 52.17,
+    "cash_ratio": 69.13,
+    "asset_turnover": 70.0
+  },
+  "radar": {
+    "roe": 100.0,
+    "gross_margin": 52.17,
+    "asset_turnover": 70.0,
+    "eps": 50.0,
+    "cash_ratio": 69.13,
+    "net_margin": 43.27
+  },
+  "years": [
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "profitability": {
+    "roe": [
+      0.8344,
+      0.5864,
+      0.7588,
+      0.2244
+    ],
+    "roa": [
+      0.098,
+      0.1245,
+      0.1204,
+      0.0711
+    ],
+    "gross_margin": [
+      0.2125,
+      0.2184,
+      0.2097,
+      0.1883
+    ],
+    "net_margin": [
+      0.0738,
+      0.1002,
+      0.0978,
+      0.0744
+    ],
+    "eps": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "structure": {
+    "cash_ratio": [
+      0.1624,
+      0.2809,
+      0.1203,
+      0.2189
+    ],
+    "debt_ratio": [
+      0.8825,
+      0.7876,
+      0.8413,
+      0.6831
+    ]
+  },
+  "operation": {
+    "ar_turnover": [
+      null,
+      null,
+      null,
+      null
+    ],
+    "ar_days": [
+      null,
+      null,
+      null,
+      null
+    ],
+    "fa_turnover": [
+      null,
+      null,
+      null,
+      null
+    ],
+    "asset_turnover": [
+      1.3278,
+      1.2435,
+      1.2312,
+      0.9563
+    ]
+  },
+  "cashflow": {
+    "cash": [
+      23.88,
+      56.28,
+      29.07,
+      68.61
+    ],
+    "net_profit": [
+      14.41,
+      24.95,
+      29.1,
+      22.29
+    ],
+    "ocf": [
+      40.02,
+      46.46,
+      25.18,
+      28.79
+    ],
+    "icf": [
+      -1.38,
+      -13.93,
+      -2.08,
+      -41.51
+    ],
+    "fcf": [
+      -29.51,
+      -2.83,
+      -45.2,
+      34.64
+    ],
+    "ncf": [
+      9.13,
+      29.7,
+      -22.1,
+      21.92
+    ]
+  },
+  "peers": [
+    {
+      "code": "HK02580",
+      "name": "奥克斯电气",
+      "roe5y": 0.601
+    },
+    {
+      "code": "HK00325",
+      "name": "布鲁可",
+      "roe5y": 0.2872
+    },
+    {
+      "code": "HK09992",
+      "name": "泡泡玛特",
+      "roe5y": 0.2398
+    },
+    {
+      "code": "HK00668",
+      "name": "安克创新",
+      "roe5y": 0.2117
+    },
+    {
+      "code": "HK00300",
+      "name": "美的集团",
+      "roe5y": 0.2035
+    },
+    {
+      "code": "HK00669",
+      "name": "创科实业",
+      "roe5y": 0.1916
+    },
+    {
+      "code": "HK01999",
+      "name": "敏华控股",
+      "roe5y": 0.1676
+    },
+    {
+      "code": "HK00921",
+      "name": "海信家电",
+      "roe5y": 0.1653
+    },
+    {
+      "code": "HK06690",
+      "name": "海尔智家",
+      "roe5y": 0.1629
+    },
+    {
+      "code": "HK06969",
+      "name": "思摩尔国际",
+      "roe5y": 0.1166
+    },
+    {
+      "code": "HK02285",
+      "name": "泉峰控股",
+      "roe5y": 0.0989
+    },
+    {
+      "code": "HK01070",
+      "name": "TCL电子",
+      "roe5y": 0.074
+    },
+    {
+      "code": "HK00751",
+      "name": "创维集团",
+      "roe5y": 0.0495
+    },
+    {
+      "code": "HK06600",
+      "name": "卧安机器人",
+      "roe5y": -0.1325
+    },
+    {
+      "code": "HK06090",
+      "name": "不同集团",
+      "roe5y": -0.3517
+    }
+  ]
+}

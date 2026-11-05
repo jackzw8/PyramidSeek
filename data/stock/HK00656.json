@@ -1,0 +1,170 @@
+{
+  "code": "HK00656",
+  "name": "复星国际",
+  "market": "HK",
+  "exchange": "HKEX",
+  "l1": "综合企业",
+  "l2": "综合企业",
+  "group": "综合企业",
+  "level": "L1",
+  "industryStd": "东财行业（港股通）",
+  "listedAt": "",
+  "score": 308.45,
+  "quality": 283.56,
+  "growth": 24.89,
+  "growthDetail": {
+    "netProfit": -60.0,
+    "opCashflow": 84.89
+  },
+  "qualitySubs": {
+    "roe": 0.0,
+    "net_profit_scale": 0.0,
+    "roa": 0.0,
+    "gross_margin": 100.0,
+    "cash_ratio": 42.85,
+    "asset_turnover": 92.86
+  },
+  "radar": {
+    "roe": 0.0,
+    "gross_margin": 100.0,
+    "asset_turnover": 92.86,
+    "eps": 50.0,
+    "cash_ratio": 42.85,
+    "net_margin": 0.0
+  },
+  "years": [
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "profitability": {
+    "roe": [
+      0.011,
+      -0.0368,
+      -0.2493
+    ],
+    "roa": [
+      0.0017,
+      -0.0055,
+      -0.0327
+    ],
+    "gross_margin": [
+      0.4262,
+      0.4447,
+      0.5064
+    ],
+    "net_margin": [
+      0.007,
+      -0.0226,
+      -0.1349
+    ],
+    "eps": [
+      null,
+      null,
+      null
+    ]
+  },
+  "structure": {
+    "cash_ratio": [
+      0.0906,
+      0.1076,
+      0.0589
+    ],
+    "debt_ratio": [
+      0.8454,
+      0.8517,
+      0.869
+    ]
+  },
+  "operation": {
+    "ar_turnover": [
+      null,
+      null,
+      null
+    ],
+    "ar_days": [
+      null,
+      null,
+      null
+    ],
+    "fa_turnover": [
+      null,
+      null,
+      null
+    ],
+    "asset_turnover": [
+      0.2452,
+      0.2412,
+      0.2421
+    ]
+  },
+  "cashflow": {
+    "cash": [
+      734.5,
+      856.96,
+      420.83
+    ],
+    "net_profit": [
+      13.84,
+      -43.48,
+      -233.36
+    ],
+    "ocf": [
+      98.55,
+      268.81,
+      265.18
+    ],
+    "icf": [
+      176.43,
+      -1.27,
+      -609.71
+    ],
+    "fcf": [
+      -397.92,
+      -142.68,
+      -152.14
+    ],
+    "ncf": [
+      -122.94,
+      124.86,
+      -496.67
+    ]
+  },
+  "peers": [
+    {
+      "code": "HK00267",
+      "name": "中信股份",
+      "roe5y": 0.0859
+    },
+    {
+      "code": "HK00363",
+      "name": "上海实业控股",
+      "roe5y": 0.0605
+    },
+    {
+      "code": "HK00659",
+      "name": "周大福创建",
+      "roe5y": 0.0518
+    },
+    {
+      "code": "HK00001",
+      "name": "长和",
+      "roe5y": 0.0463
+    },
+    {
+      "code": "HK00019",
+      "name": "太古股份公司A",
+      "roe5y": 0.0329
+    },
+    {
+      "code": "HK00087",
+      "name": "太古股份公司B",
+      "roe5y": 0.0329
+    },
+    {
+      "code": "HK00656",
+      "name": "复星国际",
+      "roe5y": -0.0917
+    }
+  ]
+}
