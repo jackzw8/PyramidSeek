@@ -19,6 +19,7 @@ import json
 import logging
 import random
 import re
+import shutil
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
@@ -228,6 +229,9 @@ class AkShareSource:
     # ── 本地缓存（D-37：全历史数据固定分区 + mtime TTL；时点数据按日分区）──
     # 财报键含源名（D-44：financial_sina_* / financial_ths_*，两源缓存共存）；前缀不变
     _HISTORY_PREFIXES = ("financial_", "price_")  # 全历史数据键前缀
+    # 慢变键（D-60）：申万行业一年改不了几次，但 131 个行业成分重建要 15~30 分钟。
+    # 强制固定走 cold/，不让 daily 每天白等一轮；过期时手动删对应文件即可刷新。
+    _SLOW_PREFIXES = ("sw_l1", "sw_l2", "sw_cons_", "industry_", "hk_ggt", "hk_industry")
     HISTORY_DIR_NAME = "cold"  # 固定分区名（与 cold 模式分区同名：同一份基线）
 
     def _is_history_key(self, key: str) -> bool:
@@ -242,9 +246,58 @@ class AkShareSource:
         if key.startswith("spot_"):
             # 快照是时点数据：任何模式都取当日（否则扩池重跑会命中旧快照、污染行情截止日）
             return self._cache_dir / self._today().isoformat() / f"{key}.json"
-        if self._partition:
-            return self._cache_dir / self._partition / f"{key}.json"
+        if key.startswith(self._SLOW_PREFIXES) or self._partition:
+            # 慢变数据（行业映射 / 港股通名单）无论哪个模式都落 cold/
+            return self._cache_dir / (self._partition or self.HISTORY_DIR_NAME) / f"{key}.json"
         return self._cache_dir / self._today().isoformat() / f"{key}.json"
+
+    def sync_lists_to_cold(self) -> list[str]:
+        """把当日分区的列表缓存同步到 ``cold/``（D-60）。
+
+        动机：``daily`` 每天把股票列表抓到日分区，而 ``financials`` / ``cold`` 复用
+        ``cold/`` 固定分区 —— 两边不通，``financials`` 会一直用建仓那天的旧列表。
+        列表抓下来后顺手同步一份，下次 ``financials`` 就用上当日列表。
+
+        **带行数校验**：当日行数显著少于 cold 现有（<80%）时拒绝覆盖，防止某次接口
+        返回残缺数据把好缓存冲掉。
+
+        :returns: 实际同步的项，如 ``["list_A=5577", "list_HK=2804"]``
+        """
+        today_dir = self._cache_dir / self._today().isoformat()
+        cold_dir = self._history_dir()
+        cold_dir.mkdir(parents=True, exist_ok=True)
+        synced: list[str] = []
+        for key in ("list_A", "list_HK"):
+            src = today_dir / f"{key}.json"
+            if not src.exists():
+                continue
+            try:
+                rows = json.loads(src.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if not isinstance(rows, list) or not rows:
+                continue
+            dst = cold_dir / f"{key}.json"
+            if dst.exists():
+                try:
+                    old = json.loads(dst.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError):
+                    old = []
+                if isinstance(old, list) and old and len(rows) < len(old) * 0.8:
+                    logger.warning(
+                        "列表缓存异常：%s 当日 %d 行 < 旧 %d 行的 80%%，拒绝覆盖",
+                        key,
+                        len(rows),
+                        len(old),
+                    )
+                    continue
+            try:
+                shutil.copy2(src, dst)
+            except OSError as exc:
+                logger.warning("列表缓存同步失败 %s：%s", key, exc)
+                continue
+            synced.append(f"{key}={len(rows)}")
+        return synced
 
     def _is_fresh(self, path: Path) -> bool:
         """全历史数据新鲜度（D-37）：文件 mtime 距今 ≤ ``stale_after`` 视为新鲜。

@@ -357,6 +357,7 @@ def run(args: argparse.Namespace) -> int:
             markets=tuple(args.markets),
             codes=codes or None,
             skip_financials=set(skipped_codes) or None,
+            sync_lists_to_cold=(args.mode == "daily" and not args.offline),
             limit=args.limit,
             sources=selection,
             chain=fetch.default_chain(
