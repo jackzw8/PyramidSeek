@@ -28,8 +28,10 @@ from .validate import validate_products
 __all__ = ["gate_check", "build_dist", "push_gh_pages", "main"]
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PUBLIC_DIR = REPO_ROOT / "public"
-DIST_DIR = REPO_ROOT / "dist"
+# 2026-11-05：站点与运行时数据统一收在 assets/（与 config.ASSETS_DIR 一致）
+ASSETS_DIR = REPO_ROOT / "assets"
+PUBLIC_DIR = ASSETS_DIR / "public"
+DIST_DIR = ASSETS_DIR / "dist"
 DATA_SUBDIR = "data"
 GH_PAGES_BRANCH = "gh-pages"
 PUBLISH_TMP = REPO_ROOT.parent / "_ps_publish_tmp"

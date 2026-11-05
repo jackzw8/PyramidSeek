@@ -204,7 +204,7 @@ def api_product():
     data_dir = config.PUBLIC_DATA_DIR
     meta_path = data_dir / "meta.json"
     if not meta_path.exists():
-        return jsonify({"error": "public/data 里还没有产物，请先跑一次批"}), 404
+        return jsonify({"error": "assets/public/data 里还没有产物，请先跑一次批"}), 404
 
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
     rows: dict[str, int] = {}

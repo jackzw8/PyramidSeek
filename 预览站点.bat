@@ -4,7 +4,7 @@ title PyramidSeek ’æµ„‘§¿¿£®public/£©
 cd /d "%~dp0"
 
 set "PORT=8000"
-set "ROOT=%~dp0public"
+set "ROOT=%~dp0assets\public"
 
 echo ============================================================
 echo   PyramidSeek ’æµ„‘§¿¿

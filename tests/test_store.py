@@ -371,9 +371,10 @@ def test_parquet_export_is_overwritten_not_appended(tmp_path) -> None:
 
 
 def test_default_paths_live_under_data_dir() -> None:
-    """默认落在 ``data/``（已 gitignore），不污染仓库。"""
+    """默认落在 ``assets/data/``（已 gitignore），不污染仓库。"""
     assert store.config.DATA_DIR.name == "data"
-    assert store.config.DATA_DIR.parent == store.config.PROJECT_ROOT
+    assert store.config.DATA_DIR.parent == store.config.ASSETS_DIR
+    assert store.config.ASSETS_DIR.parent == store.config.PROJECT_ROOT
 
 
 def test_score_snapshot_columns_include_radar_dimensions(tmp_path) -> None:

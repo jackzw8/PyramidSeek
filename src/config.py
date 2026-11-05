@@ -186,9 +186,14 @@ PS_ENV_CI = "ci"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_DIR = PROJECT_ROOT / "schema"  # 产物 JSON Schema（《产物契约》§5，M3-5 校验用）
 FIXTURES_DIR = PROJECT_ROOT / "fixtures"
-PUBLIC_DIR = PROJECT_ROOT / "public"
+# 站点与运行时数据统一收在 assets/ 下（2026-11-05 用户要求，减少根目录噪音）：
+#   assets/public —— 前端站点（页面入库，产物 gitignore）
+#   assets/dist   —— 发布快照（gitignore）
+#   assets/data   —— DuckDB / 缓存 / 清单 / 跑批日志（gitignore）
+ASSETS_DIR = PROJECT_ROOT / "assets"
+PUBLIC_DIR = ASSETS_DIR / "public"
 PUBLIC_DATA_DIR = PUBLIC_DIR / "data"
-DATA_DIR = PROJECT_ROOT / "data"  # 本地运行产物（已 gitignore）
+DATA_DIR = ASSETS_DIR / "data"  # 本地运行产物（已 gitignore）
 FIXTURES_FILE = FIXTURES_DIR / "financials.json"
 
 # ── 免责声明（家法 R20：页面 / 产物 notes / Demo 输出三处随行）───────────
