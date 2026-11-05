@@ -70,6 +70,7 @@ class Runner:
         codes_file: str | None = None,
         limit: int | None = None,
         offline: bool = False,
+        merge: bool = False,
     ) -> dict[str, Any]:
         with self._lock:
             if self._proc is not None and self._proc.poll() is None:
@@ -100,6 +101,8 @@ class Runner:
                 cmd += ["--limit", str(limit)]
             if offline:
                 cmd.append("--offline")
+            if merge:
+                cmd.append("--merge")  # D-61：分市场合并，保留其他市场产物
             # 产物目录可被覆盖：**测试必须指向 tmp** —— 否则 e2e 用例会把 fixtures 跑到
             # 真实 `public/data` 上，用户下次发布就发出「贵州茅台 + 五粮液」的假数据。
             out_override = os.environ.get("PS_CONSOLE_OUT_DIR")
