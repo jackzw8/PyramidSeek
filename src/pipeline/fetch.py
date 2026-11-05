@@ -158,6 +158,10 @@ def _fill_hk_industry(stocks: list[dict[str, Any]], codes: list[str], chain: lis
                     "l2_code": industry,
                     "l2_name": industry,
                     "industry_std": config.INDUSTRY_STANDARD_HK_GGLT,
+                    # 金融股（银行/保险/其他金融）毛利率与周转率不适用，须豁免
+                    # 「关键指标缺失」的排除判定，与 A 股口径一致（实测：22 只港股
+                    # 银行全被踢出主榜，因为这里没标记）。
+                    "is_financial": industry in config.FINANCIAL_SECTORS,
                 }
             )
             filled += 1
