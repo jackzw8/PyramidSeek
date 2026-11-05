@@ -417,7 +417,8 @@ class AkShareSource:
             "listed_at": None,  # 需单独接口，M1-4 清洗阶段补齐
             "shares": to_internal_billion(pick(row, "总股本", "shares")),
             "status": status_of(name),
-            "is_financial": False,  # 依赖行业映射表判定（§6），M1-6 编排阶段补齐
+            # 列表阶段拿不到行业 → False；回填行业时由 fetch._fill_hk_industry 重置
+            "is_financial": False,
             "updated_at": updated_at,
         }
 
