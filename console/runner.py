@@ -31,7 +31,16 @@ from . import store, utf8_env  # noqa: E402
 
 __all__ = ["BatchBusy", "Runner", "runner"]
 
-_RUN_ROOT = config.DATA_DIR / "_run"
+
+def _run_root() -> Path:
+    """跑批运行记录目录。
+
+    测试可用 ``PS_CONSOLE_RUN_ROOT`` 指到 tmp —— 否则 e2e 的 run 目录会混进真实列表
+    （下载日志时会取到测试残留，实测踩过）。
+    """
+    return Path(os.environ.get("PS_CONSOLE_RUN_ROOT") or (config.DATA_DIR / "_run"))
+
+
 _RE_FIN = re.compile(r"财报 \[(\d+)/(\d+)\]")
 _PHASE_MARKS = (
     ("采集完成", "build"),
@@ -81,7 +90,7 @@ class Runner:
                     "缓存目录与 DuckDB 为独占资源，请先停止或等待完成"
                 )
             run_id = datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:4]
-            run_dir = _RUN_ROOT / run_id
+            run_dir = _run_root() / run_id
             run_dir.mkdir(parents=True, exist_ok=True)
 
             # batch 的 offline 是独立开关（--offline），不是 --mode 取值
@@ -200,7 +209,7 @@ class Runner:
         run_id = self.status.get("runId")
         if not run_id:
             return
-        path = _RUN_ROOT / str(run_id) / "status.json"
+        path = _run_root() / str(run_id) / "status.json"
         try:
             path.write_text(json.dumps(self.status, ensure_ascii=False, indent=2), encoding="utf-8")
         except OSError:
@@ -241,7 +250,7 @@ class Runner:
         run_id = self.status.get("runId")
         if not run_id:
             return []
-        path = _RUN_ROOT / str(run_id) / "log.txt"
+        path = _run_root() / str(run_id) / "log.txt"
         if not path.exists():
             return []
         return path.read_text(encoding="utf-8", errors="replace").splitlines()[-lines:]
