@@ -75,7 +75,7 @@ def _indicator_value(raw: RawIndicators | None, key: str) -> float | None:
 def _debt_ratio(inputs: BuildInputs, stock: dict[str, Any]) -> float | None:
     """负债率近五年均值 =（总资产 − 权益）÷ 总资产（PRD §5.2，展示指标）。"""
     rows = derived.annual_window(inputs.financials.get(str(stock.get("code"))))
-    mean = derived.mean_of(derived.year_series("debt_ratio", rows, stock.get("shares")))
+    mean = derived.mean_of(derived.year_series("debt_ratio", rows))
     return derived.round_value(mean, config.RATIO_DECIMALS)
 
 

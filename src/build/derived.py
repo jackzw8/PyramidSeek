@@ -21,7 +21,6 @@ from .. import config
 from ..common import is_missing, round_half_up
 from ..engine.indicators import RawIndicators, annual_rows, year_ratio
 
-_SHARES = "__shares__"  # 分母来自股票主数据（亿股），不在财报行里（同 indicators）
 _DERIVED_ASSETS = "__total_assets_minus_equity__"  # 负债率的分子：总资产 − 权益（PRD §5.2）
 
 # 逐字段公式：字段 → (分子字段, 分母字段)；分母 ``None`` = 金额类（分子即值，单位亿元）。
@@ -31,7 +30,7 @@ FORMULAS: dict[str, tuple[str, str | None]] = {
     "roa": ("net_profit", "total_assets"),
     "gross_margin": ("gross_profit", "revenue"),
     "net_margin": ("net_profit", "revenue"),
-    "eps": ("net_profit", _SHARES),
+    "eps": ("eps", None),  # D-67：直接取源字段，取不到留空
     # structure
     "cash_ratio": ("cash", "total_assets"),
     "debt_ratio": (_DERIVED_ASSETS, "total_assets"),
@@ -90,26 +89,24 @@ def round_series(series: Sequence[float | None], decimals: int) -> list[float | 
 
 
 # ── 逐年序列 ─────────────────────────────────────────────────────────────
-def _numerator(field: str, row: Mapping[str, Any], shares: Any) -> Any:
+def _numerator(field: str, row: Mapping[str, Any]) -> Any:
     if field == _DERIVED_ASSETS:
         assets, equity = row.get("total_assets"), row.get("equity")
         if is_missing(assets) or is_missing(equity):
             return None
         return float(assets) - float(equity)
-    if field == _SHARES:
-        return shares
     return row.get(field)
 
 
-def year_series(key: str, rows: Sequence[Mapping[str, Any]], shares: Any) -> list[float | None]:
+def year_series(key: str, rows: Sequence[Mapping[str, Any]]) -> list[float | None]:
     """某展示字段逐年的值（与 ``rows`` 等长、升序；该年不可用 → ``None``）。
 
     ``ncf = ocf + icf + fcf``（三者任一为 ``None`` 则该年 ``None``，契约 §3.4）。
     """
     if key == "ncf":
-        ocf = year_series("ocf", rows, shares)
-        icf = year_series("icf", rows, shares)
-        fcf = year_series("fcf", rows, shares)
+        ocf = year_series("ocf", rows)
+        icf = year_series("icf", rows)
+        fcf = year_series("fcf", rows)
         return [
             None if None in (a, b, c) else a + b + c  # type: ignore[operator]
             for a, b, c in zip(ocf, icf, fcf, strict=True)
@@ -119,14 +116,10 @@ def year_series(key: str, rows: Sequence[Mapping[str, Any]], shares: Any) -> lis
     numerator_field, denominator_field = FORMULAS[key]
     series: list[float | None] = []
     for row in rows:
-        denominator = (
-            None
-            if denominator_field is None
-            else (shares if denominator_field == _SHARES else row.get(denominator_field))
-        )
+        denominator = None if denominator_field is None else row.get(denominator_field)
         series.append(
             year_ratio(
-                _numerator(numerator_field, row, shares),
+                _numerator(numerator_field, row),
                 denominator,
                 has_denominator=denominator_field is not None,
             )
@@ -153,14 +146,9 @@ def mean_of(series: Sequence[float | None]) -> float | None:
 
 
 # ── 四张财务表 ───────────────────────────────────────────────────────────
-def table_series(
-    rows: Sequence[Mapping[str, Any]], shares: Any
-) -> dict[str, dict[str, list[float | None]]]:
+def table_series(rows: Sequence[Mapping[str, Any]]) -> dict[str, dict[str, list[float | None]]]:
     """四张财务表的**原始**逐年序列（未取整，键顺序 = 契约字段顺序）。"""
-    return {
-        table: {key: year_series(key, rows, shares) for key in keys}
-        for table, keys in TABLES.items()
-    }
+    return {table: {key: year_series(key, rows) for key in keys} for table, keys in TABLES.items()}
 
 
 # ── 月K（前复权）─────────────────────────────────────────────────────────

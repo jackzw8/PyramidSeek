@@ -59,6 +59,7 @@ def _rows(
     equity: float | None = 200.0,
     total_assets: float = 500.0,
     op_cashflow: float = 15.0,
+    eps: float = 1.0,
 ) -> list[dict]:
     out: list[dict] = []
     for index in range(years):
@@ -73,6 +74,7 @@ def _rows(
                 "equity": equity,
                 "total_assets": total_assets,
                 "op_cashflow": op_cashflow,
+                "eps": eps,
             }
         )
     return out

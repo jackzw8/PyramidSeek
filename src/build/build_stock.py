@@ -34,9 +34,9 @@ def _radar(radar: dict[str, float]) -> dict[str, Any]:
     return {key: derived.round_value(radar.get(key, 0.0), config.Q_DECIMALS) for key in RADAR_KEYS}
 
 
-def _tables(rows: list[dict[str, Any]], shares: Any) -> dict[str, dict[str, list[Any]]]:
+def _tables(rows: list[dict[str, Any]]) -> dict[str, dict[str, list[Any]]]:
     """四张财务表：逐年数组按字段位数取整（契约 §3.5）。"""
-    raw_tables = derived.table_series(rows, shares)
+    raw_tables = derived.table_series(rows)
     return {
         table: {
             key: derived.round_series(series, derived.DECIMALS[key])
@@ -51,7 +51,6 @@ def build_stock(inputs: BuildInputs, code: str, out_dir: Path) -> Path:
     stock = inputs.stocks_by_code[code]
     score = inputs.scores_by_code[code]
     rows = derived.annual_window(inputs.financials.get(code))
-    shares = stock.get("shares")
 
     payload: dict[str, Any] = {
         "code": code,
@@ -79,7 +78,7 @@ def build_stock(inputs: BuildInputs, code: str, out_dir: Path) -> Path:
         "unfilled": list(score.unfilled),
         "radar": _radar(score.radar),
         "years": derived.year_labels(rows),
-        **_tables(rows, shares),
+        **_tables(rows),
     }
 
     # `kline` 字段**已退役**（D-56 / M4-7，2026-11-04）：行情改由前端在详情页

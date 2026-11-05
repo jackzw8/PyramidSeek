@@ -182,9 +182,9 @@ def test_offline_chain_never_touches_network(monkeypatch) -> None:
 
 
 def test_default_chain_uses_selected_source_for_online() -> None:
-    """联网主链（M5-1 / ADR-015）：**默认东财单源** + fixtures 兜底；多级回退链已废除。"""
+    """联网主链（M5-1 / ADR-015）：**默认新浪单源** + fixtures 兜底；多级回退链已废除。"""
     chain = fetch.default_chain()
-    assert [source.name for source in chain] == ["em", "fixture"]
+    assert [source.name for source in chain] == ["akshare", "fixture"]
     # 显式换源：注册表把 "sina" 映射到 AkShareSource（内部 name 仍为 "akshare"）
     assert [source.name for source in fetch.default_chain(sources={"A": "sina"})] == [
         "akshare",

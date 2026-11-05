@@ -36,7 +36,7 @@ DDL: dict[str, str] = {
         CREATE TABLE IF NOT EXISTS stock (
           code VARCHAR PRIMARY KEY, name VARCHAR, market VARCHAR, exchange VARCHAR,
           l1_code VARCHAR, l1_name VARCHAR, l2_code VARCHAR, l2_name VARCHAR,
-          industry_std VARCHAR, listed_at DATE, shares DECIMAL(18,4),
+          industry_std VARCHAR, listed_at DATE,
           status VARCHAR, is_financial BOOLEAN, updated_at TIMESTAMP
         )""",
     "financial_report": """
@@ -45,6 +45,7 @@ DDL: dict[str, str] = {
           revenue DECIMAL(18,4), gross_profit DECIMAL(18,4), net_profit DECIMAL(18,4),
           total_assets DECIMAL(18,4), total_liabilities DECIMAL(18,4), equity DECIMAL(18,4),
           cash DECIMAL(18,4), op_cashflow DECIMAL(18,4), icf DECIMAL(18,4), fcf DECIMAL(18,4),
+  eps DECIMAL(18,4),
           effective_date DATE, currency VARCHAR, source VARCHAR, fetched_at TIMESTAMP,
           PRIMARY KEY (code, report_period, report_type)
         )""",
@@ -99,7 +100,6 @@ COLUMNS: dict[str, tuple[str, ...]] = {
         "l2_name",
         "industry_std",
         "listed_at",
-        "shares",
         "status",
         "is_financial",
         "updated_at",
@@ -119,6 +119,7 @@ COLUMNS: dict[str, tuple[str, ...]] = {
         "op_cashflow",
         "icf",
         "fcf",
+        "eps",
         "effective_date",
         "currency",
         "source",
@@ -210,6 +211,9 @@ def init_schema(conn: Any) -> None:
     for table, statement in DDL.items():
         conn.execute(statement)
         logger.debug("已确保表存在：%s", table)
+    # D-67：旧库的表已存在，CREATE TABLE IF NOT EXISTS 不会补新列。
+    # 不加这句，任何已有 standard.duckdb 都会因「无 eps 列」写库失败（实测踩过）。
+    conn.execute("ALTER TABLE financial_report ADD COLUMN IF NOT EXISTS eps DECIMAL(18,4)")
 
 
 def to_db_date(value: Any) -> str | None:

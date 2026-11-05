@@ -44,7 +44,8 @@ SOURCES: dict[str, dict[str, tuple[str, type]]] = {
     },
 }
 
-DEFAULT_SOURCE: dict[str, str] = {"A": "em", "HK": "em"}
+# D-67：两个默认源都自带「基本每股收益」，无需为 EPS 反算股本
+DEFAULT_SOURCE: dict[str, str] = {"A": "sina", "HK": "tx"}
 
 
 def available_sources(market: str) -> list[str]:
