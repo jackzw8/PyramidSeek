@@ -200,6 +200,7 @@ def fetch_universe(
     codes: list[str] | None = None,
     skip_financials: set[str] | None = None,
     sync_lists_to_cold: bool = False,
+    fill_hk_metadata: bool = True,
     limit: int | None = None,
     chain: list[Any] | None = None,
     sources: dict[str, str] | None = None,
@@ -220,6 +221,8 @@ def fetch_universe(
         —— 列表 / 行业信息要用**本轮的**（申万行业名会改名，例如「白酒」→「白酒Ⅱ」），
         只有财报走标准层读回。``codes`` 因此不要为预筛缩减。
     :param limit: 每个市场最多取多少只（``codes`` 优先级更高）。
+    :param fill_hk_metadata: 是否回填港股行业与股本（逐只 ≈1.2s）。``daily`` 跑全量港股时
+        传 ``False`` —— 666 只港股通要 13 分钟，而 daily 的定位是「刷新 + 重算」（D-62）。
     :param sync_lists_to_cold: 跑完后把当日分区的股票列表同步到 ``cold/``（D-60），
         ``daily`` 用 —— 这样 ``financials`` 下次就不会还读建仓那天的旧列表。
     :param persist: 是否落库（``False`` 只做采集与清洗）。
@@ -292,8 +295,15 @@ def fetch_universe(
     # 港股行业与股本回填（D-58）：只补本批次涉及、且在港股通名单内的标的
     hk_codes = [str(row.get("code")) for row in stocks if str(row.get("market")) == "HK"]
     if hk_codes:
-        _fill_hk_industry(stocks, hk_codes, chain)
-        _fill_hk_shares(stocks, hk_codes, chain)
+        if fill_hk_metadata:
+            _fill_hk_industry(stocks, hk_codes, chain)
+            _fill_hk_shares(stocks, hk_codes, chain)
+        else:
+            logger.info(
+                "港股元数据回填已跳过（daily + 全量港股：%d 只 ×1.2s 会白等十几分钟）"
+                "—— 缺失的行业/股本留在「未分类」，用 financials 或带 --codes 补",
+                len(hk_codes),
+            )
 
     # 注意：不要在这里补一个裸的 ``sources["list_stocks"]`` 汇总键。原先它取
     # ``sources.get("list_stocks:A", "none")``，``--markets HK`` 时该键恒为 "none"，
