@@ -151,7 +151,7 @@
 
   <div class="card">
     <h2>5. 历史任务</h2>
-    <table><thead><tr><th>run_id</th><th>模式</th><th>市场</th><th>源</th><th>状态</th><th>结束时间</th></tr></thead>
+    <table><thead><tr><th>run_id</th><th>模式</th><th>市场</th><th>股票池 / 清单</th><th>源</th><th>状态</th><th>结束时间</th></tr></thead>
     <tbody id="history"></tbody></table>
   </div>
   <div class="modal" id="picker" hidden>
@@ -198,6 +198,14 @@ let sourcesSig = '';
  * sqlite 里存的是 UTC（`datetime_utc()`），直接显示会比本地时间少 8 小时；
  * 历史表的「结束时间」曾经就是原始 ISO，看着像时间不对。
  */
+function esc(text) {
+  // 产物里的清单路径来自用户输入，插进 innerHTML 前必须转义
+  return String(text == null ? '' : text).replace(
+    /[&<>"']/g,
+    (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]),
+  );
+}
+
 function fmtLocal(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -258,7 +266,14 @@ async function refresh() {
     const tbody = $('history'); tbody.innerHTML = '';
     (body.history || []).forEach((r) => {
       const tr = document.createElement('tr');
+      // 股票池：codes_note 存的是清单路径（多份用逗号分隔）或 `codes=N`
+      const note = String(r.codes_note || '');
+      const parts = note.split(',').map((s) => s.trim()).filter(Boolean);
+      const poolLabel = !parts.length
+        ? '—'
+        : (parts.length === 1 ? parts[0].split(/[\\/]/).pop() : `${parts.length} 份清单`);
       tr.innerHTML = `<td>${r.run_id}</td><td>${r.mode}</td><td>${r.markets}</td>`
+        + `<td title="${esc(note)}">${esc(poolLabel)}</td>`
         + `<td>${r.source_a || '—'} / ${r.source_hk || '—'}</td>`
         + `<td class="st-${r.status}">${r.status}</td><td>${fmtLocal(r.finished_at)}</td>`;
       tbody.appendChild(tr);
