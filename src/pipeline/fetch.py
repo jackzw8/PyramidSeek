@@ -53,6 +53,9 @@ class FetchOutcome:
     source_policy: dict[str, Any] = field(default_factory=dict)
     # 主链首个源名 = 本轮「期望源」；非它提供即视为降级（保持 D-8 的降级语义）
     expected_source: str = ""
+    # 各市场**显式选源**对应的源实例名（D-55）：`--source-a sina` 映射到 `AkShareSource`
+    # 实例，其 name 是 `akshare` 而不是选择名 `sina` —— 判定降级必须用实例名比对。
+    expected_by_market: dict[str, str] = field(default_factory=dict)
     # 全市场快照成功时的跑批日（ISO）：daily 模式不抓历史行情 → 行情截止日由快照提供（D-32）
     snapshot_date: str | None = None
 
@@ -77,7 +80,7 @@ class FetchOutcome:
             if name.startswith("financials:"):
                 code = name.split(":", 1)[1]
                 market = "HK" if code.upper().startswith("HK") else "A"
-                expected = by_market.get(market) or expected
+                expected = self.expected_by_market.get(market) or by_market.get(market) or expected
             if expected and source != expected and not enhanced:
                 return True
         return False
@@ -241,6 +244,11 @@ def fetch_universe(
     )
     outcome = FetchOutcome(universe=clean.CleanResult())
     outcome.expected_source = getattr(chain[0], "name", "") if chain else ""
+    outcome.expected_by_market = {
+        market: getattr(fin_chains[market][0], "name", "")
+        for market in markets
+        if fin_chains.get(market)
+    }
     outcome.source_policy = {
         "chain": list(
             dict.fromkeys(
