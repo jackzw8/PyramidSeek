@@ -283,12 +283,17 @@ def run(args: argparse.Namespace) -> int:
 
     codes = list(args.codes or [])
     if args.codes_file:
-        lines = [
-            line.strip()
-            for line in args.codes_file.read_text(encoding="utf-8").splitlines()
-            if line.strip() and not line.strip().startswith("#")
-        ]
-        codes.extend(lines)
+        loaded = 0
+        for path in args.codes_file:  # D-63：可传多份清单，合并去重
+            lines = [
+                line.strip()
+                for line in path.read_text(encoding="utf-8").splitlines()
+                if line.strip() and not line.strip().startswith("#")
+            ]
+            codes.extend(lines)
+            loaded += 1
+            print(f"[batch] 清单 {loaded}/{len(args.codes_file)}：{path}（{len(lines)} 个代码）")
+        codes = list(dict.fromkeys(codes))  # 保序去重
     if args.mode == "retry" and not args.offline:
         pending_path = config.DATA_DIR / "_pending.json"
         pending_codes = _read_pending(pending_path)
@@ -467,6 +472,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--codes-file",
         type=Path,
+        action="append",
         default=None,
         help="标的清单文件（每行一个代码，# 开头为注释；与 --codes 合并去重）",
     )

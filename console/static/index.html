@@ -85,7 +85,7 @@
       <div class="field" style="flex:1"><label>股票池：自定义 codes（逗号 / 空格分隔，如 SH600519, HK00700；留空 = 全市场）</label>
         <input type="text" id="codes" placeholder="SH600519, HK00700"></div>
       <div class="field" style="flex:1"><label>或：选样清单文件（--codes-file）</label>
-        <div class="pick"><input type="text" id="codesFile" placeholder="data/lists/industry_l2_top_codes.txt">
+        <div class="pick"><input type="text" id="codesFile" placeholder="可多份，逗号分隔：a.txt, b.txt">
           <button type="button" class="mini" id="btnPickFile">浏览…</button></div></div>
     </div>
     <div class="row">
@@ -327,8 +327,16 @@ function pickerOpen(mode) {
 function pickerClose() { $('picker').hidden = true; }
 
 function pickerTake(value) {
-  if (pkMode === 'file') $('codesFile').value = value;
-  else $('selDir').value = value;
+  if (pkMode === 'file') {
+    // D-63：清单可多份。选一次追加一份（逗号分隔），后端会拆成多个 --codes-file。
+    // 不关闭弹窗，方便连续点几个文件；点「关闭」退出。
+    const parts = ($('codesFile').value || '').split(',').map((s) => s.trim()).filter(Boolean);
+    if (!parts.includes(value)) parts.push(value);
+    $('codesFile').value = parts.join(', ');
+    $('pkPath').textContent = `已选 ${parts.length} 份清单，可继续选择（点关闭退出）`;
+    return;
+  }
+  $('selDir').value = value;
   pickerClose();
 }
 

@@ -97,7 +97,11 @@ class Runner:
             if codes:
                 cmd += ["--codes", *codes]
             if codes_file:
-                cmd += ["--codes-file", codes_file]
+                # D-63：前端用逗号分隔多份清单，这里拆成多个 `--codes-file`
+                for part in str(codes_file).replace(";", ",").split(","):
+                    part = part.strip()
+                    if part:
+                        cmd += ["--codes-file", part]
             if limit:
                 cmd += ["--limit", str(limit)]
             if offline:
