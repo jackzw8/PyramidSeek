@@ -422,6 +422,23 @@ def fetch_universe(
         if rows:
             industries[market] = rows
 
+    # D-52 预筛跳过的标的：从标准层读回财报，**在 clean 之前**补上。
+    # 不补的话 `clean_universe` 会拿「本轮抓到的 158 只」比全市场 1222 只，
+    # 算出 87% 缺失率 → 整批挂 degraded（误报，实测过）。
+    if skip_financials and persist:
+        try:
+            stored = store.read_table("financial_report", db_path=db_path)
+        except Exception:  # noqa: BLE001  空库 / 表不存在 → 保持原样
+            stored = []
+        restored = 0
+        for row in stored:
+            code = str(row.get("code") or "")
+            if code in skip_financials:
+                financials.setdefault(code, []).append(row)
+                restored = restored or 1
+        if restored:
+            outcome.notes.append(f"预筛读回 {len(skip_financials)} 只的财报（标准层已有，未重抓）")
+
     outcome.universe = clean.clean_universe(stocks, financials, prices, today=today)
     outcome.universe.issues.extend(price_issues)
 
