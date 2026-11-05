@@ -33,7 +33,7 @@ if __package__ in (None, ""):  # 支持 `python src/batch.py` 直接运行（家
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src import common, config, net  # noqa: E402
-from src.build import BuildInputs  # noqa: E402
+from src.build import BuildInputs, read_json, write_json  # noqa: E402
 from src.build.build_meta import (  # noqa: E402
     build_industries,
     build_meta,
@@ -282,6 +282,31 @@ def prepare_out_dir(out_dir: Path, markets: tuple[str, ...] | None = None) -> No
             path.unlink(missing_ok=True)
 
 
+def _rebase_ranking_versions(
+    out_dir: Path, keep_markets: tuple[str, ...], snapshot_version: str
+) -> int:
+    """把保留市场的 ``ranking/{market}.json`` 版本对齐到本轮（D-61）。
+
+    `--merge` 保留下来的榜单是上一批写的，``meta.snapshotVersion`` 还停在旧日期；
+    合并后它们与新一轮同属「当前有效快照」，版本必须一致，否则 `validate_products`
+    会报「snapshotVersion 不一致」。真实来源已记在 ``meta.notes``，不丢信息。
+    """
+    rebased = 0
+    for market in keep_markets:
+        path = Path(out_dir) / "ranking" / f"{market}.json"
+        payload = read_json(path)
+        if not payload:
+            continue
+        meta = dict(payload.get("meta") or {})
+        if meta.get("snapshotVersion") == snapshot_version:
+            continue
+        meta["snapshotVersion"] = snapshot_version
+        payload["meta"] = meta
+        write_json(path, payload)
+        rebased += 1
+    return rebased
+
+
 def run(args: argparse.Namespace) -> int:
     """执行完整跑批，返回进程退出码（0 成功 / 1 校验失败 / 2 采集失败）。"""
     generated_at = args.generated_at or datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -453,6 +478,11 @@ def run(args: argparse.Namespace) -> int:
         written.append(build_ranking(inputs, market, out_dir))
     for score in inputs.scored:
         written.append(build_stock(inputs, score.code, out_dir))
+    if merge_markets:
+        kept = tuple(market for market in config.MARKETS if market not in merge_markets)
+        rebased = _rebase_ranking_versions(out_dir, kept, snapshot_version)
+        if rebased:
+            print(f"[batch] 合并：{rebased} 个保留市场的榜单版本对齐到 {snapshot_version}")
     # manifest 最后生成：扫描全目录（此时 stock/*.json 才齐全），否则会漏文件
     written.append(build_manifest(inputs, out_dir))
     print(f"[batch] 产物 {len(written)} 个 → {out_dir}")
