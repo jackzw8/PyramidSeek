@@ -415,7 +415,6 @@ class AkShareSource:
             "l2_name": config.INDUSTRY_UNCLASSIFIED,
             "industry_std": config.INDUSTRY_STANDARD[market],
             "listed_at": None,  # 需单独接口，M1-4 清洗阶段补齐
-            "shares": to_internal_billion(pick(row, "总股本", "shares")),
             "status": status_of(name),
             # 列表阶段拿不到行业 → False；回填行业时由 fetch._fill_hk_industry 重置
             "is_financial": False,
@@ -834,6 +833,7 @@ _SUBJECTS: dict[str, tuple[str, ...]] = {
     "gross_profit": ("营业毛利", "毛利"),
     "cost": ("营业总成本", "营业成本"),
     "net_profit": ("归属于母公司所有者的净利润", "归属母公司股东的净利润", "净利润"),
+    "eps": ("基本每股收益", "稀释每股收益"),  # D-67：元/股，不转金额
     "total_assets": ("资产总计", "资产合计"),
     "total_liabilities": ("负债合计",),
     "equity": ("归属于母公司所有者权益合计", "所有者权益(或股东权益)合计", "股东权益合计"),
@@ -857,6 +857,16 @@ _SUBJECT_KEYWORDS: dict[str, tuple[tuple[str, ...], ...]] = {
     "net_profit": (("归属于母公司", "净利润"), ("归属母公司", "净利润")),
     "equity": (("归属于母公司", "权益"), ("归属母公司", "权益")),
 }
+
+
+def _eps_value(value: Any) -> float | None:
+    """EPS 是「元/股」，**不经过金额（元→亿元）转换**（D-67）。"""
+    if value is None or is_missing(value):
+        return None
+    try:
+        return round(float(str(value).replace(",", "")), 4)
+    except (TypeError, ValueError):
+        return None
 
 
 def _subject(row: dict[str, Any], key: str) -> Any:
@@ -919,6 +929,7 @@ def map_sina_financials(
                 "revenue": revenue,
                 "gross_profit": gross,
                 "net_profit": to_internal_billion(_subject(income, "net_profit")),
+                "eps": _eps_value(_subject(income, "eps")),
                 "total_assets": to_internal_billion(_subject(balance, "total_assets")),
                 "total_liabilities": to_internal_billion(_subject(balance, "total_liabilities")),
                 "equity": to_internal_billion(_subject(balance, "equity")),
@@ -1065,6 +1076,7 @@ def map_ths_financials(
                 "revenue": revenue,
                 "gross_profit": gross,
                 "net_profit": _ths_amount(income, *_THS_COLUMNS["net_profit"]),
+                "eps": _eps_value(pick(income, "（一）基本每股收益", "（二）稀释每股收益")),
                 "total_assets": _ths_amount(balance, *_THS_COLUMNS["total_assets"]),
                 "total_liabilities": _ths_amount(balance, *_THS_COLUMNS["total_liabilities"]),
                 "equity": _ths_amount(balance, *_THS_COLUMNS["equity"]),

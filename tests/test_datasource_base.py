@@ -41,7 +41,7 @@ def test_stock_field_contract() -> None:
         "is_financial",
         "updated_at",
     )
-    assert base.STOCK_OPTIONAL_FIELDS == ("listed_at", "shares")
+    assert base.STOCK_OPTIONAL_FIELDS == ("listed_at",)
 
 
 def test_financial_field_contract() -> None:
@@ -61,6 +61,7 @@ def test_financial_field_contract() -> None:
     )
     # 这些是「可选」——空值用 None（家法 R11），实现不得用 0 顶替
     assert base.FINANCIAL_OPTIONAL_FIELDS == (
+        "eps",
         "gross_profit",
         "total_liabilities",
         "cash",

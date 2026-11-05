@@ -80,6 +80,7 @@ def _rows(
     op_cashflow: float | None = 15.0,
     icf: float | None = -5.0,
     fcf: float | None = -3.0,
+    eps: float | None = 0.1,
 ) -> list[dict]:
     return [
         {
@@ -94,6 +95,7 @@ def _rows(
             "op_cashflow": op_cashflow,
             "icf": icf,
             "fcf": fcf,
+            "eps": eps,
         }
         for index in range(years)
     ]

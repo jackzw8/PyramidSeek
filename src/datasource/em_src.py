@@ -175,7 +175,10 @@ def map_em_a_financials(
         for report_rows in by_period[period].values():
             merged.update(report_rows)
         values = {key: _pick(merged, *cols) for key, cols in _EM_A_FIELDS.items()}
-        out.append(_row(code, period, values, stamp, "em", "CNY"))
+        row = _row(code, period, values, stamp, "em", "CNY")
+        # D-67：BASIC_EPS 是元/股，不能经过 _row 的元→亿元换算
+        row["eps"] = _pick(merged, "BASIC_EPS", "DILUTED_EPS")
+        out.append(row)
     return out
 
 
@@ -188,6 +191,16 @@ def _hk_lookup(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
         if period and name:
             out.setdefault(period, {})[name] = row.get("AMOUNT")
     return out
+
+
+def _eps_value(value: Any) -> float | None:
+    """EPS 是「元/股」，**不经过金额（元→亿元）转换**（D-67）。"""
+    if value is None:
+        return None
+    try:
+        return round(float(str(value).replace(",", "")), 4)
+    except (TypeError, ValueError):
+        return None
 
 
 def map_em_hk_financials(
@@ -236,6 +249,17 @@ def map_em_hk_financials(
         # 毛利：`_row` 用 `revenue − cost` 自算，但腾讯等票的「销售成本」科目名对不上 →
         # 为 None；此时用指标接口的毛利率反算（D-58），保证 gross_margin 有值。
         row = _row(code, period, values, stamp, "em", None)
+        # D-67：三表科目里就有「每股基本盈利」，**不额外请求指标接口**
+        row["eps"] = _eps_value(
+            next(
+                (
+                    merged.get(n)
+                    for n in ("每股基本盈利", "每股摊薄盈利")
+                    if merged.get(n) is not None
+                ),
+                None,
+            )
+        )
         if row.get("gross_profit") is None:
             ratio = margin_by_period.get(period)
             revenue = row.get("revenue")
@@ -320,29 +344,3 @@ class EastMoneySource(AkShareSource):
         except Exception as exc:  # noqa: BLE001  增强数据，失败不阻断
             logger.warning("港股指标接口不可用，%s 的毛利率将留空：%s", code, exc)
             return []
-
-    def hk_shares(self, codes: list[str]) -> dict[str, float]:
-        """港股总股本（单位：**亿股**，D-58）：用指标接口反算。
-
-        港股列表接口不给股本 → 评分层的 ``eps = net_profit ÷ shares`` 恒缺失。
-        这里取最新一期 ``HOLDER_PROFIT ÷ BASIC_EPS``（元 ÷ 元/股 = 股，再折亿股）。
-        指标缓存通常已由财报步骤写好，命中即秒回。
-        """
-        out: dict[str, float] = {}
-        for raw in codes:
-            code = str(raw)
-            stock = code[2:] if code.upper().startswith("HK") else code
-            rows = self._hk_indicators(code, stock)
-            if not rows:
-                continue
-            latest = max(rows, key=lambda row: str(row.get("REPORT_DATE") or ""))
-            eps = latest.get("BASIC_EPS")
-            profit = latest.get("HOLDER_PROFIT")
-            try:
-                eps_value = float(eps) if eps is not None else 0.0
-                profit_value = float(profit) if profit is not None else 0.0
-            except (TypeError, ValueError):
-                continue
-            if eps_value and profit_value:
-                out[code] = round(profit_value / eps_value / 1e8, 4)
-        return out

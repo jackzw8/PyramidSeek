@@ -26,6 +26,7 @@ DEFAULT_FIELDS: dict[str, float] = {
     "op_cashflow": 15.0,
     "icf": -5.0,
     "fcf": -3.0,
+    "eps": 1.0,
 }
 DEFAULT_SHARES = 10.0
 
@@ -126,7 +127,7 @@ def test_negative_net_profit_produces_negative_ratios_and_scale() -> None:
     assert result.values["roa"] == -0.05
     assert result.values["net_margin"] == -0.1
     assert result.values["net_profit_scale"] == -10.0
-    assert result.values["eps"] == -1.0
+    assert result.values["eps"] == 1.0  # D-67：直接取源字段，不随净利润变号
     assert result.values["gross_margin"] == 0.4  # 毛利口径不受净利润影响
     assert result.unavailable == ()  # 负值是有效值，不算"算不出来"
 
@@ -191,16 +192,18 @@ def test_indicator_with_no_available_year_is_zero_and_reported() -> None:
     assert result.values["roe"] == 0.1  # 其他项不受影响
 
 
-def test_missing_shares_makes_eps_unavailable() -> None:
-    result = raw_indicators(make_stock(shares=None), make_rows())
+def test_missing_eps_is_unavailable() -> None:
+    """D-67：源没给 EPS 就留空，不再用净利润÷股本补。"""
+    result = raw_indicators(make_stock(), make_rows([{"eps": None}] * 5))
     assert result.values["eps"] == 0.0
     assert result.unavailable == ("eps",)
 
 
-def test_zero_shares_is_division_by_zero_not_missing() -> None:
-    result = raw_indicators(make_stock(shares=0), make_rows())
+def test_zero_eps_is_valid_value() -> None:
+    """EPS=0 是有效值（亏损/持平），不算缺失。"""
+    result = raw_indicators(make_stock(), make_rows([{"eps": 0.0}] * 5))
     assert result.values["eps"] == 0.0
-    assert result.unavailable == ()  # 除零 → 0，按 §3 不算"算不出来"
+    assert result.unavailable == ()
 
 
 def test_no_financials_at_all_yields_all_zero_and_all_unavailable() -> None:
@@ -287,16 +290,13 @@ def _fixture_stock(code: str) -> tuple[dict, list[dict]]:
     return stock, rows
 
 
-def test_real_fixture_eps_consistent_with_net_profit_scale() -> None:
-    """两项指标互为交叉验证：eps × shares 应等于净利润均值（亿股/亿元 单位自洽）。"""
+def test_real_fixture_without_eps_marks_unavailable() -> None:
+    """D-67：fixtures 没有 EPS 字段 → 记 unavailable，不用净利润÷股本补。"""
     stock, rows = _fixture_stock("SH600900")
     result = raw_indicators(stock, rows)
 
-    assert result.unavailable == ()
-    # 容差按"eps 取 4 位小数 × 股本"推：|Δeps| ≤ 5e-5 × 244.7 ≈ 0.0123，再留裕量
-    assert result.values["eps"] * stock["shares"] == pytest.approx(
-        result.values["net_profit_scale"], abs=0.05
-    )
+    assert "eps" in result.unavailable
+    assert result.values["eps"] == 0.0
 
 
 def test_real_fixture_financial_stock_reports_unavailable_gross_margin() -> None:

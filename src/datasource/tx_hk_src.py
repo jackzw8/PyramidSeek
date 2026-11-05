@@ -113,6 +113,16 @@ def _parse_period(rows: list[Any]) -> dict[str, Any]:
     }
 
 
+def _eps_value(value: Any) -> float | None:
+    """EPS 是「元/股」，**不经过金额（元→亿元）转换**（D-67）。"""
+    if value is None:
+        return None
+    try:
+        return round(float(str(value).replace(",", "").replace("元", "")), 4)
+    except (TypeError, ValueError):
+        return None
+
+
 def map_tx_hk_financials(
     code: str,
     periods: list[dict[str, Any]],
@@ -169,6 +179,11 @@ def map_tx_hk_financials(
                 "revenue": revenue,
                 "gross_profit": gross,
                 "net_profit": values.get("net_profit"),
+                # D-67：EPS 是元/股，不能走 pick() 的元→亿元折算
+                "eps": _eps_value(
+                    (item.get("fields") or {}).get("基本每股收益")
+                    or (item.get("fields") or {}).get("摊薄每股收益")
+                ),
                 "total_assets": values.get("total_assets"),
                 "total_liabilities": values.get("total_liabilities"),
                 "equity": values.get("equity"),

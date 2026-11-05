@@ -57,12 +57,11 @@ STOCK_REQUIRED_FIELDS = (
     "l2_name",  # 申万二级 / GICS Industry
     "industry_std",  # 申万2021 / GICS（港股降级路径见 ADR-011）
     "status",  # normal / ST / suspended / delisted / new
-    "is_financial",  # 是否金融类（毛利率/周转率不适用）
+    "is_financial",  # 金融股标记  # 是否金融类（毛利率/周转率不适用）
     "updated_at",
 )
 STOCK_OPTIONAL_FIELDS = (
     "listed_at",  # 上市日期；次新股判定用（<5 年）
-    "shares",  # 总股本（亿股），算 EPS 用
 )
 
 # financial_report：财务报表（《数据字典》§3.2）
@@ -81,6 +80,7 @@ FINANCIAL_REQUIRED_FIELDS = (
     "fetched_at",
 )
 FINANCIAL_OPTIONAL_FIELDS = (
+    "eps",  # 每股收益（元/股），直接取源字段；取不到留空（D-67）
     "gross_profit",  # 毛利（缺则 revenue − 营业成本；金融类不适用 → None）
     "total_liabilities",  # 勾稽校验用：|资产 − (负债 + 权益)| / 资产 ≤ 5%
     "cash",  # 现金及现金等价物

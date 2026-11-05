@@ -25,7 +25,7 @@ class BuildInputs:
 
     snapshot_version: str
     generated_at: str  # UTC ISO8601（--generated-at 可固定，保幂等 R19）
-    stocks: tuple[dict[str, Any], ...] = ()  # 标准层主数据（含 status / l1_name / shares / ...）
+    stocks: tuple[dict[str, Any], ...] = ()  # 标准层主数据（含 status / l1_name / ...）
     financials: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
     prices: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
     scored: tuple[StockScore, ...] = ()

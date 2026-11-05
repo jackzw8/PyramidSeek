@@ -14,9 +14,10 @@ from src.datasource.em_src import map_em_a_financials, map_em_hk_financials
 from src.datasource.tx_hk_src import map_tx_hk_financials, parse_tx_amount
 
 
-def test_defaults_are_eastmoney_for_both_markets() -> None:
-    assert registry.validate_selection(None) == {"A": "em", "HK": "em"}
-    assert registry.validate_selection({"A": "sina"}) == {"A": "sina", "HK": "em"}
+def test_defaults_are_sina_and_tx() -> None:
+    # D-67：两个默认源都自带「基本每股收益」，无需反算股本
+    assert registry.validate_selection(None) == {"A": "sina", "HK": "tx"}
+    assert registry.validate_selection({"A": "em"}) == {"A": "em", "HK": "tx"}
 
 
 def test_available_sources_exclude_tencent_for_a_shares() -> None:

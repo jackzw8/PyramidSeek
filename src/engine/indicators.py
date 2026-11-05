@@ -50,7 +50,6 @@ SCALE_INDICATORS: tuple[str, ...] = ("net_profit_scale",)
 # 量纲分类仅用于**展示与落库取整**（如产物里保留几位）；**计算链路一律不取整**（D-18）：
 # 中间取整会让"接近但不等"的值被抹成并列，直接改变分位分（engine.js 也不取整）。
 
-_SHARES = "__shares__"  # 分母来自股票主数据（亿股），不在财报行里
 
 # 公式表（§3）：指标 → (分子字段, 分母字段)。分母 ``None`` = 直接对分子取均值。
 # 单位自洽：金额一律亿元、股本一律亿股 → eps 的数值即「元/股」。
@@ -62,7 +61,7 @@ _FORMULAS: dict[str, tuple[str, str | None]] = {
     "cash_ratio": ("cash", "total_assets"),
     "asset_turnover": ("revenue", "total_assets"),
     "net_profit_scale": ("net_profit", None),
-    "eps": ("net_profit", _SHARES),
+    "eps": ("eps", None),  # D-67：直接取源字段
 }
 
 
@@ -142,11 +141,11 @@ def raw_indicators(
 ) -> RawIndicators:
     """计算一只股票的 8 项原始指标（《评分算法规格》§3）。
 
-    :param stock: 股票主数据行（取 ``code``、``shares``；``shares`` 单位亿股）。
+    :param stock: 股票主数据行（取 ``code`` 等）。
     :param financials: 该股票的财报行（标准层字段，金额单位亿元）。
     :returns: :class:`RawIndicators` —— 8 项值与"哪些项算不出来"的留痕。
 
-    >>> raw = raw_indicators({"code": "SH600900", "shares": 10.0}, [
+    >>> raw = raw_indicators({"code": "SH600900"}, [
     ...     {"report_period": "2024-12-31", "report_type": "annual",
     ...      "net_profit": 10.0, "equity": 100.0, "revenue": 100.0,
     ...      "total_assets": 200.0, "gross_profit": 40.0, "cash": 20.0},
@@ -157,7 +156,6 @@ def raw_indicators(
     1.0
     """
     rows = annual_rows(financials, years=years, as_of=as_of)
-    shares = stock.get("shares")
     values: dict[str, float] = {}
     unavailable: list[str] = []
 
@@ -168,8 +166,6 @@ def raw_indicators(
             denominator: Any
             if denominator_field is None:
                 denominator = None
-            elif denominator_field == _SHARES:
-                denominator = shares
             else:
                 denominator = row.get(denominator_field)
             ratio = year_ratio(
