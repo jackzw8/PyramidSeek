@@ -23,7 +23,7 @@ from src import config
 from src.datasource.akshare_src import AkShareSource
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUT_DIR = "data/lists"
+DEFAULT_OUT_DIR = "assets/data/lists"
 
 UNCLASSIFIED = config.INDUSTRY_UNCLASSIFIED
 LEVEL_LABEL = {"l1": "申万一级", "l2": "申万二级"}
