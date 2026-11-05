@@ -64,13 +64,21 @@ class FetchOutcome:
         多级 stub 链仍靠 ``expected_source`` 判断谁算「降级」。
         行情 / 全市场快照是增强接口，缺失不影响主榜与评分，豁免。
         """
+        by_market = (self.source_policy or {}).get("byMarket") or {}
         for name, source in self.sources.items():
             enhanced = name.startswith(("price_daily", "market_snapshot"))
             if source in ("none", "fixture"):
                 if not enhanced:
                     return True
                 continue
-            if self.expected_source and source != self.expected_source and not enhanced:
+            # 财报是**显式选源**（D-55 / ADR-015）：按市场取该市场选的源做基准，
+            # 否则 `--source-a sina` 会因「不等于主链首源 akshare」被误判成降级。
+            expected = self.expected_source
+            if name.startswith("financials:"):
+                code = name.split(":", 1)[1]
+                market = "HK" if code.upper().startswith("HK") else "A"
+                expected = by_market.get(market) or expected
+            if expected and source != expected and not enhanced:
                 return True
         return False
 

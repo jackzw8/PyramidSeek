@@ -294,7 +294,13 @@ def test_second_run_hits_cache_without_calling_source(tmp_path) -> None:
     second = make_source(ak, tmp_path).list_stocks("A")
 
     assert calls["n"] == 1  # 第二次命中缓存，未再调用数据源
-    assert first == second
+
+    # `updated_at` 是「转换成标准行的时刻」，每次调用都取 now() —— 跨秒即不等，
+    # 与「是否命中缓存」无关，比较时剔掉（否则这条断言有概率偶发失败）。
+    def _strip_updated(rows):
+        return [{key: value for key, value in row.items() if key != "updated_at"} for row in rows]
+
+    assert _strip_updated(first) == _strip_updated(second)
 
 
 def test_cache_file_lands_under_date_directory(tmp_path) -> None:
