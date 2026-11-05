@@ -25,7 +25,6 @@ import os
 import shutil
 import sys
 from datetime import UTC, date, datetime, timedelta
-from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -195,59 +194,6 @@ def _prescreen_financials(
         return list(codes), 0
     kept = [code for code in codes if latest.get(code, "") < expected_period]
     return kept, len(codes) - len(kept)
-
-
-def _to_plain(value: Any) -> Any:
-    """duckdb 读回来的是 ``Decimal`` / ``date``，转成与 fetch 输出一致的 ``float`` / ``str``。
-
-    ``Decimal`` 不转，产物 ``json.dumps`` 会直接 TypeError；``date`` 转 ISO 字符串，
-    与 clean 产出的 ``report_period``（``"2026-09-30"``）同形。
-    """
-    if isinstance(value, Decimal):
-        return float(value)
-    if isinstance(value, datetime):
-        return value.strftime("%Y-%m-%dT%H:%M:%SZ")
-    if isinstance(value, date):
-        return value.isoformat()
-    return value
-
-
-def _merge_prescreened(outcome: Any, codes: list[str], db_path: Path | None = None) -> int:
-    """把预筛跳过的标的从标准层读回，仍参与本轮评分（D-52 缺口修补）。
-
-    预筛的语义是「**不用重抓**财报」，不是「不要这只票」。原实现只把待抓清单传给
-    ``fetch_universe``，被跳过的标的既没抓、也没读回 —— ``--codes SH600519 HK00700``
-    会静默只剩一只，用户还以为自己选错了。
-
-    :returns: 实际补进来的股票数
-    """
-    wanted = {str(code) for code in codes}
-
-    def _read(table: str) -> list[dict[str, Any]]:
-        return [
-            {key: _to_plain(val) for key, val in row.items()}
-            for row in store.read_table(table, db_path=db_path)
-            if str(row.get("code")) in wanted
-        ]
-
-    added = 0
-    have = {str(row.get("code")) for row in outcome.universe.stocks}
-    for row in _read("stock"):
-        if str(row.get("code")) in have:
-            continue
-        outcome.universe.stocks.append(row)
-        added += 1
-
-    known = set(outcome.universe.financials)
-    for row in _read("financial_report"):
-        code = str(row.get("code"))
-        if code in known:
-            continue
-        outcome.universe.financials.setdefault(code, []).append(row)
-
-    if added:
-        outcome.notes.append(f"预筛读回 {added} 只（标准层已有应到报告期，未重抓财报）")
-    return added
 
 
 def prepare_out_dir(out_dir: Path, markets: tuple[str, ...] | None = None) -> None:
@@ -426,12 +372,6 @@ def run(args: argparse.Namespace) -> int:
     except DataSourceError as exc:
         print(f"[batch][ERROR] 采集失败：{exc}", file=sys.stderr)
         return 2
-
-    # 预筛只决定「抓不抓」，不决定「要不要这只票」：跳过的从标准层读回，照常评分。
-    if skipped_codes:
-        restored = _merge_prescreened(outcome, skipped_codes, args.db)
-        if restored:
-            print(f"[batch] 预筛读回：{restored} 只来自标准层（未重抓财报，仍参与评分）")
 
     inputs = assemble_inputs(
         outcome, snapshot_version=snapshot_version, generated_at=generated_at, as_of=as_of
