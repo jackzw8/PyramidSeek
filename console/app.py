@@ -28,7 +28,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from flask import Flask, jsonify, request, send_from_directory  # noqa: E402
+from flask import Flask, jsonify, request, send_file, send_from_directory  # noqa: E402
 
 from src import config  # noqa: E402
 from src.datasource.registry import (  # noqa: E402
@@ -183,6 +183,27 @@ def api_fs():
 def api_log():
     tail = max(10, min(int(request.args.get("tail", 200)), 2000))
     return jsonify({"lines": runner.tail(tail)})
+
+
+@app.get("/api/log/download")
+def api_log_download():
+    """下载完整日志（前端只显示 tail，长跑批的完整日志得能带走）。
+
+    ``?run=<run_id>`` 指定某次；不传则取当前运行中的，没有就取最新一份。
+    """
+    run_id = request.args.get("run") or runner.status.get("runId")
+    run_root = config.DATA_DIR / "_run"
+    if run_id:
+        path = run_root / run_id / "log.txt"
+    else:
+        # 只挑非空日志：测试残留 / 刚创建的 run 目录会留 0 字节 log.txt，
+        # 按 mtime 取最新会拿到空文件（实测踩到）。
+        candidates = [item for item in run_root.glob("*/log.txt") if item.stat().st_size > 0]
+        candidates.sort(key=lambda item: item.stat().st_mtime, reverse=True)
+        path = candidates[0] if candidates else None
+    if not path or not Path(path).exists():
+        return jsonify({"error": "没有日志文件（还没跑过批）"}), 404
+    return send_file(path, as_attachment=True, download_name=f"{Path(path).parent.name}.log")
 
 
 @app.get("/api/history")
