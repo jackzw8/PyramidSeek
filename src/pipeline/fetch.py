@@ -188,6 +188,7 @@ def fetch_universe(
     markets: tuple[str, ...] = config.MARKETS,
     codes: list[str] | None = None,
     skip_financials: set[str] | None = None,
+    sync_lists_to_cold: bool = False,
     limit: int | None = None,
     chain: list[Any] | None = None,
     sources: dict[str, str] | None = None,
@@ -208,6 +209,8 @@ def fetch_universe(
         —— 列表 / 行业信息要用**本轮的**（申万行业名会改名，例如「白酒」→「白酒Ⅱ」），
         只有财报走标准层读回。``codes`` 因此不要为预筛缩减。
     :param limit: 每个市场最多取多少只（``codes`` 优先级更高）。
+    :param sync_lists_to_cold: 跑完后把当日分区的股票列表同步到 ``cold/``（D-60），
+        ``daily`` 用 —— 这样 ``financials`` 下次就不会还读建仓那天的旧列表。
     :param persist: 是否落库（``False`` 只做采集与清洗）。
     """
     # 历史行情改前端按需取（D-56 / M4-7）：硬闸放在这里，任何调用方都绕不过去。
@@ -452,6 +455,22 @@ def fetch_universe(
         len(financials),
         outcome.degraded,
     )
+
+    if sync_lists_to_cold:
+        # D-60：daily 把列表抓到日分区后，同步一份到 cold/，供 financials 下次使用
+        for source in chain:
+            fn = getattr(source, "sync_lists_to_cold", None)
+            if fn is None:
+                continue
+            try:
+                synced = fn()
+            except Exception:  # noqa: BLE001  同步失败不影响跑批结果
+                logger.warning("列表缓存同步失败", exc_info=True)
+                break
+            if synced:
+                logger.info("列表缓存已同步到 cold：%s", "、".join(synced))
+            break
+
     return outcome
 
 
