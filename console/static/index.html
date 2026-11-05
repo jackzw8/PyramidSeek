@@ -7,15 +7,15 @@
 <style>
   :root{--bg:#f6f6f4;--card:#fff;--line:#e4e3df;--tx:#2c2c2a;--sub:#6b6a66;--acc:#1a5fb4;--ok:#1e8e5a;--bad:#c0392b}
   *{box-sizing:border-box}
-  body{margin:0;font:14px/1.7 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--tx)}
+  body{margin:0;font:15px/1.75 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--tx)}
   main{max-width:1080px;margin:0 auto;padding:20px 16px 60px}
-  h1{font-size:20px;font-weight:500;margin:0 0 4px}
-  .sub{color:var(--sub);font-size:13px;margin-bottom:16px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
-  .card h2{font-size:14px;font-weight:500;margin:0 0 10px;color:var(--sub)}
+  h1{font-size:23px;font-weight:500;margin:0 0 4px}
+  .sub{color:var(--sub);font-size:14px;line-height:1.75;margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px}
+  .card h2{font-size:15px;font-weight:500;margin:0 0 10px;color:var(--sub)}
   .row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px}
   .field{display:flex;flex-direction:column;gap:4px;min-width:150px}
-  label{font-size:12px;color:var(--sub)}
+  label{font-size:13px;color:var(--sub)}
   select,input[type=text],input[type=number]{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
   input[type=text]{min-width:280px}
   button{padding:8px 16px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;cursor:pointer}
@@ -24,33 +24,34 @@
   button:disabled{opacity:.45;cursor:not-allowed}
   .bar{height:10px;background:#ecebe7;border-radius:6px;overflow:hidden;margin:8px 0}
   .bar>i{display:block;height:100%;background:var(--acc);width:0;transition:width .4s}
-  .kv{display:flex;gap:18px;flex-wrap:wrap;font-size:13px}
+  .kv{display:flex;gap:20px;flex-wrap:wrap;font-size:14px}
   .kv b{font-weight:500}
-  .phase{padding:1px 8px;border-radius:10px;background:#eef2f7;font-size:12px}
+  .phase{padding:2px 9px;border-radius:10px;background:#eef2f7;font-size:13px}
   .phase.done{background:#e5f2ea;color:var(--ok)} .phase.failed{background:#faecea;color:var(--bad)}
-  pre#log{height:280px;overflow:auto;background:#14161a;color:#c9d4de;font:12px/1.55 ui-monospace,Consolas,monospace;padding:12px;border-radius:8px;white-space:pre-wrap}
+  pre#log{height:320px;overflow:auto;background:#14161a;color:#c9d4de;font:13px/1.6 ui-monospace,Consolas,monospace;padding:14px;border-radius:8px;white-space:pre-wrap}
+  code{background:#f0efeb;padding:1px 5px;border-radius:4px;font:13px ui-monospace,Consolas,monospace}
   pre#log .ln-err{color:#ff9a9a}
   pre#log .ln-warn{color:#e3c07a}
   pre#log .ln-sum{color:#7ec8e3}
   .pick{display:flex;gap:6px}
   .pick input{flex:1}
-  .mini{padding:5px 10px;font-size:12px;white-space:nowrap}
+  .mini{padding:6px 12px;font-size:13px;white-space:nowrap}
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:9}
   .modal[hidden]{display:none}
   .modal-box{background:#fff;border-radius:10px;width:min(600px,92vw);max-height:82vh;display:flex;flex-direction:column;padding:14px}
   .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-  .modal-path{font:12px ui-monospace,Consolas,monospace;color:var(--sub);margin-bottom:8px;word-break:break-all}
+  .modal-path{font:13px ui-monospace,Consolas,monospace;color:var(--sub);margin-bottom:8px;word-break:break-all}
   .modal-list{overflow:auto;flex:1;border:1px solid var(--line);border-radius:8px;padding:4px;min-height:180px}
-  .modal-list div{padding:6px 8px;cursor:pointer;border-radius:6px;font-size:13px}
+  .modal-list div{padding:8px 10px;cursor:pointer;border-radius:6px;font-size:14px}
   .modal-list div:hover{background:#eef2f7}
   .modal-foot{margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
-  .modal-foot .hint{font-size:12px;color:var(--sub)}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
-  th{color:var(--sub);font-weight:400}
+  .modal-foot .hint{font-size:13px;color:var(--sub)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--sub);font-weight:500;background:#fafaf8}
   .st-done{color:var(--ok)} .st-failed{color:var(--bad)} .st-running{color:var(--acc)}
-  .pending-list{max-height:160px;overflow:auto;font-size:13px}
-  .msg{font-size:13px;color:var(--sub);min-height:20px;margin-top:6px}
+  .pending-list{max-height:180px;overflow:auto;font-size:14px}
+  .msg{font-size:14px;color:var(--sub);min-height:20px;margin-top:6px}
   .err{color:var(--bad)}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   @media(max-width:800px){.grid2{grid-template-columns:1fr}}
@@ -59,7 +60,7 @@
 <body>
 <main>
   <h1>PyramidSeek 跑批控制台</h1>
-  <div class="sub">M5-4 / M5-5 · 子进程跑批（关掉浏览器不中断）· 任务互斥 · 数据源平权可选（ADR-015）</div>
+  <div class="sub">本地跑批控制台 —— 选好模式与股票池，一键执行。跑批在独立子进程中运行，关掉页面也不会中断；产物写入 <code>assets/public/data/</code>，可在下方预览、校验并发布到 GitHub Pages。</div>
 
   <div class="card">
     <h2>1. 配置并触发跑批</h2>
@@ -111,7 +112,7 @@
       <button class="primary" id="btnRun">启动跑批</button>
       <button class="danger" id="btnStop" disabled>停止</button>
       <label style="align-self:center"><input type="checkbox" id="offline"> offline（只 fixtures，回归）</label>
-      <label style="align-self:center" title="只替换本轮市场的产物，其他市场沿用上一批（D-61）"><input type="checkbox" id="merge"> 合并保留其他市场</label>
+      <label style="align-self:center" title="只替换本轮市场的产物，其他市场沿用上一批（D-61）"><input type="checkbox" id="merge" checked> 合并保留其他市场</label>
     </div>
     <div class="msg" id="runMsg"></div>
   </div>
