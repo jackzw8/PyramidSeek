@@ -250,17 +250,36 @@ def _merge_prescreened(outcome: Any, codes: list[str], db_path: Path | None = No
     return added
 
 
-def prepare_out_dir(out_dir: Path) -> None:
-    """重置产物目录：删掉上一批的 ``ranking/`` 与 ``stock/``。
+def prepare_out_dir(out_dir: Path, markets: tuple[str, ...] | None = None) -> None:
+    """重置产物目录。
 
-    产物 = **本次跑批的快照**；样本变小时（如 ``--codes`` 小样本）残留的分片文件会变成
-    「stock/ 有而榜单未收录」的孤儿，让产物校验失败（实跑踩过）。``meta`` / ``industries`` /
-    ``search-index`` 是整文件覆盖，无需处理。
+    ``markets=None``（默认）：删掉 ``ranking/`` 与 ``stock/`` 整个目录 —— 产物 = 本次跑批的
+    **完整快照**；样本变小时（如 ``--codes`` 小样本）残留的分片会变成「stock/ 有而榜单未收录」
+    的孤儿，让产物校验失败（实跑踩过）。
+
+    ``markets``（``--merge``，D-61）：**只删这些市场的分片**，保留其他市场 —— 支持
+    「今天跑 A 股、明天补港股」的分批跑法。
     """
-    for name in ("ranking", "stock"):
-        target = Path(out_dir) / name
-        if target.exists():
-            shutil.rmtree(target)
+    if markets is None:
+        for name in ("ranking", "stock"):
+            target = Path(out_dir) / name
+            if target.exists():
+                shutil.rmtree(target)
+        return
+
+    ranking_dir = Path(out_dir) / "ranking"
+    stock_dir = Path(out_dir) / "stock"
+    for market in markets:
+        (ranking_dir / f"{market}.json").unlink(missing_ok=True)
+    if not stock_dir.exists():
+        return
+    prefixes = {"A": ("SH", "SZ", "BJ"), "HK": ("HK",)}
+    wanted = tuple(prefix for market in markets for prefix in prefixes.get(market, ()))
+    if not wanted:
+        return
+    for path in stock_dir.glob("*.json"):
+        if path.stem.startswith(wanted):
+            path.unlink(missing_ok=True)
 
 
 def run(args: argparse.Namespace) -> int:
@@ -420,13 +439,17 @@ def run(args: argparse.Namespace) -> int:
         print(f"[batch] 分析层落库 {stats.path}（{stats.rows}）")
 
     out_dir = Path(args.out)
-    prepare_out_dir(out_dir)  # 清掉上一批的分片目录，避免孤儿文件（家法 R19 幂等）
+    # D-61：--merge 只替换本轮市场的分片，其余市场沿用上一批（支持分批跑）
+    merge_markets = tuple(args.markets) if args.merge else None
+    prepare_out_dir(out_dir, merge_markets)
     written = [
-        build_meta(inputs, out_dir),
-        build_industries(inputs, out_dir),
-        build_search_index(inputs, out_dir),
+        build_meta(inputs, out_dir, merge_markets=merge_markets),
+        build_industries(inputs, out_dir, merge_markets=merge_markets),
+        build_search_index(inputs, out_dir, merge_markets=merge_markets),
     ]
-    for market in config.MARKETS:
+    # 只为本轮市场写榜单：`build_ranking` 对没数据的市场也会写空数组，
+    # merge 模式下会把其他市场的榜单覆盖成空（实测踩过）。
+    for market in merge_markets or tuple(config.MARKETS):
         written.append(build_ranking(inputs, market, out_dir))
     for score in inputs.scored:
         written.append(build_stock(inputs, score.code, out_dir))
@@ -475,6 +498,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="标的清单文件（每行一个代码，# 开头为注释；与 --codes 合并去重）",
     )
     parser.add_argument("--limit", type=int, default=None, help="每个市场最多取多少只")
+    parser.add_argument(
+        "--merge",
+        action="store_true",
+        help="分市场合并：只替换本轮市场的产物，保留其他市场（D-61，支持分批跑）",
+    )
     parser.add_argument(
         "--source-a",
         choices=available_sources("A"),

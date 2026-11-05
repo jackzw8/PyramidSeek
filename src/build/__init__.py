@@ -78,4 +78,19 @@ def write_json(path: Path, payload: Any) -> Path:
     return path
 
 
-__all__ = ["BuildInputs", "write_json"]
+def read_json(path: Path) -> dict[str, Any] | None:
+    """读已存在的产物（``--merge`` 用）；不存在 / 解析失败返回 ``None``。
+
+    「读不到就当没有旧产物」：合并失败比产出错误数据好 —— 大不了本市场被单独重置。
+    """
+    if not path.exists():
+        return None
+    try:
+        with path.open(encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+__all__ = ["BuildInputs", "read_json", "write_json"]

@@ -111,6 +111,7 @@
       <button class="primary" id="btnRun">启动跑批</button>
       <button class="danger" id="btnStop" disabled>停止</button>
       <label style="align-self:center"><input type="checkbox" id="offline"> offline（只 fixtures，回归）</label>
+      <label style="align-self:center" title="只替换本轮市场的产物，其他市场沿用上一批（D-61）"><input type="checkbox" id="merge"> 合并保留其他市场</label>
     </div>
     <div class="msg" id="runMsg"></div>
   </div>
@@ -434,6 +435,7 @@ $('btnRun').onclick = async () => {
     codes: codes.length ? codes : null,
     codesFile: $('codesFile').value.trim() || null,
     offline: $('offline').checked,
+    merge: $('merge').checked,
   };
   $('runMsg').textContent = '提交中…'; $('runMsg').className = 'msg';
   const { ok, status, body } = await api('/api/run', {

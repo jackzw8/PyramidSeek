@@ -106,6 +106,7 @@ def api_run():
             codes_file=body.get("codesFile") or None,
             limit=int(body["limit"]) if body.get("limit") else None,
             offline=bool(body.get("offline")),
+            merge=bool(body.get("merge")),
         )
     except BatchBusy as exc:
         return jsonify({"error": str(exc)}), 409

@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from .. import config
-from . import BuildInputs, write_json
+from . import BuildInputs, read_json, write_json
 
 
 def market_standard(inputs: BuildInputs, market: str) -> str:
@@ -62,8 +62,13 @@ def _quality(inputs: BuildInputs) -> dict[str, Any]:
     }
 
 
-def build_meta(inputs: BuildInputs, out_dir: Path) -> Path:
-    """生成 ``meta.json``，返回写出路径。"""
+def build_meta(
+    inputs: BuildInputs, out_dir: Path, *, merge_markets: tuple[str, ...] | None = None
+) -> Path:
+    """生成 ``meta.json``，返回写出路径。
+
+    ``merge_markets``（D-61）：只替换这些市场的数据，其余市场沿用旧产物里的值。
+    """
     data_date: dict[str, str] = {}
     if inputs.data_date_financial:
         data_date["financial"] = inputs.data_date_financial
@@ -93,11 +98,72 @@ def build_meta(inputs: BuildInputs, out_dir: Path) -> Path:
     # 口径与质量回执（M5-3 / ADR-014）
     payload["universe"] = _universe(inputs)
     payload["quality"] = _quality(inputs)
+
+    if merge_markets:
+        previous = read_json(out_dir / "meta.json")
+        if previous:
+            payload = _merge_meta(previous, payload, merge_markets)
     return write_json(out_dir / "meta.json", payload)
 
 
-def build_industries(inputs: BuildInputs, out_dir: Path) -> Path:
-    """生成 ``industries.json``（行业树 + 池计数），返回写出路径。"""
+def _merge_meta(
+    old: dict[str, Any], new: dict[str, Any], markets: tuple[str, ...]
+) -> dict[str, Any]:
+    """把旧 ``meta`` 里「非本轮市场」的部分搬回来（D-61 分市场合并）。
+
+    - ``universe.byMarket`` / ``industryStandard`` / ``sourcePolicy.byMarket``：按市场取值；
+    - ``generatedAt`` / ``snapshotVersion`` 取本轮（最新）；
+    - ``degraded`` 取**或** —— 任一批次降级就保持警示，别掩盖；
+    - ``notes`` 追加一行说明本轮覆盖了哪些市场、其余沿用哪一批。
+    """
+    keep = [market for market in config.MARKETS if market not in markets]
+    merged = dict(new)
+
+    old_by_market = (old.get("universe") or {}).get("byMarket") or {}
+    by_market = dict((new.get("universe") or {}).get("byMarket") or {})
+    for market in keep:
+        if market in old_by_market:
+            by_market[market] = old_by_market[market]
+    merged["universe"] = {
+        **(new.get("universe") or {}),
+        "byMarket": dict(sorted(by_market.items())),
+    }
+
+    standard = dict(new.get("industryStandard") or {})
+    old_standard = old.get("industryStandard") or {}
+    for market in keep:
+        if market in old_standard:
+            standard[market] = old_standard[market]
+    merged["industryStandard"] = standard
+
+    if "sourcePolicy" in new:
+        policy = dict(new["sourcePolicy"])
+        old_by = (old.get("sourcePolicy") or {}).get("byMarket") or {}
+        policy_by = dict(policy.get("byMarket") or {})
+        for market in keep:
+            if market in old_by:
+                policy_by[market] = old_by[market]
+        policy["byMarket"] = policy_by
+        merged["sourcePolicy"] = policy
+
+    merged["degraded"] = bool(new.get("degraded")) or bool(old.get("degraded"))
+    stamp = str(old.get("generatedAt") or "")
+    note = (
+        f"本轮覆盖 {'/'.join(markets)}（{new.get('generatedAt')}）"
+        f"；其余市场沿用上一批（generatedAt={stamp}）"
+    )
+    notes = str(new.get("notes") or "")
+    merged["notes"] = f"{notes}；{note}" if notes else note
+    return merged
+
+
+def build_industries(
+    inputs: BuildInputs, out_dir: Path, *, merge_markets: tuple[str, ...] | None = None
+) -> Path:
+    """生成 ``industries.json``（行业树 + 池计数），返回写出路径。
+
+    ``merge_markets``（D-61）：``tree`` 按 ``market``、``counts`` 按 ``{market}:`` 前缀替换。
+    """
     tree: list[dict[str, Any]] = []
     for market in config.MARKETS:
         stocks = [s for s in inputs.stocks if str(s.get("market") or "") == market]
@@ -131,6 +197,23 @@ def build_industries(inputs: BuildInputs, out_dir: Path) -> Path:
             "use_fallback": pool.use_fallback,
         }
 
+    if merge_markets:
+        previous = read_json(out_dir / "industries.json")
+        if previous:
+            old_tree = {str(node.get("market")): node for node in (previous.get("tree") or [])}
+            tree = [
+                node
+                if str(node.get("market")) in merge_markets
+                else old_tree.get(str(node.get("market")), node)
+                for node in tree
+            ]
+            old_counts = {
+                key: value
+                for key, value in (previous.get("counts") or {}).items()
+                if key.split(":", 1)[0] not in merge_markets
+            }
+            counts = {**old_counts, **counts}
+
     payload: dict[str, Any] = {
         "snapshotVersion": inputs.snapshot_version,
         "contractVersion": config.CONTRACT_VERSION,
@@ -154,8 +237,13 @@ def _pinyin_letters(name: str) -> str:
     return "".join(lazy_pinyin(name, style=Style.FIRST_LETTER))
 
 
-def build_search_index(inputs: BuildInputs, out_dir: Path) -> Path:
-    """生成 ``search-index.json``（搜索索引，契约 §3.6），返回写出路径。"""
+def build_search_index(
+    inputs: BuildInputs, out_dir: Path, *, merge_markets: tuple[str, ...] | None = None
+) -> Path:
+    """生成 ``search-index.json``（搜索索引，契约 §3.6），返回写出路径。
+
+    ``merge_markets``（D-61）：按 ``entry.market`` 替换，其余市场沿用旧索引。
+    """
     entries = [
         {
             "code": code,
@@ -165,6 +253,15 @@ def build_search_index(inputs: BuildInputs, out_dir: Path) -> Path:
         }
         for code, stock in sorted(inputs.stocks_by_code.items())
     ]
+    if merge_markets:
+        previous = read_json(out_dir / "search-index.json")
+        if previous:
+            kept = [
+                item
+                for item in (previous.get("entries") or [])
+                if str(item.get("market") or "") not in merge_markets
+            ]
+            entries = sorted([*kept, *entries], key=lambda item: str(item.get("code") or ""))
     payload: dict[str, Any] = {
         "snapshotVersion": inputs.snapshot_version,
         "contractVersion": config.CONTRACT_VERSION,
