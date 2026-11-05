@@ -78,8 +78,9 @@ ENDPOINTS: dict[str, str] = {
     "industry_sw": "sw_index_second_info",  # 申万二级行业列表（131 个，含「上级行业」）
     "industry_sw_cons": "index_component_sw",  # 申万行业成分股（symbol=行业代码）
     "industry_a": "stock_board_industry_name_em",  # 东财行业板块（保留备选，当前实测不可用）
-    # 港股东财行业（ADR-011 降级路径）；同为东财系，实测不可用
-    "industry_hk": "stock_hk_industry_name_em",
+    # 注：原配的 `industry_hk: stock_hk_industry_name_em` 在 akshare 1.19.1 **不存在**
+    # （`getattr` 直接 AttributeError）→ 港股行业长期静默降级 fixtures。已改为从
+    # `hk_industry` 缓存聚合（D-58 / industry_tree），此条目不保留，避免再被误用。
 }
 
 # 内部复权模式 → AkShare 的 adjust 参数值：``"raw"``（不复权）在 akshare 里是**空串**。
@@ -688,25 +689,30 @@ class AkShareSource:
         if market == "A":
             nodes, _ = self._sw_industry()  # A 股 = 申万一级 + 二级（见 ENDPOINTS 说明）
             return nodes
-        # 港股：东财口径（ADR-011 降级路径）；东财接口不可用时由上层回退 fixtures
-        endpoint = ENDPOINTS["industry_hk"]
-        std = config.INDUSTRY_STANDARD_HK_FALLBACK
-        rows = self._fetch(
-            f"industry_{market}",
-            getattr(self.ak, endpoint),
-            what=f"行业分类（{market}）",
-        )
+        # 港股：从 hk_industry 缓存聚合（D-58 收尾）。东财**没有**港股行业板块接口 ——
+        # 原配的 `stock_hk_industry_name_em` 在 akshare 1.19.1 并不存在，这里长期静默
+        # 降级 fixtures，导致 `industries.json` 里的港股行业是假数据（与个股 l1 不一致）。
+        cached = self._load_cache("hk_industry") or []
+        names = sorted({str(row.get("industry") or "").strip() for row in cached} - {""})
+        if not names:
+            raise DataSourceError(
+                "港股行业缓存为空：先跑一次含港股的跑批回填 hk_industry（D-58）",
+                source=self.name,
+            )
+        std = config.INDUSTRY_STANDARD_HK_GGLT
         return [
             {
                 "standard": std,
                 "version": "v1",
-                "level": 1,  # 东财板块列表只给一级，二级树待自建映射表
-                "node_code": str(pick(row, "板块代码", "代码", "code") or ""),
-                "node_name": str(pick(row, "板块名称", "名称", "name") or ""),
+                "level": 1,  # 东财「所属行业」只有一级，二级暂缺
+                "node_code": name,
+                "node_name": name,
                 "parent_code": None,
-                "member_count": pick(row, "公司家数", "member_count"),
+                "member_count": sum(
+                    1 for row in cached if str(row.get("industry") or "").strip() == name
+                ),
             }
-            for row in rows
+            for name in names
         ]
 
     def health_check(self) -> bool:

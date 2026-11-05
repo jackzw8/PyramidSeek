@@ -490,18 +490,36 @@ def test_price_daily_strips_market_prefix_for_both_markets(tmp_path) -> None:
     assert seen == [("600900", "qfq"), ("00700", "qfq")]
 
 
-def test_industry_tree_marks_hk_downgrade(tmp_path) -> None:
-    """ADR-011：港股不直接提供 GICS，先用东财口径并在 industry_std 标注。"""
-    ak = SimpleNamespace(
-        stock_hk_industry_name_em=lambda **kw: [
-            {"板块代码": "HKB01", "板块名称": "资讯科技", "公司家数": 12}
+def test_industry_tree_hk_aggregates_from_cache(tmp_path) -> None:
+    """D-58：港股行业从 `hk_industry` 缓存聚合（东财「所属行业」）。
+
+    东财没有港股行业板块接口（原配的 `stock_hk_industry_name_em` 在 akshare 1.19.1
+    不存在），所以这里不调接口，只按行业名去重聚合并统计成员数。
+    """
+    source = make_source(SimpleNamespace(), tmp_path)
+    source._save_cache(
+        "hk_industry",
+        [
+            {"code": "HK00700", "industry": "软件服务"},
+            {"code": "HK09988", "industry": "软件服务"},
+            {"code": "HK00939", "industry": "银行"},
         ],
     )
-    source = make_source(ak, tmp_path)
 
-    hk_tree = source.industry_tree("HK")
-    assert hk_tree[0]["standard"] == config.INDUSTRY_STANDARD_HK_FALLBACK
-    assert hk_tree[0]["node_name"] == "资讯科技"
+    nodes = source.industry_tree("HK")
+    names = {node["node_name"] for node in nodes}
+    assert names == {"软件服务", "银行"}
+    assert all(node["standard"] == config.INDUSTRY_STANDARD_HK_GGLT for node in nodes)
+    assert all(node["level"] == 1 for node in nodes)
+    software = next(node for node in nodes if node["node_name"] == "软件服务")
+    assert software["member_count"] == 2
+
+
+def test_industry_tree_hk_empty_cache_raises(tmp_path) -> None:
+    """缓存为空时明确报错 —— 不能让上层看到 `AttributeError` 那种含糊信息。"""
+    source = make_source(SimpleNamespace(), tmp_path)
+    with pytest.raises(base.DataSourceError, match="港股行业缓存为空"):
+        source.industry_tree("HK")
 
 
 def test_unknown_market_rejected(tmp_path) -> None:
