@@ -146,7 +146,10 @@ def _merge_meta(
         policy["byMarket"] = policy_by
         merged["sourcePolicy"] = policy
 
-    merged["degraded"] = bool(new.get("degraded")) or bool(old.get("degraded"))
+    # `degraded` 只反映**本轮市场**：保留市场的状态已经在它们各自的产物里，
+    # 而旧 meta 没有分市场字段 —— 取「或」会让一次误报永久钉在产物上（实测踩过：
+    # 覆盖率误报修好后，`degraded` 仍是 True，因为上一批的 True 被 or 合并进来）。
+    merged["degraded"] = bool(new.get("degraded"))
     stamp = str(old.get("generatedAt") or "")
     note = (
         f"本轮覆盖 {'/'.join(markets)}（{new.get('generatedAt')}）"
