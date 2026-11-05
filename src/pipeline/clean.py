@@ -246,11 +246,15 @@ def normalize_financial_rows(
         item.setdefault("code", code)
         missing = _missing_fields(item, FINANCIAL_REQUIRED)
         if missing:
+            # 该期**整行丢弃**（不进评分、不进 _pending.json）；股票本身保留，
+            # 用其余有效期评分。季报/中报按 R7 本就不进主评分 → 记 WARNING 而非 ERROR，
+            # 否则 cold 全量重抓时几千条历史/季报缺失会把日志刷成一片 ERROR。
+            level = LEVEL_ERROR if item.get("report_type") == "annual" else LEVEL_WARN
             issues.append(
                 Issue(
-                    LEVEL_ERROR,
+                    level,
                     ",".join(missing),
-                    f"财报必填字段缺失：{missing}，该期入「待补」",
+                    f"财报必填字段缺失：{missing}，该期丢弃、不参与评分",
                     code,
                 )
             )
