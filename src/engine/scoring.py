@@ -347,8 +347,13 @@ class StockScore:
 
 def _pool_means(
     pools: dict[str, PoolInfo], raws: dict[str, RawIndicators]
-) -> dict[tuple[str, str], dict[str, float]]:
-    """每个对比池内各**可用**指标的均值（§8 填充用；池内该指标全缺 → 不出现在结果里）。"""
+) -> dict[tuple[str, str], dict[str, tuple[float, int]]]:
+    """每个对比池内各**可用**指标的（均值, 样本数）。
+
+    样本数供 :data:`config.MIN_FILL_SAMPLES` 判定 —— 池内只有 1 只有值时，
+    那个"均值"其实是这只股票的个体值，不该拿来填别人（D-65）。
+    池内该指标全缺 → 不出现在结果里。
+    """
     collected: dict[tuple[str, str], dict[str, list[float]]] = {}
     for pool in pools.values():
         bucket = collected.setdefault((pool.market, pool.group), {})
@@ -361,7 +366,10 @@ def _pool_means(
                     continue
                 bucket.setdefault(indicator, []).append(float(value))
     return {
-        key: {indicator: sum(values) / len(values) for indicator, values in bucket.items()}
+        key: {
+            indicator: (sum(values) / len(values), len(values))
+            for indicator, values in bucket.items()
+        }
         for key, bucket in collected.items()
     }
 
@@ -427,8 +435,10 @@ def score_universe(
         for indicator in INDICATOR_KEYS:
             if indicator not in raw.unavailable:
                 continue
-            mean_value = pool_mean.get(indicator)
-            if mean_value is None:
+            entry = pool_mean.get(indicator)
+            mean_value, sample_count = entry if entry is not None else (None, 0)
+            if mean_value is None or sample_count < config.MIN_FILL_SAMPLES:
+                # 池里没有值，或样本太少（1~2 只不能代表整个行业）→ 不填充
                 unfilled_list.append(indicator)
             else:
                 values[indicator] = mean_value

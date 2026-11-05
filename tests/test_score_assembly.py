@@ -198,22 +198,38 @@ def test_ranking_is_group_scoped_and_stable_for_ties() -> None:
 
 # ── §8 缺失值处理 ────────────────────────────────────────────────────────
 def test_missing_indicator_is_filled_with_pool_mean() -> None:
-    """缺失项用**同池均值**填充，并记进 `filled`（置信度降低）。"""
-    stocks = [_stock("SH600001"), _stock("SH600002")]
+    """池内样本足够（≥ MIN_FILL_SAMPLES）时，缺失项用**同池均值**填充并记进 `filled`。"""
+    stocks = [_stock(f"SH60000{i}") for i in (1, 2, 3)]
     financials = {
         "SH600001": _rows(gross_profit=40.0),
-        "SH600002": _rows(gross_profit=None),  # 算不出来
+        "SH600002": _rows(gross_profit=30.0),
+        "SH600003": _rows(gross_profit=None),  # 算不出来
     }
     rows = {row.code: row for row in score_universe(stocks, financials)}
 
-    assert rows["SH600002"].filled == ("gross_margin",)
-    assert rows["SH600002"].unfilled == ()
-    assert rows["SH600002"].subs["gross_margin"] == pytest.approx(
-        interp_anchor(0.40, config.ABS_ANCHORS["gross_margin"])
+    assert rows["SH600003"].filled == ("gross_margin",)
+    assert rows["SH600003"].unfilled == ()
+    # 填充的是**池均值** (0.40 + 0.30) / 2 = 0.35，不是某一只的值
+    assert rows["SH600003"].subs["gross_margin"] == pytest.approx(
+        interp_anchor(0.35, config.ABS_ANCHORS["gross_margin"])
     )
-    assert rows["SH600002"].subs["gross_margin"] == pytest.approx(
-        rows["SH600001"].subs["gross_margin"]
-    )
+
+
+def test_missing_indicator_not_filled_when_pool_too_small() -> None:
+    """池内有效样本 < MIN_FILL_SAMPLES 时**不填充**（1~2 只代表不了行业，D-65）。
+
+    原实现只要池里有值就填 —— 实测出现过「14 只保险股里 1 只有毛利率，其余 13 只
+    全用它的值」，分数被单只样本带偏。不足时记 ``unfilled``，非金融股会进单列。
+    """
+    stocks = [_stock("SH600001"), _stock("SH600002")]
+    financials = {
+        "SH600001": _rows(gross_profit=40.0),
+        "SH600002": _rows(gross_profit=None),
+    }
+    rows = {row.code: row for row in score_universe(stocks, financials)}
+
+    assert rows["SH600002"].filled == ()
+    assert rows["SH600002"].unfilled == ("gross_margin",)
 
 
 def test_financial_missing_indicator_is_exempt_from_ineligibility() -> None:

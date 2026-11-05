@@ -72,6 +72,11 @@ def build_stock(inputs: BuildInputs, code: str, out_dir: Path) -> Path:
             "opCashflow": derived.round_value(score.growth_ocf, config.GROWTH_ITEM_DECIMALS),
         },
         "qualitySubs": _subs(score.subs),
+        # 指标可信度（D-65）：`filled` = 用同行均值顶替的项，`unfilled` = 连池均值都没有的项。
+        # 原先这两个标记只活在内存里，产物不输出 → 用户看到「毛利率空着、分数却有一项」，
+        # 无从核对。前端可据此标注“含 N 项估算”。
+        "filled": list(score.filled),
+        "unfilled": list(score.unfilled),
         "radar": _radar(score.radar),
         "years": derived.year_labels(rows),
         **_tables(rows, shares),

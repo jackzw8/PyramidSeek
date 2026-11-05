@@ -173,8 +173,22 @@ def _fill_hk_shares(stocks: list[dict[str, Any]], codes: list[str], chain: list[
     """港股股本回填（D-58）：港股列表接口不给股本 → 从指标接口反算（亿股）。
 
     ``eps = net_profit ÷ shares``，没有股本这项恒缺失。失败静默跳过（eps 留空而已）。
+
+    **兜底（D-66）**：``hk_shares`` 只有东财源实现，而主链只放「A 股选的源 + fixtures」——
+    选 ``--source-hk tx`` 时链里没有东财，股本这一项永远补不上（实测：660 只港股 EPS 全缺、
+    ``hk_indicator_*`` 缓存只剩 1 个）。这里在链里找不到实现时补一个东财源，仅用于取指标。
     """
-    for source in chain:
+    sources = list(chain)
+    if not any(getattr(source, "hk_shares", None) for source in sources):
+        try:
+            from ..datasource.registry import build_source  # 局部导入，避免循环依赖
+
+            sources.append(build_source("HK", "em", partition="cold"))
+            logger.info("港股股本：链里无东财源，兜底构造 em（仅取指标/股本，不改选源口径）")
+        except Exception as exc:  # noqa: BLE001  兜底失败就退回原行为
+            logger.warning("港股股本兜底失败：%s", exc)
+
+    for source in sources:
         fn = getattr(source, "hk_shares", None)
         if fn is None:
             continue
