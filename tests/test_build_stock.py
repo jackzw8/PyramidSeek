@@ -29,6 +29,8 @@ EXPECTED_KEYS = (
     "growth",
     "growthDetail",
     "qualitySubs",
+    "filled",
+    "unfilled",
     "radar",
     "years",
     "profitability",

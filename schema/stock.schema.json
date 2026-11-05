@@ -2,80 +2,197 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://pyramidseek/schema/stock.schema.json",
   "type": "object",
-  "required": ["code", "name", "market", "score", "quality", "growth", "years", "radar", "qualitySubs"],
+  "required": [
+    "code",
+    "name",
+    "market",
+    "score",
+    "quality",
+    "growth",
+    "years",
+    "radar",
+    "qualitySubs"
+  ],
   "properties": {
-    "code": { "type": "string", "pattern": "^(SH|SZ|BJ|HK)\\d{5,6}$" },
-    "name": { "type": "string" },
-    "market": { "enum": ["A", "HK"] },
-    "exchange": { "type": "string" },
-    "l1": { "type": "string" },
-    "l2": { "type": "string" },
-    "group": { "type": "string" },
-    "level": { "enum": ["L1", "L2", ""] },
-    "industryStd": { "type": "string" },
-    "listedAt": { "type": "string" },
-    "score": { "type": "number", "minimum": 0, "maximum": 1000 },
-    "quality": { "type": "number" },
-    "growth": { "type": "number" },
-    "growthDetail": { "type": "object" },
-    "qualitySubs": { "type": "object" },
+    "code": {
+      "type": "string",
+      "pattern": "^(SH|SZ|BJ|HK)\\d{5,6}$"
+    },
+    "name": {
+      "type": "string"
+    },
+    "market": {
+      "enum": [
+        "A",
+        "HK"
+      ]
+    },
+    "exchange": {
+      "type": "string"
+    },
+    "l1": {
+      "type": "string"
+    },
+    "l2": {
+      "type": "string"
+    },
+    "group": {
+      "type": "string"
+    },
+    "level": {
+      "enum": [
+        "L1",
+        "L2",
+        ""
+      ]
+    },
+    "industryStd": {
+      "type": "string"
+    },
+    "listedAt": {
+      "type": "string"
+    },
+    "score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1000
+    },
+    "quality": {
+      "type": "number"
+    },
+    "growth": {
+      "type": "number"
+    },
+    "growthDetail": {
+      "type": "object"
+    },
+    "qualitySubs": {
+      "type": "object"
+    },
     "radar": {
       "type": "object",
-      "required": ["roe", "gross_margin", "asset_turnover", "eps", "cash_ratio", "net_margin"]
+      "required": [
+        "roe",
+        "gross_margin",
+        "asset_turnover",
+        "eps",
+        "cash_ratio",
+        "net_margin"
+      ]
     },
-    "years": { "type": "array", "items": { "type": "string" } },
+    "years": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "profitability": {
       "type": "object",
       "properties": {
-        "roe": { "type": "array" },
-        "roa": { "type": "array" },
-        "gross_margin": { "type": "array" },
-        "net_margin": { "type": "array" },
-        "eps": { "type": "array" }
+        "roe": {
+          "type": "array"
+        },
+        "roa": {
+          "type": "array"
+        },
+        "gross_margin": {
+          "type": "array"
+        },
+        "net_margin": {
+          "type": "array"
+        },
+        "eps": {
+          "type": "array"
+        }
       }
     },
     "structure": {
       "type": "object",
       "properties": {
-        "cash_ratio": { "type": "array" },
-        "debt_ratio": { "type": "array" }
+        "cash_ratio": {
+          "type": "array"
+        },
+        "debt_ratio": {
+          "type": "array"
+        }
       }
     },
     "operation": {
       "type": "object",
       "properties": {
-        "ar_turnover": { "type": "array" },
-        "ar_days": { "type": "array" },
-        "fa_turnover": { "type": "array" },
-        "asset_turnover": { "type": "array" }
+        "ar_turnover": {
+          "type": "array"
+        },
+        "ar_days": {
+          "type": "array"
+        },
+        "fa_turnover": {
+          "type": "array"
+        },
+        "asset_turnover": {
+          "type": "array"
+        }
       }
     },
     "cashflow": {
       "type": "object",
       "properties": {
-        "cash": { "type": "array" },
-        "net_profit": { "type": "array" },
-        "ocf": { "type": "array" },
-        "icf": { "type": "array" },
-        "fcf": { "type": "array" },
-        "ncf": { "type": "array" }
+        "cash": {
+          "type": "array"
+        },
+        "net_profit": {
+          "type": "array"
+        },
+        "ocf": {
+          "type": "array"
+        },
+        "icf": {
+          "type": "array"
+        },
+        "fcf": {
+          "type": "array"
+        },
+        "ncf": {
+          "type": "array"
+        }
       }
     },
     "kline": {
       "type": "object",
       "properties": {
-        "months": { "type": "array", "items": { "type": "string" } },
-        "o": { "type": "array" },
-        "h": { "type": "array" },
-        "l": { "type": "array" },
-        "c": { "type": "array" },
+        "months": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "o": {
+          "type": "array"
+        },
+        "h": {
+          "type": "array"
+        },
+        "l": {
+          "type": "array"
+        },
+        "c": {
+          "type": "array"
+        },
         "hfq": {
           "type": "object",
           "properties": {
-            "o": { "type": "array" },
-            "h": { "type": "array" },
-            "l": { "type": "array" },
-            "c": { "type": "array" }
+            "o": {
+              "type": "array"
+            },
+            "h": {
+              "type": "array"
+            },
+            "l": {
+              "type": "array"
+            },
+            "c": {
+              "type": "array"
+            }
           }
         }
       }
@@ -84,13 +201,39 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["code", "name"],
+        "required": [
+          "code",
+          "name"
+        ],
         "properties": {
-          "code": { "type": "string" },
-          "name": { "type": "string" },
-          "roe5y": { "type": ["number", "null"] }
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "roe5y": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
         }
       }
+    },
+    "filled": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "用同行均值顶替的指标（D-65）；空数组 = 六项全是真实值"
+    },
+    "unfilled": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "连池均值都拿不到的指标（D-65）；非金融股非空 → 不入主榜"
     }
   }
 }
