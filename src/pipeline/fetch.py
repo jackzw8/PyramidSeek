@@ -461,7 +461,18 @@ def fetch_universe(
     for interface, source in sorted(outcome.sources.items()):
         if source == "fixture":
             outcome.notes.append(f"{interface} 降级到 fixtures（离线示例数据）")
-        elif outcome.expected_source and source not in ("none", outcome.expected_source):
+            continue
+        if source == "none":
+            continue
+        # 财报是按市场**显式选源**的（D-67 默认 A=新浪 / HK=tx）。主链只放 A 股选的源，
+        # 拿它的 name 去比港股财报会把「显式选 tx」误记成「降级到 tx」（实测 667 条刷屏）。
+        if interface.startswith("financials:"):
+            code = interface.split(":", 1)[1]
+            market = "HK" if code.upper().startswith("HK") else "A"
+            expected = outcome.expected_by_market.get(market) or outcome.expected_source
+        else:
+            expected = outcome.expected_source
+        if expected and source != expected:
             outcome.notes.append(f"{interface} 降级到 {source}")
     for interface in outcome.failed_interfaces:
         outcome.notes.append(f"{interface} 全链路失败（无数据）")
