@@ -1,34 +1,34 @@
 {
-  "snapshotVersion": "2026-11-05",
+  "snapshotVersion": "2026-11-11",
   "contractVersion": "1.2",
   "formulaVersion": "v1.0",
-  "generatedAt": "2026-11-05T10:27:45Z",
-  "publishedAt": "2026-11-05T10:41:55Z",
+  "generatedAt": "2026-11-11T13:42:03Z",
+  "publishedAt": "2026-11-11T14:20:04Z",
   "files": [
     {
       "path": "industries.json",
       "bytes": 33465,
-      "sha256": "1af3c7d7543ead898f974a9c5e120ebb1aa8f672d39009c93b32488553b94763"
+      "sha256": "a24f7d94c916a2fc58740a407f03ad05942ff0a8ec26ee8d2967e95262e59c6a"
     },
     {
       "path": "meta.json",
-      "bytes": 23971,
-      "sha256": "b47ddd95ad3fdba251d552de809193d9f78d4bfc8e3fcd7c1004e3f0fde01392"
+      "bytes": 1179,
+      "sha256": "fba03f1b4515eee666ad2cfce2a8a280765ba814dd5a8af39cff03b09b985ac6"
     },
     {
       "path": "ranking/A.json",
       "bytes": 510268,
-      "sha256": "9d381b6b96f41d968c06847f08db5b698817f883d35c73c8bc8214c0870612ec"
+      "sha256": "c2087395e7e87bba17f3204f59070e4fefdb84317686efb5f841f7f72e9a3e2c"
     },
     {
       "path": "ranking/HK.json",
       "bytes": 284361,
-      "sha256": "3ac053a3bd55a63e9e14a56083a1f4071a421013daad07d23c6c3f90bf93439c"
+      "sha256": "6b3b08e5f7be8752df20b15ddafa8a9b633e9f7751d78c6ff485a156a1a0b3b1"
     },
     {
       "path": "search-index.json",
       "bytes": 206422,
-      "sha256": "b6566b7abea4e270b43c6c58bf7c684386db2c5bd52eea73122d4555b50b6f71"
+      "sha256": "d5449015fbac26526fa0474bf2b8e60080b2b32e2a6b50ca1b5cfa127e82304d"
     },
     {
       "path": "stock/HK00001.json",
@@ -9476,7 +9476,7 @@
       "sha256": "bd85ad47dc87fb2650d6da64e7ddb6b9c52ce37c3c394db87305cdee1af2257b"
     }
   ],
-  "totalBytes": 12848712,
+  "totalBytes": 12825920,
   "counts": {
     "stocks": 1889,
     "rankingA": 1222,
