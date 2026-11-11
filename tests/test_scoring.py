@@ -358,7 +358,7 @@ def test_growth_total_stays_within_configured_bounds(
 
 
 def test_growth_total_rounds_items_before_summing() -> None:
-    """**先各自取整再相加**，不是"加总后再取整"—— 双引擎在此处分歧最难查。"""
+    """**先各自取整再相加**，不是"加总后再取整"—— 取整顺序在此处分歧最难查。"""
     result = growth_score([1.0, 1.234], [1.0, 1.111])
     assert result.items["growth_np"] == round(growth_item([1.0, 1.234]), 2)
     assert result.total == round(result.items["growth_np"] + result.items["growth_ocf"], 2)

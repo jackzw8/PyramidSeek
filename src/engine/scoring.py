@@ -8,7 +8,7 @@
 本模块只管 5 项绝对值指标（= ``config.ABS_ANCHORS`` 的键），不越界实现分位。
 
 **子分不做取整**：§4.2 伪代码返回的是插值原值，本节也照此返回（不 round）。
-取整只发生在组装阶段（M2-5 的 ``Q``）；双引擎比对（M2-6）用容差。
+取整只发生在组装阶段（M2-5 的 ``Q``）；黄金样本回归（M2-6）用容差。
 子分的比对待确认事项与 :mod:`indicators` 的取整口径同属《计划完成情况》**D-18**。
 """
 
@@ -277,7 +277,8 @@ def quality_score(subs: dict[str, float] | SubScores) -> float:
     """质量分 Q（§2 / §11）：**先 `round(Σ(sub×w), 2)` 再 ÷ 100**。
 
     ⚠️ 顺序是硬要求：`round(Σ/100, 2)` 与本实现在 ``.xx5`` 边界会差 0.01，
-    M2-6 双引擎逐项比对必然失败（参考实现 `engine.js` 就是先 `toFixed` 再除）。
+    黄金样本在 `.xx5` 边界必然对不上（历史参考实现 `engine.js` 就是先 `toFixed` 再除；
+    顺序以规格为准）。
     """
     values = subs.values if isinstance(subs, SubScores) else subs
     weighted = 0.0

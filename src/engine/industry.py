@@ -117,7 +117,7 @@ def percentile_score(values: Sequence[float], value: float) -> float:
     less = sum(1 for item in values if item < value)
     equal = sum(1 for item in values if item == value)
     raw = ((less + 0.5 * equal) / n) * config.PERCENTILE_SCALE
-    # §4.2 伪代码没写取整；**对齐 engine.js 的 `toFixed(2)`** 取 2 位（D-18）。
+    # §4.2 伪代码没写取整；**按历史参考实现的 `toFixed(2)` 口径**取 2 位（D-18）。
     # 用 round_half_up 而非内置 round：`(0+0.5×1)/16×100 = 3.125` 这种边界值
     # 银行家舍入会给 3.12、JS 给 3.13 —— M2-6 逐项比对会失败。
     return round_half_up(raw, config.PERCENTILE_DECIMALS)

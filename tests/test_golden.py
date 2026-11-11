@@ -1,58 +1,27 @@
-"""M2-6：双引擎黄金样本对账（Python 与 JS 逐项比对，《评分算法规格》§11）。
+"""M2-6：Python 黄金样本回归（《评分算法规格》§11）。
 
-- `fixtures/golden_python.json` 是 Python 侧 `score_universe` 在 `fixtures/financials.json`
+- ``fixtures/golden_python.json`` 是 ``score_universe`` 在 ``fixtures/financials.json``
   上的**基准快照**（提交进库，防口径被无意改动）；
-- `tests/run_engine.js` 用 node 跑参考实现 `engine.js` 吃**同一份输入**，
-  与 Python 逐项比对：Q / G / 两项单项成长分 / 总分 / 6 项子分 / 雷达六维 / 对比池。
+- 口径被无意改动即红；有意改参数则按 R3 升 ``formulaVersion`` 并更新快照。
 
-比对口径（06 §11）：已取整字段**严格相等**；未取整字段容差 ``1e-9``
-（JS ``Math.pow`` 与 Python ``**`` 末位可能差 1 ULP）。需要 node：
-环境变量 ``PYRAMIDSEEK_NODE`` → ``PATH`` → 本机便携版；都找不到则跳过。
+历史：2026-11-11 前这里还有一条「Python 与 JS 原型逐项对账」用例；D-68 / ADR-017
+起前端只渲染产物、评分只保留 Python 一个生产点，跨语言对账退役（见 08 ADR-017）。
 """
 
 from __future__ import annotations
 
 import json
 import math
-import os
-import shutil
-import subprocess
 from pathlib import Path
-
-import pytest
 
 from src.engine.scoring import score_universe
 
 REPO = Path(__file__).resolve().parent.parent
 FIXTURES = REPO / "fixtures" / "financials.json"
 GOLDEN = REPO / "fixtures" / "golden_python.json"
-RUNNER = REPO / "tests" / "run_engine.js"
 
-# 子分 / 雷达里**不取整**的键（其余为分位子分，按 06 §11 已取整 → 严格相等）
-UNROUNDED_KEYS = frozenset({"roe", "roa", "gross_margin", "cash_ratio", "net_margin"})
-ROUNDED_FIELDS = ("quality", "growth", "growth_np", "growth_ocf", "score")
-
-
-def _node() -> str | None:
-    """定位 node：环境变量 → PATH → 已知固定位置（2026-10-15 起在 adev-tools）。
-
-    注意：注册表 PATH 变更后，**已启动的宿主进程**（IDE / 本工具的 shell 宿主）不会自动刷新，
-    其子进程里 `shutil.which` 可能仍找不到 → 显式候选路径兜底。
-    """
-    env = os.environ.get("PYRAMIDSEEK_NODE")
-    if env and Path(env).exists():
-        return env
-    which = shutil.which("node")
-    if which:
-        return which
-    bases = (
-        Path(r"D:\AIwork\adev-tools\node-v20.18.1-win-x64"),  # 用户固定位置（在用户 PATH）
-        REPO.parent / "temp" / "node",  # 旧便携版位置（兼容保留）
-    )
-    for base in bases:
-        for candidate in sorted(base.glob("node.exe")) or sorted(base.glob("*/node.exe")):
-            return str(candidate)
-    return None
+# 未取整字段的容差（06 §11 同口径）
+TOL = 1e-9
 
 
 def _python_rows() -> list[dict]:
@@ -73,14 +42,6 @@ def _python_rows() -> list[dict]:
         }
         for row in score_universe(payload["stocks"], financials)
     ]
-
-
-def _pair_by_code(rows: list[dict]) -> dict[str, dict]:
-    return {row["code"]: row for row in rows}
-
-
-# 未取整字段的相对/绝对容差（06 §11 同口径）
-TOL = 1e-9
 
 
 def _assert_close(actual: object, expected: object, path: str) -> None:
@@ -120,37 +81,3 @@ def test_python_matches_committed_golden() -> None:
     """Python 侧结果与**提交在库里的基准快照**逐项一致（口径被无意改动即红）。"""
     assert GOLDEN.exists(), "基准快照缺失：先生成 fixtures/golden_python.json"
     _assert_close(_python_rows(), json.loads(GOLDEN.read_text(encoding="utf-8")), "golden")
-
-
-def test_js_engine_matches_python(demo_web_js_dir: Path) -> None:
-    """JS 参考实现吃同一份 fixtures，与 Python 逐项比对（§11 口径）。"""
-    node = _node()
-    if node is None:
-        pytest.skip("找不到 node（设 PYRAMIDSEEK_NODE 或加入 PATH）")
-
-    completed = subprocess.run(
-        [node, str(RUNNER), str(FIXTURES), str(demo_web_js_dir / "engine.js")],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        timeout=120,
-        check=False,
-    )
-    assert completed.returncode == 0, f"JS 引擎运行失败：{completed.stderr[-800:]}"
-    js_rows = _pair_by_code(json.loads(completed.stdout))
-    py_rows = _pair_by_code(_python_rows())
-
-    assert set(js_rows) == set(py_rows)
-    for code, js in js_rows.items():
-        py = py_rows[code]
-        assert js["compare_level"] == py["compare_level"], code
-        assert js["compare_group"] == py["compare_group"], code
-        for field in ROUNDED_FIELDS:  # 已取整 → 严格相等
-            assert js[field] == py[field], f"{code}.{field}: js={js[field]} py={py[field]}"
-        for table in ("subs", "radar"):
-            assert set(js[table]) == set(py[table]), code
-            for key, value in py[table].items():
-                if key in UNROUNDED_KEYS:  # 未取整 → 容差 1e-9
-                    assert js[table][key] == pytest.approx(value, abs=1e-9), f"{code}.{table}.{key}"
-                else:  # 分位子分（取 2 位）→ 严格相等
-                    assert js[table][key] == value, f"{code}.{table}.{key}"

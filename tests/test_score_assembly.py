@@ -90,8 +90,8 @@ def _fixture_universe() -> tuple[list[dict], dict[str, list[dict]]]:
 def test_quality_score_rounds_the_weighted_sum_before_dividing() -> None:
     """**取整顺序钉子**：`round(Σ(sub×w), 2) ÷ 100`，不是 `round(Σ÷100, 2)`。
 
-    参考实现 `engine.js` 就是先 `toFixed(2)` 再除 100；两者在边界上差 0.01，
-    M2-6 双引擎逐项比对必然失败（06 §11 已写死这条）。
+    历史参考实现 `engine.js` 就是先 `toFixed(2)` 再除 100；两者在边界上差 0.01，
+    黄金样本在这一步必然对不上（06 §11 已写死这条）。
     """
     subs = {key: 12.3456749 for key in config.WEIGHTS}
     weighted = sum(12.3456749 * weight for weight in config.WEIGHTS.values())

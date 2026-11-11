@@ -70,7 +70,7 @@ def test_normalize_code_still_raises_identifiable_error() -> None:
         common.normalize_code("ABC", "A")
 
 
-# ── 双引擎舍入口径（D-18）────────────────────────────────────────────────
+# ── 舍入口径（D-18）──────────────────────────────────────────────────────
 def test_round_half_up_matches_js_math_round() -> None:
     """半进位朝 ``+∞``，与 JS 的 ``Math.round`` / ``toFixed`` 逐位一致。"""
     assert common.round_half_up(3.125, 2) == 3.13  # JS: Math.round(312.5) / 100

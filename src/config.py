@@ -78,7 +78,7 @@ CAGR_CAP = 0.20  # |CAGR| ≥ 20% → 方向分满分
 CV_LOW = 0.15  # CV ≤ 0.15 → 稳定性系数 k = 1.0
 CV_HIGH = 0.75  # CV ≥ 0.75 → k = K_MIN
 K_MIN, K_MAX = 0.6, 1.0
-STABILITY_DECIMALS = 4  # k 的中间结果保留位数（双引擎逐字对齐要求）
+STABILITY_DECIMALS = 4  # k 的中间结果保留位数（取整口径要求，见 06 §6）
 GROWTH_ITEM_DECIMALS = 2  # 单项成长分 round 位数（先 round 再相加，禁止先加总）
 
 # ── 总分与排序（评分规格 §7）─────────────────────────────────────────────

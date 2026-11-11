@@ -25,7 +25,7 @@ from typing import Any
 from .. import config
 from ..common import is_missing
 
-# 8 项指标（顺序与《评分算法规格》§3 表格一致；双引擎对账按此顺序逐项比对）
+# 8 项指标（顺序与《评分算法规格》§3 表格一致；黄金样本按此顺序逐项比对）
 INDICATOR_KEYS: tuple[str, ...] = (
     "roe",
     "roa",
@@ -177,7 +177,7 @@ def raw_indicators(
                 samples.append(ratio)
         if samples:
             # 计算链路**不取整**（D-18）：中间取整会把"接近但不等"的值抹成并列，
-            # 直接改变分位分；engine.js 同样不取整。取整只发生在「与 JS 对齐的点」
+            # 直接改变分位分；历史参考实现同样不取整。取整只发生在「输出边界」
             # 与「落库/产物字段」两处边界。
             values[key] = sum(samples) / len(samples)
         else:

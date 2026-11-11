@@ -110,7 +110,7 @@ def round_half_up(value: float, decimals: int) -> float:
 
     **注意方向**：JS 的 ``Math.round`` / ``toFixed`` 遇 ``.5`` 一律**朝 ``+∞``** 取整，
     对负数是"向零"（``Math.round(-2.5) === -2``，不是 ``-3``）。这里刻意保留这个**不对称**行为 ——
-    "更好看"的对称舍入反而会让 M2-6 双引擎逐项比对失败（《计划完成情况》D-18）。
+    "更好看"的对称舍入反而会让黄金样本在末位产生噪声（《计划完成情况》D-18）。
     """
     factor = 10**decimals
     return math.floor(value * factor + 0.5) / factor
