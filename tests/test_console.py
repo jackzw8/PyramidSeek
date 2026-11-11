@@ -6,6 +6,7 @@ fixtures 快），验证「状态可查 / 互斥 409 / 完成落库 / 日志可 
 
 from __future__ import annotations
 
+import json
 import time
 from pathlib import Path
 
@@ -55,6 +56,61 @@ def test_state_reports_sources_and_defaults(client) -> None:
     assert body["sources"]["A"][0]["name"] in {"sina", "em", "ths"}
     assert [s["name"] for s in body["sources"]["HK"]] == ["tx", "em"]
     assert any(s["default"] for s in body["sources"]["A"])
+
+
+def _set_pending(monkeypatch, tmp_path, text: str) -> None:
+    """把 ``PENDING_PATH`` 指到本次用例的临时文件（真实文件在 assets/data/，测试不能碰）。"""
+    path = tmp_path / "_pending.json"
+    path.write_text(text, encoding="utf-8")
+    monkeypatch.setattr("console.app.PENDING_PATH", path)
+
+
+@pytest.mark.parametrize(
+    ("payload", "expected"),
+    [
+        ({"generated_at": "2026-11-11T00:00:00Z", "pending": []}, 0),
+        (
+            {
+                "generated_at": "2026-11-11T00:00:00Z",
+                "pending": [{"code": "SH600900", "reason": "超时"}],
+            },
+            1,
+        ),
+        ([{"code": "SH600900"}], 1),  # 旧版裸列表格式，仍需兼容
+    ],
+)
+def test_pending_returns_items_not_wrapper(
+    client, monkeypatch, tmp_path, payload, expected
+) -> None:
+    """V2-C03：``_pending.json`` 是 ``{"generated_at", "pending"}`` 包裹对象。
+
+    原先直接返回整个 dict → ``pendingCount = len(dict) = 2``、``/api/pending.items``
+    是 dict，前端 ``items.length`` 为 ``undefined`` → 恒显示「（无失败项）」，
+    「一键重试」整体失效。
+    """
+    _set_pending(monkeypatch, tmp_path, json.dumps(payload, ensure_ascii=False))
+
+    state = client.get("/api/state").get_json()
+    items = client.get("/api/pending").get_json()["items"]
+
+    assert state["pendingCount"] == expected
+    assert isinstance(items, list)
+    assert len(items) == expected
+
+
+@pytest.mark.parametrize("text", ["{", '{"pending": "oops"}', '"a string"', "null", "{}"])
+def test_pending_bad_payload_is_empty(client, monkeypatch, tmp_path, text) -> None:
+    """坏 JSON / 坏结构一律当空清单，不让一个运维文件把控制台拖垮。"""
+    _set_pending(monkeypatch, tmp_path, text)
+
+    assert client.get("/api/state").get_json()["pendingCount"] == 0
+    assert client.get("/api/pending").get_json()["items"] == []
+
+
+def test_pending_missing_file_is_empty(client, monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr("console.app.PENDING_PATH", tmp_path / "missing.json")
+    assert client.get("/api/state").get_json()["pendingCount"] == 0
+    assert client.get("/api/pending").get_json()["items"] == []
 
 
 def test_child_process_env_forces_utf8() -> None:

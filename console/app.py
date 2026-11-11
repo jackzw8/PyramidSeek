@@ -65,12 +65,30 @@ def _sources_payload() -> dict:
 
 
 def _pending() -> list[dict]:
+    """读失败清单，返回**条目列表**（V2-C03）。
+
+    ``_pending.json`` 是 ``batch.py`` 写出的包裹对象
+    ``{"generated_at": "...", "pending": [...]}``，不是裸列表。原先直接
+    ``json.loads`` 后整个 dict 就返回了：``/api/state.pendingCount`` 变成
+    ``len(dict) == 2``，``/api/pending.items`` 也是 dict，前端读
+    ``items.length`` 得 ``undefined`` → 恒显示「（无失败项）」，「一键重试」
+    随之失效（审核报告 §4.2 V2-C03）。
+
+    顺带做类型防御：文件可能被手工改坏或来自旧版（裸列表），坏形态一律当空清单，
+    不让控制台因为一个运维文件起不来。
+    """
     if not PENDING_PATH.exists():
         return []
     try:
-        return json.loads(PENDING_PATH.read_text(encoding="utf-8"))
-    except ValueError:
+        payload = json.loads(PENDING_PATH.read_text(encoding="utf-8"))
+    except (ValueError, OSError):
         return []
+
+    if isinstance(payload, dict):
+        items = payload.get("pending", [])
+    else:
+        items = payload  # 兼容旧版裸列表格式
+    return items if isinstance(items, list) else []
 
 
 @app.get("/")
